@@ -1,0 +1,40 @@
+========================================
+LOGOS MJA — FICHIERS À DÉPOSER ICI
+Dossier : public/images/logos/
+========================================
+
+Format recommandé : PNG fond transparent, au moins 300x300px
+Tous ces fichiers sont optionnels : si absent → le logo par défaut (logomjat.png) s'affiche.
+
+─── LOGOS SAISONNIERS (navbar automatique selon le mois) ───
+
+  noel.png          → Décembre : Logo MJA version Noël (chapeau, guirlandes...)
+  nouvel-an.png     → Janvier  : Logo MJA version Nouvel An
+  bac-ti-dej.png    → Juin     : Logo MJA version Fwi Ti Dèj / Bac
+  ete.png           → Juillet/Août : Logo MJA version Été / Sport
+  rentree.png       → Septembre : Logo MJA version Rentrée
+
+─── LOGOS PAR ÉVÉNEMENT (pages événements) ───
+
+  evenements/ti-dej.png              → Opération Fwi Ti Dèj
+  evenements/sport-day.png           → MJA Sport Day
+  evenements/lumina.png              → Trophées Lumina / Gala
+  evenements/forum-jeunesse.png      → Forum de la Jeunesse
+  evenements/forum-associations.png  → Forum des Associations
+  evenements/ag.png                  → Assemblée Générale
+  evenements/atelier.png             → Ateliers (cuisine, santé, CV...)
+  evenements/course-solidaire.png    → Course Solidaire
+
+─── LOGOS TERRITOIRE FWI TI DÈJ ───
+
+  madin-ti-dej.png    → Madin' Ti Dèj (Martinique)
+  karu-ti-dej.png     → Karu' Ti Dèj (Guadeloupe)
+  guia-ti-dej.png     → Guia' Ti Dèj (Guyane)
+
+─── LOGOS DE BASE (déjà existants dans /public/images/) ───
+
+  ../logomjat.png       ✅ Logo principal MJA fond transparent
+  ../logo.jpg           ✅ Logo MJA fond blanc
+  ../fwitidejllogo.png  ✅ Logo réseau Fwi Ti Dèj
+
+========================================
