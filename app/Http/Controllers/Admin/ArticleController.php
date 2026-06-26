@@ -27,7 +27,7 @@ class ArticleController extends Controller
             $validated['image'] = $request->file('image')->store('articles', 'public');
         }
 
-        if ($validated['publie'] && !isset($validated['publie_le'])) {
+        if ($validated['publie'] && empty($validated['publie_le'])) {
             $validated['publie_le'] = now();
         }
 
@@ -48,7 +48,7 @@ class ArticleController extends Controller
             $validated['image'] = $request->file('image')->store('articles', 'public');
         }
 
-        if ($validated['publie'] && !$article->publie_le) {
+        if ($validated['publie'] && empty($validated['publie_le']) && !$article->publie_le) {
             $validated['publie_le'] = now();
         }
 
@@ -73,6 +73,7 @@ class ArticleController extends Controller
             'categorie' => 'required|string',
             'auteur'    => 'nullable|string|max:100',
             'publie'    => 'boolean',
+            'publie_le' => 'nullable|date',
         ]);
     }
 }
