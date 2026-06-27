@@ -21,7 +21,7 @@
     {{-- ── OpenGraph ────────────────────────────────────────────── --}}
     <meta property="og:type"        content="@yield('og_type', 'website')">
     <meta property="og:site_name"   content="Madin'Jeunes Ambition">
-    <meta property="og:title"       content="@yield('og_title', "@yield('title', "Madin'Jeunes Ambition")")">
+    <meta property="og:title"       content="@yield('title', "Madin'Jeunes Ambition")">
     <meta property="og:description" content="@yield('meta_description', "Madin'Jeunes Ambition — Association de jeunes bénévoles à Fort-de-France, Martinique.")">
     <meta property="og:image"       content="@yield('og_image', asset('images/logomjat.png'))">
     <meta property="og:image:width"  content="1200">
@@ -31,8 +31,7 @@
 
     {{-- ── Twitter Card ─────────────────────────────────────────── --}}
     <meta name="twitter:card"        content="@yield('twitter_card', 'summary_large_image')">
-    <meta name="twitter:site"        content="@madin_jeunes_ambition">
-    <meta name="twitter:title"       content="@yield('og_title', "@yield('title', "Madin'Jeunes Ambition")")">
+    <meta name="twitter:title"       content="@yield('title', "Madin'Jeunes Ambition")">
     <meta name="twitter:description" content="@yield('meta_description', "Association de jeunes bénévoles à Fort-de-France, Martinique.")">
     <meta name="twitter:image"       content="@yield('og_image', asset('images/logomjat.png'))">
 
