@@ -1,5 +1,10 @@
 @extends('layouts.app')
 @section('title', "{$event->titre} — Madin'Jeunes Ambition")
+@section('meta_description', $event->description ? \Illuminate\Support\Str::limit(strip_tags($event->description), 155) : "Événement organisé par Madin'Jeunes Ambition en Martinique.")
+@section('og_type', 'event')
+@if($event->image ?? null)
+@section('og_image', asset('storage/'.$event->image))
+@endif
 
 @section('content')
 <section class="hero-gradient text-white py-16 relative overflow-hidden">

@@ -1,5 +1,9 @@
 @extends('layouts.app')
 @section('title', "{$project->titre} — Madin'Jeunes Ambition")
+@section('meta_description', $project->description ? \Illuminate\Support\Str::limit(strip_tags($project->description), 155) : "Projet de Madin'Jeunes Ambition — association de jeunes bénévoles en Martinique.")
+@if($project->image ?? null)
+@section('og_image', asset('storage/'.$project->image))
+@endif
 
 @section('content')
 <section class="hero-gradient text-white py-16 relative overflow-hidden">

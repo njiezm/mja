@@ -1,5 +1,6 @@
 @extends('layouts.app')
 @section('title', "Contact — Madin'Jeunes Ambition")
+@section('meta_description', "Contactez Madin'Jeunes Ambition — association basée à Fort-de-France, Martinique. Pour toute question, partenariat ou information sur nos programmes.")
 
 @section('content')
 
@@ -53,11 +54,11 @@
                         <h3 class="font-display font-bold text-mja-gray text-sm mb-3">Nos réseaux sociaux</h3>
                         <div class="grid grid-cols-3 gap-3">
                             @foreach([
-                                ['fab fa-facebook','Facebook','MadinJeunesAmbition','https://www.facebook.com/MadinJeunesAmbition','#1877F2'],
-                                ['fab fa-instagram','Instagram','@mja_martinique','https://www.instagram.com/','#E1306C'],
-                                ['fab fa-tiktok','TikTok','@mja_officiel','https://www.tiktok.com/','#010101'],
-                                ['fab fa-snapchat','Snapchat','mja.martinique','https://www.snapchat.com/','#FFFC00'],
-                                ['fab fa-youtube','YouTube','MJA Officiel','https://www.youtube.com/','#FF0000'],
+                                ['fab fa-facebook','Facebook','MadinJeunesAmbition','https://www.facebook.com/MadinJeunesAmbition/','#1877F2'],
+                                ['fab fa-instagram','Instagram','@madin_jeunes_ambition','https://www.instagram.com/madin_jeunes_ambition/','#E1306C'],
+                                ['fab fa-tiktok','TikTok','@fwi_ti_dej','https://www.tiktok.com/@fwi_ti_dej','#010101'],
+                                ['fab fa-snapchat','Snapchat','(bientôt)','https://www.snapchat.com/','#FFFC00'],
+                                ['fab fa-youtube','YouTube','MJA Officiel','https://www.youtube.com/channel/UCX6nyVEv_QyFuLREyVvOMLw','#FF0000'],
                             ] as [$icon,$name,$handle,$url,$color])
                             <a href="{{ $url }}" target="_blank"
                                class="flex flex-col items-center gap-1.5 bg-gray-50 hover:bg-gray-100 border border-gray-100 rounded-xl p-3 transition-colors text-center">

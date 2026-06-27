@@ -1,5 +1,7 @@
 ﻿@extends('layouts.app')
 @section('title', "Fwi Ti Dèj · Santé Nutrition Sport — Madin'Jeunes Ambition")
+@section('meta_description', "Le programme SNS de MJA : petits-déjeuners solidaires Fwi Ti Dèj, sport, prévention santé pour les jeunes de Martinique, Guadeloupe et Guyane.")
+@section('og_image', asset('images/fwitidejllogo.png'))
 
 @section('content')
 
@@ -148,20 +150,20 @@
             {{-- Tableau nutritionnel --}}
             <div>
                 <h3 class="font-display font-black text-2xl text-mja-gray mb-6 flex items-center gap-2">
-                    <span>⚡</span> Valeurs nutritionnelles
+                    <i class="fas fa-bolt text-orange-400"></i> Valeurs nutritionnelles
                     <span class="text-sm font-normal text-gray-400 ml-1">pour 100 g</span>
                 </h3>
                 <div class="grid grid-cols-2 gap-3 mb-8">
                     @foreach([
-                        ['🔥','89 kcal','Énergie','bg-yellow-50'],
-                        ['🌾','23 g','Glucides','bg-amber-50'],
-                        ['⚡','358 mg','Potassium','bg-orange-50'],
-                        ['🌿','2,6 g','Fibres','bg-green-50'],
-                        ['🧬','Vit. B6','20 % des AJR','bg-blue-50'],
-                        ['😊','Sérotonine','Régulateur d\'humeur','bg-purple-50'],
+                        ['<i class="fas fa-fire text-orange-500"></i>','89 kcal','Énergie','bg-yellow-50'],
+                        ['<i class="fas fa-wheat-awn text-amber-600"></i>','23 g','Glucides','bg-amber-50'],
+                        ['<i class="fas fa-bolt text-orange-400"></i>','358 mg','Potassium','bg-orange-50'],
+                        ['<i class="fas fa-leaf text-green-500"></i>','2,6 g','Fibres','bg-green-50'],
+                        ['<i class="fas fa-dna text-blue-500"></i>','Vit. B6','20 % des AJR','bg-blue-50'],
+                        ['<i class="fas fa-brain text-purple-500"></i>','Sérotonine','Régulateur d\'humeur','bg-purple-50'],
                     ] as [$ico, $val, $label, $bg])
                     <div class="rounded-2xl p-4 border border-yellow-100 flex items-center gap-3 {{ $bg }}">
-                        <div class="w-11 h-11 bg-white rounded-xl flex items-center justify-center text-xl shrink-0 shadow-sm">{{ $ico }}</div>
+                        <div class="w-11 h-11 bg-white rounded-xl flex items-center justify-center shrink-0 shadow-sm">{!! $ico !!}</div>
                         <div>
                             <div class="font-display font-black text-base text-mja-gray leading-tight">{{ $val }}</div>
                             <div class="text-xs text-gray-400 font-display leading-tight">{{ $label }}</div>
@@ -171,7 +173,7 @@
                 </div>
 
                 <div class="rounded-2xl p-5 text-yellow-900 font-display" style="background:linear-gradient(135deg,#fbbf24,#f97316)">
-                    <h4 class="font-black text-base mb-2">💡 Pourquoi la banane au petit-déjeuner ?</h4>
+                    <h4 class="font-black text-base mb-2"><i class="fas fa-lightbulb mr-1.5"></i> Pourquoi la banane au petit-déjeuner ?</h4>
                     <p class="text-sm leading-relaxed font-medium">
                         Ses sucres naturels (glucose, fructose, saccharose) libèrent de l'énergie
                         progressivement, sans pic glycémique. Elle cale, elle booste, elle se mange
@@ -184,7 +186,7 @@
         {{-- Histoire + Le savais-tu --}}
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="md:col-span-2 bg-white rounded-3xl p-7 shadow-sm border border-yellow-100">
-                <h3 class="font-display font-black text-xl text-mja-gray mb-4">📜 La banane en Martinique : une histoire profonde</h3>
+                <h3 class="font-display font-black text-xl text-mja-gray mb-4"><i class="fas fa-book-open mr-2 text-mja-gray/70"></i> La banane en Martinique : une histoire profonde</h3>
                 <p class="text-gray-600 text-sm leading-relaxed mb-3">
                     Introduite aux Antilles au XVIII<sup>e</sup> siècle, la banane est aujourd'hui l'un des piliers
                     de l'agriculture martiniquaise. La Martinique exporte ses bananes vers la France métropolitaine
@@ -204,7 +206,7 @@
             </div>
 
             <div class="bg-yellow-400 rounded-3xl p-7">
-                <h3 class="font-display font-black text-xl text-yellow-900 mb-5">🌟 Le savais-tu ?</h3>
+                <h3 class="font-display font-black text-xl text-yellow-900 mb-5"><i class="fas fa-star mr-2"></i> Le savais-tu ?</h3>
                 <ul class="space-y-4">
                     @foreach([
                         'La Martinique produit +80 000 tonnes de bananes par an',
@@ -213,7 +215,7 @@
                         'Elle contient du tryptophane, précurseur de la sérotonine',
                     ] as $fact)
                     <li class="flex gap-3">
-                        <span class="text-yellow-700 font-black text-lg leading-none mt-0.5 shrink-0">→</span>
+                        <i class="fas fa-chevron-right text-yellow-700 mt-1 shrink-0 text-sm"></i>
                         <p class="text-yellow-900 text-sm font-display font-semibold leading-snug">{{ $fact }}</p>
                     </li>
                     @endforeach
@@ -241,15 +243,15 @@
         <div class="flex flex-wrap gap-2 justify-center mb-8" id="quiz-tabs">
             <button onclick="quizInit('nutrition')" data-tab="nutrition"
                 class="quiz-tab active font-display font-bold text-sm px-5 py-2.5 rounded-full border-2 transition-all duration-200">
-                🍌 Nutrition
+                <i class="fas fa-utensils mr-1.5 text-xs"></i> Nutrition
             </button>
             <button onclick="quizInit('sport')" data-tab="sport"
                 class="quiz-tab font-display font-bold text-sm px-5 py-2.5 rounded-full border-2 transition-all duration-200">
-                🏃 Sport & Santé
+                <i class="fas fa-running mr-1.5 text-xs"></i> Sport & Santé
             </button>
             <button onclick="quizInit('ftd')" data-tab="ftd"
                 class="quiz-tab font-display font-bold text-sm px-5 py-2.5 rounded-full border-2 transition-all duration-200">
-                🍊 Fwi Ti Dèj
+                <i class="fas fa-mug-hot mr-1.5 text-xs"></i> Fwi Ti Dèj
             </button>
         </div>
 
@@ -259,7 +261,7 @@
 
             {{-- Écran départ --}}
             <div id="quiz-start" class="flex-1 flex flex-col items-center justify-center text-center p-10">
-                <div id="qs-emoji" class="text-6xl mb-5 leading-none">🍌</div>
+                <div id="qs-emoji" class="text-5xl mb-5 leading-none text-orange-400"></div>
                 <h3 id="qs-title" class="font-display font-black text-2xl text-mja-gray mb-2"></h3>
                 <p id="qs-desc" class="text-gray-400 text-sm mb-2 max-w-sm leading-relaxed"></p>
                 <p id="qs-count" class="text-orange-500 font-display font-bold text-sm mb-8"></p>
@@ -329,13 +331,13 @@
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
                     @foreach([
-                        ['Martinique', 'Madin\' Ti Dèj', 'Fort-de-France', '🇫🇷', 'Territoire fondateur. Opérationnel dans plusieurs établissements de Fort-de-France depuis 2016.', 'border-orange-500/40', 'bg-orange-500/10', 'text-orange-400'],
-                        ['Guadeloupe', 'Karu\' Ti Dèj', 'Pointe-à-Pitre',  '🇫🇷', 'La déclinaison guadeloupéenne, portée par les jeunes bénévoles de Guadeloupe.', 'border-mja-yellow/30', 'bg-mja-yellow/10', 'text-mja-yellow'],
-                        ['Guyane',     'Guia\' Ti Dèj', 'Cayenne',         '🇫🇷', 'La déclinaison guyanaise, adaptée aux réalités nutritionnelles de la Guyane.',  'border-mja-red/30',    'bg-mja-red/10',    'text-mja-red'],
+                        ['Martinique', 'Madin\' Ti Dèj', 'Fort-de-France', 'fa-globe-americas text-orange-400', 'Territoire fondateur. Opérationnel dans plusieurs établissements de Fort-de-France depuis 2016.', 'border-orange-500/40', 'bg-orange-500/10', 'text-orange-400'],
+                        ['Guadeloupe', 'Karu\' Ti Dèj', 'Pointe-à-Pitre',  'fa-globe-americas text-mja-yellow', 'La déclinaison guadeloupéenne, portée par les jeunes bénévoles de Guadeloupe.', 'border-mja-yellow/30', 'bg-mja-yellow/10', 'text-mja-yellow'],
+                        ['Guyane',     'Guia\' Ti Dèj', 'Cayenne',         'fa-globe-americas text-mja-red',    'La déclinaison guyanaise, adaptée aux réalités nutritionnelles de la Guyane.',  'border-mja-red/30',    'bg-mja-red/10',    'text-mja-red'],
                     ] as [$pays, $nom, $ville, $flag, $desc, $cardBorder, $cardBg, $textColor])
                     <div class="rounded-2xl border {{ $cardBorder }} {{ $cardBg }} p-5">
                         <div class="flex items-center gap-2 mb-3">
-                            <span class="text-xl">{{ $flag }}</span>
+                            <i class="fas {{ $flag }}"></i>
                             <span class="text-xs font-display font-bold text-gray-300 uppercase tracking-wide">{{ $pays }}</span>
                         </div>
                         <div class="font-display font-black text-lg {{ $textColor }} mb-0.5">{{ $nom }}</div>
@@ -497,7 +499,7 @@
 const QUIZZES = {
     nutrition: {
         label: "Nutrition & Alimentation",
-        emoji: "🍌",
+        emoji: "fa-utensils",
         desc: "Alimentation saine, fruits locaux, habitudes alimentaires… es-tu incollable ?",
         questions: [
             {
@@ -535,7 +537,7 @@ const QUIZZES = {
 
     sport: {
         label: "Sport & Santé",
-        emoji: "🏃",
+        emoji: "fa-running",
         desc: "Activité physique, récupération, bien-être… à toi de jouer !",
         questions: [
             {
@@ -573,7 +575,7 @@ const QUIZZES = {
 
     ftd: {
         label: "Fwi Ti Dèj",
-        emoji: "🍊",
+        emoji: "fa-mug-hot",
         desc: "Tu connais bien l'initiative des petits-déjeuners solidaires de MJA ?",
         questions: [
             {
@@ -613,7 +615,7 @@ function quizInit(id) {
         t.classList.toggle("active", t.dataset.tab === id);
     });
     const q = QUIZZES[id];
-    document.getElementById("qs-emoji").textContent = q.emoji;
+    document.getElementById("qs-emoji").innerHTML = '<i class="fas ' + q.emoji + '"></i>';
     document.getElementById("qs-title").textContent = q.label;
     document.getElementById("qs-desc").textContent  = q.desc;
     document.getElementById("qs-count").textContent = q.questions.length + " questions";
@@ -670,7 +672,7 @@ function quizAnswer(idx) {
     const expl = document.getElementById("q-explanation");
     expl.classList.remove("hidden");
     expl.classList.add(isOk ? "correct-expl" : "wrong-expl");
-    expl.textContent = (isOk ? "✅ " : "❌ ") + question.explanation;
+    expl.innerHTML = '<i class="fas ' + (isOk ? "fa-check-circle" : "fa-times-circle") + ' mr-1.5"></i> ' + question.explanation;
 
     const nextBtn = document.getElementById("q-next");
     const isLast  = qState.current + 1 >= QUIZZES[qState.quiz].questions.length;
@@ -697,14 +699,14 @@ function showResult() {
     const s     = qState.score;
     const pct   = s / total;
 
-    var emoji, msg;
-    if (pct === 1)        { emoji = "🏆"; msg = "Parfait ! Tu es un expert !"; }
-    else if (pct >= 0.75) { emoji = "🌟"; msg = "Excellent ! Tu maîtrises très bien le sujet !"; }
-    else if (pct >= 0.5)  { emoji = "👍"; msg = "Bien joué ! Tu as de bonnes bases."; }
-    else if (pct >= 0.25) { emoji = "📚"; msg = "Pas mal ! Il y a encore des choses à découvrir."; }
-    else                  { emoji = "💪"; msg = "Ne te décourage pas - l'essentiel est d'apprendre !"; }
+    var icon, msg;
+    if (pct === 1)        { icon = "fa-trophy";    msg = "Parfait ! Tu es un expert !"; }
+    else if (pct >= 0.75) { icon = "fa-star";      msg = "Excellent ! Tu maîtrises très bien le sujet !"; }
+    else if (pct >= 0.5)  { icon = "fa-thumbs-up"; msg = "Bien joué ! Tu as de bonnes bases."; }
+    else if (pct >= 0.25) { icon = "fa-book-open"; msg = "Pas mal ! Il y a encore des choses à découvrir."; }
+    else                  { icon = "fa-dumbbell";  msg = "Ne te décourage pas - l'essentiel est d'apprendre !"; }
 
-    document.getElementById("result-emoji").textContent = emoji;
+    document.getElementById("result-emoji").innerHTML = '<i class="fas ' + icon + ' text-orange-400"></i>';
     document.getElementById("result-score").textContent = s + "/" + total;
     document.getElementById("result-label").textContent = s === total
         ? "Score parfait !"

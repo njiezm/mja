@@ -1,5 +1,7 @@
 @extends('layouts.app')
 @section('title', "Madin'Jeunes Ambition – Les jeunes de la Martinique se mobilisent !")
+@section('meta_description', "Association de jeunes bénévoles à Fort-de-France, Martinique. Fwi Ti Dèj, Sport, Santé, Culture — MJA mobilise la jeunesse ultramarine depuis 2011.")
+@section('og_image', asset('images/logomjat.png'))
 
 @section('content')
 
@@ -39,11 +41,11 @@
                 <!-- Réseaux sociaux -->
                 <div class="flex gap-3 mt-8 justify-center lg:justify-start">
                     @foreach([
-                        ['fab fa-facebook','https://www.facebook.com/MadinJeunesAmbition','#1877F2'],
-                        ['fab fa-instagram','https://www.instagram.com/','#E1306C'],
-                        ['fab fa-tiktok','https://www.tiktok.com/','#010101'],
+                        ['fab fa-facebook','https://www.facebook.com/MadinJeunesAmbition/','#1877F2'],
+                        ['fab fa-instagram','https://www.instagram.com/madin_jeunes_ambition/','#E1306C'],
+                        ['fab fa-tiktok','https://www.tiktok.com/@fwi_ti_dej','#010101'],
                         ['fab fa-snapchat','https://www.snapchat.com/','#FFFC00'],
-                        ['fab fa-youtube','https://www.youtube.com/','#FF0000'],
+                        ['fab fa-youtube','https://www.youtube.com/channel/UCX6nyVEv_QyFuLREyVvOMLw','#FF0000'],
                     ] as [$icon,$url,$color])
                     <a href="{{ $url }}" target="_blank"
                        class="w-9 h-9 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center transition-colors text-white text-sm">
@@ -162,7 +164,7 @@
                 </div>
                 <div class="shrink-0 grid grid-cols-3 gap-3">
                     <div class="w-20 h-20 bg-white/10 rounded-2xl flex flex-col items-center justify-center gap-1 text-white">
-                        <span class="text-xl leading-none">🍌</span>
+                        <i class="fas fa-seedling text-xl text-mja-yellow"></i>
                         <span class="text-xs font-display font-semibold">Ti Dèj</span>
                     </div>
                     @foreach([['fa-running','Sport'],['fa-shield-alt','Santé']] as [$icon,$label])
@@ -375,14 +377,14 @@
             <!-- Cartes territoires -->
             <div class="flex-1 grid grid-cols-2 gap-4">
                 @foreach([
-                    ['Martinique','Madin\' Ti Dèj','Fort-de-France','🇫🇷','bg-mja-blue','text-white','Territoire fondateur — depuis 2016.'],
-                    ['Guadeloupe','Karu\' Ti Dèj','Pointe-à-Pitre','🇫🇷','bg-mja-yellow','text-mja-dark','Karukéra — déclinaison guadeloupéenne.'],
-                    ['Guyane','Guia\' Ti Dèj','Cayenne','🇫🇷','bg-mja-red','text-white','Déclinaison guyanaise du réseau.'],
-                    ['France hex.','Réseau diaspora','Paris & métropole','🗼','bg-mja-dark','text-white','Jeunes ultramarins engagés en métropole.'],
-                ] as [$pays,$nom,$ville,$emoji,$bg,$fg,$desc])
+                    ['Martinique','Madin\' Ti Dèj','Fort-de-France','fa-globe-americas','bg-mja-blue','text-white','Territoire fondateur — depuis 2016.'],
+                    ['Guadeloupe','Karu\' Ti Dèj','Pointe-à-Pitre','fa-globe-americas','bg-mja-yellow','text-mja-dark','Karukéra — déclinaison guadeloupéenne.'],
+                    ['Guyane','Guia\' Ti Dèj','Cayenne','fa-globe-americas','bg-mja-red','text-white','Déclinaison guyanaise du réseau.'],
+                    ['France hex.','Réseau diaspora','Paris & métropole','fa-landmark','bg-mja-dark','text-white','Jeunes ultramarins engagés en métropole.'],
+                ] as [$pays,$nom,$ville,$icon,$bg,$fg,$desc])
                 <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 card-hover">
                     <div class="flex items-center gap-2 mb-3">
-                        <span class="text-xl">{{ $emoji }}</span>
+                        <i class="fas {{ $icon }} text-sm text-gray-400"></i>
                         <span class="text-xs font-display font-bold {{ $fg }} {{ $bg }} px-2.5 py-0.5 rounded-full">{{ $pays }}</span>
                     </div>
                     <div class="font-display font-black text-base text-mja-gray">{{ $nom }}</div>

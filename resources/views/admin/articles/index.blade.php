@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 @section('title', 'Actualités')
 @section('page-title', 'Actualités')
 
@@ -43,7 +43,7 @@
                         <a href="{{ route('admin.articles.edit', $article) }}" title="Modifier" class="w-8 h-8 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center transition-colors">
                             <i class="fas fa-edit text-xs"></i>
                         </a>
-                        <form method="POST" action="{{ route('admin.articles.destroy', $article) }}" onsubmit="return confirm('Supprimer cet article ?')">
+                        <form method="POST" action="{{ route('admin.articles.destroy', $article) }}" data-confirm="Supprimer cet article ?">
                             @csrf @method('DELETE')
                             <button type="submit" class="w-8 h-8 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg flex items-center justify-center transition-colors">
                                 <i class="fas fa-trash text-xs"></i>

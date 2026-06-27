@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 @section('title', 'Demandes d\'adhésion')
 @section('page-title', 'Demandes d\'adhésion')
 @section('content')
@@ -73,7 +73,7 @@
                 <td class="px-4 py-4">
                     <div class="flex items-center justify-center gap-2">
                         <a href="{{ route('admin.adhesions.show', $adhesion) }}" class="w-8 h-8 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center"><i class="fas fa-eye text-xs"></i></a>
-                        <form method="POST" action="{{ route('admin.adhesions.destroy', $adhesion) }}" onsubmit="return confirm('Supprimer cette demande ?')">
+                        <form method="POST" action="{{ route('admin.adhesions.destroy', $adhesion) }}" data-confirm="Supprimer cette demande ?">
                             @csrf @method('DELETE')
                             <button class="w-8 h-8 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg flex items-center justify-center"><i class="fas fa-trash text-xs"></i></button>
                         </form>

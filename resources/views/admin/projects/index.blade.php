@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 @section('title', 'Projets')
 @section('page-title', 'Projets')
 
@@ -43,7 +43,7 @@
                     <div class="flex items-center justify-center gap-2">
                         <a href="{{ route('projects.show', $project) }}" target="_blank" class="w-8 h-8 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg flex items-center justify-center transition-colors"><i class="fas fa-eye text-xs"></i></a>
                         <a href="{{ route('admin.projects.edit', $project) }}" class="w-8 h-8 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center transition-colors"><i class="fas fa-edit text-xs"></i></a>
-                        <form method="POST" action="{{ route('admin.projects.destroy', $project) }}" onsubmit="return confirm('Supprimer ce projet ?')">
+                        <form method="POST" action="{{ route('admin.projects.destroy', $project) }}" data-confirm="Supprimer ce projet ?">
                             @csrf @method('DELETE')
                             <button class="w-8 h-8 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg flex items-center justify-center transition-colors"><i class="fas fa-trash text-xs"></i></button>
                         </form>

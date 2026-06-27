@@ -1,5 +1,7 @@
 @extends('layouts.app')
-@section('title', "Adhésion — Madin'Jeunes Ambition")
+@section('title', "Rejoindre MJA — Adhésion Madin'Jeunes Ambition")
+@section('meta_description', "Rejoins Madin'Jeunes Ambition ! Adhère en ligne pour intégrer notre équipe de jeunes bénévoles engagés en Martinique. Gratuit et ouvert à tous.")
+@section('twitter_card', 'summary')
 
 @section('content')
 

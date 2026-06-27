@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 @section('title', 'Partenaires')
 @section('page-title', 'Partenaires')
 
@@ -70,7 +70,7 @@
                             <i class="fas fa-edit text-xs"></i>
                         </a>
                         <form method="POST" action="{{ route('admin.partenaires.destroy', $p) }}"
-                              onsubmit="return confirm('Supprimer {{ $p->nom }} ?')">
+                              data-confirm="Supprimer {{ $p->nom }} ?">
                             @csrf @method('DELETE')
                             <button class="w-8 h-8 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg flex items-center justify-center">
                                 <i class="fas fa-trash text-xs"></i>

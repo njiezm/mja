@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 @section('title', 'Équipe')
 @section('page-title', 'Membres de l\'équipe')
 @section('content')
@@ -30,7 +30,7 @@
         </div>
         <div class="flex flex-col gap-1 flex-shrink-0">
             <a href="{{ route('admin.team.edit', $member) }}" class="w-8 h-8 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center"><i class="fas fa-edit text-xs"></i></a>
-            <form method="POST" action="{{ route('admin.team.destroy', $member) }}" onsubmit="return confirm('Supprimer ?')">
+            <form method="POST" action="{{ route('admin.team.destroy', $member) }}" data-confirm="Supprimer ?">
                 @csrf @method('DELETE')
                 <button class="w-8 h-8 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg flex items-center justify-center"><i class="fas fa-trash text-xs"></i></button>
             </form>

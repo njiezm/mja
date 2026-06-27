@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 @section('title', 'Événements')
 @section('page-title', 'Événements')
 @section('content')
@@ -34,7 +34,7 @@
                     <div class="flex items-center justify-center gap-2">
                         <a href="{{ route('events.show', $event) }}" target="_blank" class="w-8 h-8 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg flex items-center justify-center"><i class="fas fa-eye text-xs"></i></a>
                         <a href="{{ route('admin.events.edit', $event) }}" class="w-8 h-8 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center"><i class="fas fa-edit text-xs"></i></a>
-                        <form method="POST" action="{{ route('admin.events.destroy', $event) }}" onsubmit="return confirm('Supprimer ?')">
+                        <form method="POST" action="{{ route('admin.events.destroy', $event) }}" data-confirm="Supprimer ?">
                             @csrf @method('DELETE')
                             <button class="w-8 h-8 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg flex items-center justify-center"><i class="fas fa-trash text-xs"></i></button>
                         </form>

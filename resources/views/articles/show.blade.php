@@ -1,5 +1,10 @@
 @extends('layouts.app')
 @section('title', "{$article->titre} — Madin'Jeunes Ambition")
+@section('meta_description', $article->extrait ?? \Illuminate\Support\Str::limit(strip_tags($article->contenu ?? ''), 155))
+@section('og_type', 'article')
+@if($article->image)
+@section('og_image', asset('storage/'.$article->image))
+@endif
 
 @section('content')
 

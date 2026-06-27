@@ -1,5 +1,6 @@
 @extends('layouts.app')
 @section('title', "Actualités — Madin'Jeunes Ambition")
+@section('meta_description', "Retrouvez toutes les actualités de Madin'Jeunes Ambition — événements, actions bénévoles, Fwi Ti Dèj et initiatives jeunesse en Martinique.")
 
 @section('content')
 <section class="hero-gradient text-white py-16 relative overflow-hidden">

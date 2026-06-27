@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿﻿@extends('layouts.admin')
 @section('title', "Adhésion de {$adhesion->prenom} {$adhesion->nom}")
 @section('page-title', 'Dossier d\'adhésion')
 @section('content')
@@ -136,7 +136,7 @@
             <a href="{{ route('admin.adhesions.index') }}" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold px-4 py-2.5 rounded-xl transition-colors text-sm flex items-center justify-center gap-2">
                 <i class="fas fa-arrow-left"></i> Retour à la liste
             </a>
-            <form method="POST" action="{{ route('admin.adhesions.destroy', $adhesion) }}" onsubmit="return confirm('Supprimer cette demande d\'adhésion ?')" class="pt-1 border-t border-gray-100">
+            <form method="POST" action="{{ route('admin.adhesions.destroy', $adhesion) }}" data-confirm="Supprimer cette demande d'adhésion ?" class="pt-1 border-t border-gray-100">
                 @csrf @method('DELETE')
                 <button class="w-full text-red-500 hover:text-red-700 text-sm font-semibold flex items-center justify-center gap-2 py-2">
                     <i class="fas fa-trash"></i> Supprimer

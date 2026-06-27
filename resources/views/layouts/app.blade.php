@@ -19,19 +19,22 @@
     <link rel="canonical" href="{{ url()->current() }}">
 
     {{-- ── OpenGraph ────────────────────────────────────────────── --}}
-    <meta property="og:type"        content="website">
+    <meta property="og:type"        content="@yield('og_type', 'website')">
     <meta property="og:site_name"   content="Madin'Jeunes Ambition">
-    <meta property="og:title"       content="@yield('title', "Madin'Jeunes Ambition")">
+    <meta property="og:title"       content="@yield('og_title', "@yield('title', "Madin'Jeunes Ambition")")">
     <meta property="og:description" content="@yield('meta_description', "Madin'Jeunes Ambition — Association de jeunes bénévoles à Fort-de-France, Martinique.")">
-    <meta property="og:image"       content="{{ asset('images/logomjat.png') }}">
+    <meta property="og:image"       content="@yield('og_image', asset('images/logomjat.png'))">
+    <meta property="og:image:width"  content="1200">
+    <meta property="og:image:height" content="630">
     <meta property="og:url"         content="{{ url()->current() }}">
     <meta property="og:locale"      content="fr_FR">
 
     {{-- ── Twitter Card ─────────────────────────────────────────── --}}
-    <meta name="twitter:card"        content="summary">
-    <meta name="twitter:title"       content="@yield('title', "Madin'Jeunes Ambition")">
+    <meta name="twitter:card"        content="@yield('twitter_card', 'summary_large_image')">
+    <meta name="twitter:site"        content="@madin_jeunes_ambition">
+    <meta name="twitter:title"       content="@yield('og_title', "@yield('title', "Madin'Jeunes Ambition")")">
     <meta name="twitter:description" content="@yield('meta_description', "Association de jeunes bénévoles à Fort-de-France, Martinique.")">
-    <meta name="twitter:image"       content="{{ asset('images/logomjat.png') }}">
+    <meta name="twitter:image"       content="@yield('og_image', asset('images/logomjat.png'))">
 
     {{-- ── Tailwind CSS (local → CDN fallback) ────────────────── --}}
     <script src="{{ asset('vendor/tailwind/tailwind.js') }}"
@@ -223,15 +226,15 @@
                         Créée en 2011 à Fort-de-France, Martinique. Nous rassemblons les jeunes autour d'actions éducatives, culturelles, sociales, sportives et de santé.
                     </p>
                     <div class="flex flex-wrap gap-3 mt-5">
-                        <a href="https://www.facebook.com/MadinJeunesAmbition" target="_blank" title="Facebook"
+                        <a href="https://www.facebook.com/MadinJeunesAmbition/" target="_blank" title="Facebook"
                            class="w-9 h-9 bg-white/5 hover:bg-[#1877F2] rounded-xl flex items-center justify-center transition-colors text-sm">
                             <i class="fab fa-facebook"></i>
                         </a>
-                        <a href="https://www.instagram.com/" target="_blank" title="Instagram"
+                        <a href="https://www.instagram.com/madin_jeunes_ambition/" target="_blank" title="Instagram"
                            class="w-9 h-9 bg-white/5 hover:bg-[#E1306C] rounded-xl flex items-center justify-center transition-colors text-sm">
                             <i class="fab fa-instagram"></i>
                         </a>
-                        <a href="https://www.tiktok.com/" target="_blank" title="TikTok"
+                        <a href="https://www.tiktok.com/@fwi_ti_dej" target="_blank" title="TikTok"
                            class="w-9 h-9 bg-white/5 hover:bg-[#010101] rounded-xl flex items-center justify-center transition-colors text-sm">
                             <i class="fab fa-tiktok"></i>
                         </a>
@@ -239,7 +242,7 @@
                            class="w-9 h-9 bg-white/5 hover:bg-[#FFFC00] hover:text-black rounded-xl flex items-center justify-center transition-colors text-sm">
                             <i class="fab fa-snapchat"></i>
                         </a>
-                        <a href="https://www.youtube.com/" target="_blank" title="YouTube"
+                        <a href="https://www.youtube.com/channel/UCX6nyVEv_QyFuLREyVvOMLw" target="_blank" title="YouTube"
                            class="w-9 h-9 bg-white/5 hover:bg-[#FF0000] rounded-xl flex items-center justify-center transition-colors text-sm">
                             <i class="fab fa-youtube"></i>
                         </a>

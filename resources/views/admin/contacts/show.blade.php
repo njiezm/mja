@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 @section('title', 'Message de ' . $contact->nom)
 @section('page-title', 'Détail du message')
 @section('content')
@@ -48,7 +48,7 @@
             <a href="{{ route('admin.contacts.index') }}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold px-5 py-2.5 rounded-xl transition-colors text-sm">
                 <i class="fas fa-arrow-left mr-1"></i> Retour
             </a>
-            <form method="POST" action="{{ route('admin.contacts.destroy', $contact) }}" onsubmit="return confirm('Supprimer ce message ?')" class="ml-auto">
+            <form method="POST" action="{{ route('admin.contacts.destroy', $contact) }}" data-confirm="Supprimer ce message ?" class="ml-auto">
                 @csrf @method('DELETE')
                 <button class="text-red-500 hover:text-red-700 text-sm font-semibold flex items-center gap-1">
                     <i class="fas fa-trash"></i> Supprimer

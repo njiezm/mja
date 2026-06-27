@@ -176,27 +176,19 @@
             </div>
         </header>
 
-        <!-- Flash messages -->
+        <!-- Validation errors (inline, contextuel) -->
+        @if($errors->any())
         <div class="px-6 pt-4">
-            @if(session('success'))
-            <div class="bg-green-50 border-l-4 border-green-500 text-green-800 px-4 py-3 rounded-lg text-sm flex items-center gap-2 mb-4 font-display font-semibold">
-                <i class="fas fa-check-circle text-green-500"></i> {{ session('success') }}
-            </div>
-            @endif
-            @if(session('error'))
-            <div class="bg-red-50 border-l-4 border-mja-red text-red-800 px-4 py-3 rounded-lg text-sm flex items-center gap-2 mb-4 font-display font-semibold">
-                <i class="fas fa-exclamation-circle text-mja-red"></i> {{ session('error') }}
-            </div>
-            @endif
-            @if($errors->any())
-            <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg text-sm mb-4">
-                <div class="flex items-center gap-2 mb-1 font-display font-bold"><i class="fas fa-exclamation-triangle text-mja-red"></i> Erreurs de validation :</div>
+            <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl text-sm mb-4">
+                <div class="flex items-center gap-2 mb-1 font-display font-bold">
+                    <i class="fas fa-exclamation-triangle text-mja-red"></i> Erreurs de validation :
+                </div>
                 <ul class="list-disc list-inside space-y-1 ml-4">
                     @foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach
                 </ul>
             </div>
-            @endif
         </div>
+        @endif
 
         <main class="flex-1 px-6 pb-10">
             @yield('content')
@@ -281,6 +273,105 @@
             if (touchStartX - e.changedTouches[0].clientX > 60) closeSidebar();
         }, { passive: true });
     </script>
+    <!-- ═══ TOASTS SESSION ═══ -->
+    @if(session('success') || session('error'))
+    <div id="toast-container" class="fixed top-5 right-5 z-[60] flex flex-col gap-3 w-80 pointer-events-none">
+        @if(session('success'))
+        <div class="toast-item pointer-events-auto bg-white border border-green-200 shadow-xl rounded-2xl px-4 py-3.5 flex items-start gap-3 translate-x-0 opacity-100 transition-all duration-400">
+            <span class="w-8 h-8 bg-green-100 rounded-xl flex items-center justify-center shrink-0">
+                <i class="fas fa-check text-green-600 text-sm"></i>
+            </span>
+            <div class="flex-1 min-w-0">
+                <p class="font-display font-semibold text-sm text-gray-800 leading-snug">{{ session('success') }}</p>
+            </div>
+            <button onclick="this.closest('.toast-item').remove()" class="text-gray-300 hover:text-gray-500 transition-colors mt-0.5 shrink-0">
+                <i class="fas fa-times text-xs"></i>
+            </button>
+        </div>
+        @endif
+        @if(session('error'))
+        <div class="toast-item pointer-events-auto bg-white border border-red-200 shadow-xl rounded-2xl px-4 py-3.5 flex items-start gap-3">
+            <span class="w-8 h-8 bg-red-100 rounded-xl flex items-center justify-center shrink-0">
+                <i class="fas fa-exclamation text-mja-red text-sm"></i>
+            </span>
+            <div class="flex-1 min-w-0">
+                <p class="font-display font-semibold text-sm text-gray-800 leading-snug">{{ session('error') }}</p>
+            </div>
+            <button onclick="this.closest('.toast-item').remove()" class="text-gray-300 hover:text-gray-500 transition-colors mt-0.5 shrink-0">
+                <i class="fas fa-times text-xs"></i>
+            </button>
+        </div>
+        @endif
+    </div>
+    <script>
+    setTimeout(function() {
+        document.querySelectorAll('.toast-item').forEach(function(el) {
+            el.style.transition = 'opacity 0.5s, transform 0.5s';
+            el.style.opacity = '0';
+            el.style.transform = 'translateX(24px)';
+            setTimeout(function() { if (el.parentNode) el.remove(); }, 500);
+        });
+    }, 5000);
+    </script>
+    @endif
+
+    <!-- ═══ MODAL CONFIRMATION ═══ -->
+    <div id="confirm-modal" class="fixed inset-0 z-50 hidden items-center justify-center" style="background:rgba(10,20,40,.65)">
+        <div class="bg-white rounded-2xl p-8 max-w-sm w-full mx-4 shadow-2xl">
+            <div class="w-14 h-14 bg-red-50 border border-red-100 rounded-2xl flex items-center justify-center mb-5 mx-auto">
+                <i class="fas fa-trash-alt text-mja-red text-xl"></i>
+            </div>
+            <h3 class="font-display font-black text-xl text-center text-mja-gray mb-2">Confirmer la suppression</h3>
+            <p id="confirm-msg" class="text-gray-400 text-sm text-center mb-7 leading-relaxed"></p>
+            <div class="flex gap-3">
+                <button id="confirm-cancel-btn"
+                    class="flex-1 py-3 border-2 border-gray-200 hover:border-gray-300 rounded-xl font-display font-bold text-gray-600 hover:bg-gray-50 transition-colors">
+                    <i class="fas fa-times mr-1 text-xs"></i> Annuler
+                </button>
+                <button id="confirm-ok-btn"
+                    class="flex-1 py-3 bg-mja-red hover:bg-red-700 text-white rounded-xl font-display font-bold transition-colors shadow-sm">
+                    <i class="fas fa-trash-alt mr-1 text-xs"></i> Supprimer
+                </button>
+            </div>
+        </div>
+    </div>
+    <script>
+    (function() {
+        var modal  = document.getElementById('confirm-modal');
+        var msgEl  = document.getElementById('confirm-msg');
+        var _form  = null;
+
+        function showModal(form) {
+            _form = form;
+            msgEl.textContent = form.dataset.confirm || 'Cette action est irréversible. Confirmer ?';
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+        function hideModal() {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            _form = null;
+        }
+
+        document.addEventListener('submit', function(e) {
+            var f = e.target;
+            if (f.hasAttribute('data-confirm')) {
+                e.preventDefault();
+                showModal(f);
+            }
+        });
+
+        document.getElementById('confirm-ok-btn').addEventListener('click', function() {
+            if (!_form) return;
+            _form.removeAttribute('data-confirm');
+            hideModal();
+            _form.submit();
+        });
+        document.getElementById('confirm-cancel-btn').addEventListener('click', hideModal);
+        modal.addEventListener('click', function(e) { if (e.target === modal) hideModal(); });
+    })();
+    </script>
+
     @stack('scripts')
 </body>
 </html>
