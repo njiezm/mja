@@ -1,4 +1,4 @@
-﻿@php
+@php
 use Carbon\Carbon;
 
 $today = Carbon::today();
@@ -263,7 +263,7 @@ $activeBanner = collect($banners)->first(fn($b) => $b['actif']);
 @if($activeBanner)
 <div id="seasonal-banner"
      data-key="{{ $activeBanner['key'] }}"
-     class="{{ $activeBanner['bg'] }} {{ $activeBanner['text'] }} relative overflow-hidden"
+     class="{{ $activeBanner['bg'] }} {{ $activeBanner['text'] }} overflow-hidden"
      style="display:none">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-4">
         <div class="flex items-center gap-3 min-w-0">

@@ -112,8 +112,9 @@
 </head>
 <body class="bg-white">
 
-    <!-- Navbar -->
-    <nav class="bg-mja-dark shadow-lg sticky top-0 z-50">
+    <!-- Navbar + bandeau saisonnier dans un seul bloc sticky -->
+    <div class="sticky top-0 z-50 shadow-lg">
+    <nav class="bg-mja-dark">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
 
@@ -187,9 +188,7 @@
                 @endforeach
             </div>
         </div>
-    </nav>
-
-    @include('partials.seasonal-banner')
+    </nav>@include('partials.seasonal-banner')</div>{{-- /sticky --}}
 
     <!-- Flash -->
     @if(session('success'))
