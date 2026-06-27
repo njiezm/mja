@@ -28,7 +28,11 @@
                 @if($contact->telephone)
                 <div>
                     <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Téléphone</div>
-                    <div class="text-gray-900">{{ $contact->telephone }}</div>
+                    <a href="tel:{{ $contact->telephone }}" class="inline-flex items-center gap-2 font-semibold text-mja-blue hover:underline">
+                        <span class="text-base leading-none">🇲🇶</span>
+                        <i class="fas fa-phone text-xs text-mja-blue"></i>
+                        {{ $contact->telephone }}
+                    </a>
                 </div>
                 @endif
             </div>

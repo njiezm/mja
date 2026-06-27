@@ -83,10 +83,15 @@
                     <div class="text-gray-400 text-xs font-display font-semibold uppercase tracking-wider">Madin' Jeunes Ambition</div>
                 </div>
 
-                <div class="bg-mja-light rounded-2xl p-5 border-l-4 border-mja-blue">
-                    <h3 class="font-display font-bold text-mja-gray mb-2">Rejoindre l'association</h3>
-                    <p class="text-gray-600 text-sm leading-relaxed">Vous avez entre 16 et 35 ans et souhaitez vous engager ? Précisez vos motivations dans le message.</p>
-                </div>
+                <a href="{{ route('adhesion') }}" class="group block bg-mja-yellow/10 hover:bg-mja-yellow/20 rounded-2xl p-5 border-l-4 border-mja-yellow transition-colors">
+                    <h3 class="font-display font-bold text-mja-gray mb-2 group-hover:text-mja-blue transition-colors flex items-center gap-2">
+                        <i class="fas fa-user-plus text-mja-yellow"></i> Rejoindre l'association
+                    </h3>
+                    <p class="text-gray-600 text-sm leading-relaxed mb-3">Tu as entre 16 et 35 ans et tu veux t'engager ? Remplis le formulaire d'adhésion en ligne.</p>
+                    <span class="inline-flex items-center gap-2 text-mja-blue font-display font-bold text-sm">
+                        Formulaire d'adhésion <i class="fas fa-arrow-right text-xs"></i>
+                    </span>
+                </a>
             </div>
 
             <!-- Formulaire -->
@@ -127,9 +132,16 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                             <div>
                                 <label class="block text-sm font-display font-bold text-mja-gray mb-1.5">Téléphone</label>
-                                <input type="tel" name="telephone" value="{{ old('telephone') }}"
-                                    class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl px-4 py-3 text-sm outline-none transition-colors"
-                                    placeholder="+596 696 00 00 00">
+                                <div class="relative">
+                                    <div class="absolute left-0 top-0 h-full flex items-center pl-3.5 gap-1.5 pointer-events-none select-none">
+                                        <span class="text-base leading-none">🇲🇶</span>
+                                        <span class="text-xs font-bold text-gray-400 font-display">+596</span>
+                                        <span class="text-gray-200 font-light">|</span>
+                                    </div>
+                                    <input type="tel" name="telephone" value="{{ old('telephone') }}"
+                                        class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl pl-[4.5rem] pr-4 py-3 text-sm outline-none transition-colors"
+                                        placeholder="696 00 00 00">
+                                </div>
                             </div>
                             <div>
                                 <label class="block text-sm font-display font-bold text-mja-gray mb-1.5">Sujet <span class="text-mja-red">*</span></label>

@@ -3,9 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
     <title>@yield('title', 'Administration') — MJA</title>
 
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/logomjat.png') }}">
+
+    <script src="{{ asset('vendor/tailwind/tailwind.js') }}"
+            onerror="this.onerror=null;var s=document.createElement('script');s.src='https://cdn.tailwindcss.com';document.head.appendChild(s)"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -30,8 +34,10 @@
             }
         }
     </script>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ asset('fonts/fonts.css') }}"
+          onerror="this.onerror=null;var l=document.createElement('link');l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Open+Sans:wght@400;500;600&display=swap';document.head.appendChild(l)">
+    <link rel="stylesheet" href="{{ asset('vendor/fontawesome/css/all.min.css') }}"
+          onerror="this.onerror=null;var l=document.createElement('link');l.rel='stylesheet';l.href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css';document.head.appendChild(l)">
     <style>
         body { font-family: 'Open Sans', sans-serif; }
         h1,h2,h3,h4,.font-display { font-family: 'Montserrat', sans-serif; }
@@ -40,7 +46,8 @@
 <body class="bg-gray-50 min-h-screen flex">
 
     <!-- Sidebar -->
-    <aside id="sidebar" class="w-64 bg-mja-navy min-h-screen flex flex-col fixed left-0 top-0 z-40 hidden lg:flex">
+    <aside id="sidebar" class="w-72 sm:w-64 bg-mja-navy min-h-screen flex flex-col fixed left-0 top-0 z-40
+        -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out shadow-2xl">
         <!-- Logo -->
         <div class="p-5 border-b border-white/10">
             <a href="{{ route('home') }}" class="flex items-center gap-3 group">
@@ -96,8 +103,24 @@
                       {{ request()->routeIs('admin.team.*') ? 'bg-mja-blue text-white' : 'text-gray-400 hover:bg-white/5 hover:text-white' }}">
                 <i class="fas fa-users w-4 text-center text-mja-yellow"></i> Équipe
             </a>
+            <a href="{{ route('admin.partenaires.index') }}"
+               class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-display font-semibold transition-colors
+                      {{ request()->routeIs('admin.partenaires.*') ? 'bg-mja-blue text-white' : 'text-gray-400 hover:bg-white/5 hover:text-white' }}">
+                <i class="fas fa-handshake w-4 text-center text-mja-yellow"></i> Partenaires
+            </a>
 
-            @php $nonLus = \App\Models\Contact::where('lu', false)->count(); @endphp
+            @php
+                $nonLus = \App\Models\Contact::where('lu', false)->count();
+                $nouvellesAdhesions = \App\Models\Adhesion::where('lu', false)->count();
+            @endphp
+            <a href="{{ route('admin.adhesions.index') }}"
+               class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-display font-semibold transition-colors
+                      {{ request()->routeIs('admin.adhesions.*') ? 'bg-mja-blue text-white' : 'text-gray-400 hover:bg-white/5 hover:text-white' }}">
+                <i class="fas fa-user-plus w-4 text-center text-mja-yellow"></i> Adhésions
+                @if($nouvellesAdhesions > 0)
+                <span class="ml-auto bg-mja-yellow text-mja-dark text-xs font-black px-2 py-0.5 rounded-full">{{ $nouvellesAdhesions }}</span>
+                @endif
+            </a>
             <a href="{{ route('admin.contacts.index') }}"
                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-display font-semibold transition-colors
                       {{ request()->routeIs('admin.contacts.*') ? 'bg-mja-blue text-white' : 'text-gray-400 hover:bg-white/5 hover:text-white' }}">
@@ -121,27 +144,35 @@
     </aside>
 
     <!-- Main -->
-    <div class="lg:ml-64 flex-1 flex flex-col min-h-screen">
+    <div class="lg:ml-64 flex-1 flex flex-col min-h-screen pb-16 lg:pb-0">
 
         <!-- Topbar -->
-        <header class="bg-white border-b border-gray-100 px-6 py-3 flex items-center justify-between sticky top-0 z-30 shadow-sm">
+        <header class="bg-white border-b border-gray-100 px-4 sm:px-6 py-3 flex items-center justify-between sticky top-0 z-30 shadow-sm">
             <div class="flex items-center gap-3">
-                <button id="sidebar-toggle" class="lg:hidden text-gray-500 hover:text-mja-blue p-1">
-                    <i class="fas fa-bars text-xl"></i>
+                @php $totalNotifs = ($nonLus ?? 0) + ($nouvellesAdhesions ?? 0); @endphp
+                <button id="sidebar-toggle" class="lg:hidden relative w-9 h-9 flex items-center justify-center rounded-xl hover:bg-gray-100 text-gray-500 hover:text-mja-blue transition-colors">
+                    <i class="fas fa-bars text-lg"></i>
+                    @if($totalNotifs > 0)
+                    <span class="absolute -top-0.5 -right-0.5 w-4 h-4 bg-mja-red text-white text-[10px] font-black rounded-full flex items-center justify-center">{{ $totalNotifs > 9 ? '9+' : $totalNotifs }}</span>
+                    @endif
                 </button>
-                <!-- Three-dot accent -->
-                <div class="flex gap-1 items-center">
+                <!-- Three-dot accent (desktop) -->
+                <div class="hidden sm:flex gap-1 items-center">
                     <span class="w-2 h-2 rounded-full bg-mja-blue"></span>
                     <span class="w-2 h-2 rounded-full bg-mja-yellow"></span>
                     <span class="w-2 h-2 rounded-full bg-mja-red"></span>
                 </div>
-                <h1 class="font-display font-bold text-mja-gray text-lg">@yield('page-title', 'Administration')</h1>
+                <h1 class="font-display font-bold text-mja-gray text-base sm:text-lg truncate max-w-[180px] sm:max-w-none">@yield('page-title', 'Administration')</h1>
             </div>
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2 sm:gap-4">
+                @if($totalNotifs > 0)
+                <span class="lg:hidden bg-red-50 text-mja-red text-xs font-bold px-2 py-1 rounded-lg">{{ $totalNotifs }} notif.</span>
+                @endif
                 <a href="{{ route('home') }}" target="_blank"
-                   class="text-sm text-gray-400 hover:text-mja-blue flex items-center gap-1.5 font-display font-semibold transition-colors">
+                   class="hidden sm:flex text-sm text-gray-400 hover:text-mja-blue items-center gap-1.5 font-display font-semibold transition-colors">
                     <i class="fas fa-external-link-alt text-xs"></i> Voir le site
                 </a>
+                <span class="hidden sm:block text-xs text-gray-400 font-display font-semibold truncate max-w-[100px]">{{ auth()->user()->name }}</span>
             </div>
         </header>
 
@@ -173,20 +204,82 @@
     </div>
 
     <!-- Mobile sidebar overlay -->
-    <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-30 hidden lg:hidden" onclick="closeSidebar()"></div>
+    <div id="sidebar-overlay"
+         class="fixed inset-0 bg-black/60 z-30 lg:hidden opacity-0 invisible transition-all duration-300"
+         onclick="closeSidebar()"></div>
+
+    <!-- Mobile bottom navigation bar -->
+    <nav class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-100 shadow-lg">
+        <div class="grid grid-cols-5 h-16">
+            @php
+                $mobileNav = [
+                    ['icon' => 'fa-tachometer-alt', 'label' => 'Accueil', 'route' => 'admin.dashboard',   'pattern' => 'admin.dashboard',   'badge' => 0,                   'color' => 'text-mja-blue'],
+                    ['icon' => 'fa-newspaper',       'label' => 'Contenu',  'route' => 'admin.articles.index', 'pattern' => 'admin.articles.*', 'badge' => 0,               'color' => 'text-mja-blue'],
+                    ['icon' => 'fa-user-plus',       'label' => 'Adhésions','route' => 'admin.adhesions.index','pattern' => 'admin.adhesions.*','badge' => $nouvellesAdhesions ?? 0, 'color' => 'text-mja-yellow'],
+                    ['icon' => 'fa-envelope',        'label' => 'Messages', 'route' => 'admin.contacts.index', 'pattern' => 'admin.contacts.*', 'badge' => $nonLus ?? 0,   'color' => 'text-mja-red'],
+                    ['icon' => 'fa-ellipsis-h',      'label' => 'Plus',     'route' => null,                   'pattern' => null,               'badge' => 0,               'color' => 'text-gray-500'],
+                ];
+            @endphp
+            @foreach($mobileNav as $item)
+                @if($item['route'])
+                <a href="{{ route($item['route']) }}"
+                   class="flex flex-col items-center justify-center gap-0.5 relative transition-colors
+                          {{ request()->routeIs($item['pattern']) ? 'text-mja-blue' : 'text-gray-400' }}">
+                    <i class="fas {{ $item['icon'] }} text-lg"></i>
+                    <span class="text-[9px] font-display font-bold leading-none">{{ $item['label'] }}</span>
+                    @if($item['badge'] > 0)
+                    <span class="absolute top-2 right-1/2 translate-x-3 w-4 h-4 bg-mja-red text-white text-[9px] font-black rounded-full flex items-center justify-center">{{ $item['badge'] > 9 ? '9+' : $item['badge'] }}</span>
+                    @endif
+                    @if(request()->routeIs($item['pattern']))
+                    <span class="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-mja-blue rounded-b-full"></span>
+                    @endif
+                </a>
+                @else
+                <button onclick="toggleSidebar()"
+                        class="flex flex-col items-center justify-center gap-0.5 relative text-gray-400 transition-colors">
+                    <i class="fas {{ $item['icon'] }} text-lg"></i>
+                    <span class="text-[9px] font-display font-bold leading-none">{{ $item['label'] }}</span>
+                </button>
+                @endif
+            @endforeach
+        </div>
+    </nav>
 
     <script>
-        function closeSidebar() {
-            document.getElementById('sidebar').classList.add('hidden');
-            document.getElementById('sidebar').classList.remove('flex');
-            document.getElementById('sidebar-overlay').classList.add('hidden');
+        function openSidebar() {
+            const aside   = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            aside.classList.remove('-translate-x-full');
+            overlay.classList.remove('opacity-0', 'invisible');
+            document.body.style.overflow = 'hidden';
         }
-        document.getElementById('sidebar-toggle')?.addEventListener('click', () => {
+        function closeSidebar() {
+            const aside   = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            aside.classList.add('-translate-x-full');
+            overlay.classList.add('opacity-0', 'invisible');
+            document.body.style.overflow = '';
+        }
+        function toggleSidebar() {
             const aside = document.getElementById('sidebar');
-            aside.classList.toggle('hidden');
-            aside.classList.toggle('flex');
-            document.getElementById('sidebar-overlay').classList.toggle('hidden');
+            if (aside.classList.contains('-translate-x-full')) openSidebar();
+            else closeSidebar();
+        }
+        document.getElementById('sidebar-toggle')?.addEventListener('click', toggleSidebar);
+
+        // Fermer la sidebar si on passe en desktop (resize)
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 1024) {
+                document.body.style.overflow = '';
+            }
         });
+
+        // Swipe gauche pour fermer
+        let touchStartX = 0;
+        document.getElementById('sidebar')?.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+        document.getElementById('sidebar')?.addEventListener('touchend', e => {
+            if (touchStartX - e.changedTouches[0].clientX > 60) closeSidebar();
+        }, { passive: true });
     </script>
     @stack('scripts')
 </body>

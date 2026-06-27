@@ -3,10 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Madin'Jeunes Ambition – Association de jeunes bénévoles à Fort-de-France, Martinique.">
+
+    {{-- ── Titre dynamique ──────────────────────────────────────── --}}
     <title>@yield('title', "Madin'Jeunes Ambition")</title>
 
-    <script src="https://cdn.tailwindcss.com"></script>
+    {{-- ── Favicon ──────────────────────────────────────────────── --}}
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/logomjat.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/logomjat.png') }}">
+
+    {{-- ── SEO ─────────────────────────────────────────────────── --}}
+    <meta name="description" content="@yield('meta_description', "Madin'Jeunes Ambition — Association de jeunes bénévoles à Fort-de-France, Martinique. Initiative Fwi Ti Dèj pour le petit-déjeuner scolaire.")">
+    <meta name="keywords" content="MJA, Madin'Jeunes Ambition, Martinique, jeunesse, bénévolat, Fwi Ti Dèj, Fort-de-France, santé, nutrition, sport">
+    <meta name="author" content="Madin'Jeunes Ambition">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="{{ url()->current() }}">
+
+    {{-- ── OpenGraph ────────────────────────────────────────────── --}}
+    <meta property="og:type"        content="website">
+    <meta property="og:site_name"   content="Madin'Jeunes Ambition">
+    <meta property="og:title"       content="@yield('title', "Madin'Jeunes Ambition")">
+    <meta property="og:description" content="@yield('meta_description', "Madin'Jeunes Ambition — Association de jeunes bénévoles à Fort-de-France, Martinique.")">
+    <meta property="og:image"       content="{{ asset('images/logomjat.png') }}">
+    <meta property="og:url"         content="{{ url()->current() }}">
+    <meta property="og:locale"      content="fr_FR">
+
+    {{-- ── Twitter Card ─────────────────────────────────────────── --}}
+    <meta name="twitter:card"        content="summary">
+    <meta name="twitter:title"       content="@yield('title', "Madin'Jeunes Ambition")">
+    <meta name="twitter:description" content="@yield('meta_description', "Association de jeunes bénévoles à Fort-de-France, Martinique.")">
+    <meta name="twitter:image"       content="{{ asset('images/logomjat.png') }}">
+
+    {{-- ── Tailwind CSS (local → CDN fallback) ────────────────── --}}
+    <script src="{{ asset('vendor/tailwind/tailwind.js') }}"
+            onerror="this.onerror=null;var s=document.createElement('script');s.src='https://cdn.tailwindcss.com';document.head.appendChild(s)"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -32,8 +61,13 @@
         }
     </script>
 
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    {{-- ── Polices Google Fonts (local → CDN fallback) ──────────── --}}
+    <link rel="stylesheet" href="{{ asset('fonts/fonts.css') }}"
+          onerror="this.onerror=null;var l=document.createElement('link');l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Open+Sans:wght@400;500;600&display=swap';document.head.appendChild(l)">
+
+    {{-- ── Font Awesome (local → CDN fallback) ────────────────── --}}
+    <link rel="stylesheet" href="{{ asset('vendor/fontawesome/css/all.min.css') }}"
+          onerror="this.onerror=null;var l=document.createElement('link');l.rel='stylesheet';l.href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css';document.head.appendChild(l)">
 
     <style>
         body { font-family: 'Open Sans', sans-serif; color: #333333; }
@@ -124,8 +158,12 @@
                         {{ $label }}
                     </a>
                     @endforeach
+                    <a href="{{ route('adhesion') }}"
+                       class="ml-1 bg-mja-yellow hover:bg-yellow-400 text-mja-dark font-display font-bold text-sm px-4 py-2 rounded-full transition-colors {{ request()->routeIs('adhesion') ? 'ring-2 ring-mja-yellow ring-offset-2 ring-offset-mja-dark' : '' }}">
+                        Adhérer
+                    </a>
                     <a href="{{ route('contact') }}"
-                       class="ml-2 btn-yellow font-display font-bold text-sm px-5 py-2 rounded-full transition-colors">
+                       class="ml-1 btn-blue font-display font-bold text-sm px-4 py-2 rounded-full transition-colors {{ request()->routeIs('contact') ? 'ring-2 ring-mja-blue ring-offset-2 ring-offset-mja-dark' : '' }}">
                         Contact
                     </a>
                 </div>
@@ -141,13 +179,15 @@
                 @foreach([
                     ['Accueil', 'home'], ['À propos', 'about'], ['Projets', 'projects.index'],
                     ['SNS', 'sns'], ['Événements', 'events.index'], ['Actualités', 'articles.index'],
-                    ['Ressources', 'resources.index'], ['Contact', 'contact'],
+                    ['Ressources', 'resources.index'], ['Contact', 'contact'], ['Adhérer', 'adhesion'],
                 ] as [$label, $route])
                 <a href="{{ route($route) }}" class="block px-3 py-2 text-gray-300 hover:text-mja-yellow text-sm font-semibold font-display transition-colors">{{ $label }}</a>
                 @endforeach
             </div>
         </div>
     </nav>
+
+    @include('partials.seasonal-banner')
 
     <!-- Flash -->
     @if(session('success'))
@@ -231,6 +271,10 @@
                         <li class="flex gap-2 items-center">
                             <i class="fas fa-envelope text-mja-yellow w-4 shrink-0"></i>
                             <a href="{{ route('contact') }}" class="hover:text-mja-yellow transition-colors">Nous contacter</a>
+                        </li>
+                        <li class="flex gap-2 items-center">
+                            <i class="fas fa-user-plus text-mja-yellow w-4 shrink-0"></i>
+                            <a href="{{ route('adhesion') }}" class="hover:text-mja-yellow transition-colors">Adhérer à MJA</a>
                         </li>
                     </ul>
                 </div>

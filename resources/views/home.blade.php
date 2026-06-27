@@ -32,8 +32,8 @@
                     <a href="{{ route('about') }}" class="btn-blue font-display font-bold px-8 py-3.5 rounded-full transition-colors text-lg text-center">
                         Découvrir l'association
                     </a>
-                    <a href="{{ route('contact') }}" class="btn-yellow font-display font-bold px-8 py-3.5 rounded-full transition-colors text-lg text-center">
-                        Nous rejoindre <i class="fas fa-arrow-right ml-1 text-sm"></i>
+                    <a href="{{ route('adhesion') }}" class="btn-yellow font-display font-bold px-8 py-3.5 rounded-full transition-colors text-lg text-center">
+                        Adhérer maintenant <i class="fas fa-arrow-right ml-1 text-sm"></i>
                     </a>
                 </div>
                 <!-- Réseaux sociaux -->
@@ -72,15 +72,65 @@
 </section>
 
 <!-- ═══ STATS ═══ -->
-<section class="bg-mja-dark py-10 relative z-10">
+<section class="bg-mja-dark py-10 relative z-10" id="stats-section">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center text-white">
-            @foreach([['70+','Membres actifs','text-mja-blue'],['2011','Année de création','text-mja-yellow'],['30+','Sympathisants','text-mja-red'],['∞','Projets & ambitions','text-mja-blue']] as [$v,$l,$c])
-            <div><div class="font-display font-black text-4xl {{ $c }}">{{ $v }}</div><div class="text-sm mt-1 text-gray-400 font-display font-semibold">{{ $l }}</div></div>
-            @endforeach
+            <div>
+                <div class="font-display font-black text-4xl text-mja-blue">
+                    <span class="stat-counter" data-target="70">0</span>+
+                </div>
+                <div class="text-sm mt-1 text-gray-400 font-display font-semibold">Membres actifs</div>
+            </div>
+            <div>
+                <div class="font-display font-black text-4xl text-mja-yellow">2011</div>
+                <div class="text-sm mt-1 text-gray-400 font-display font-semibold">Année de création</div>
+            </div>
+            <div>
+                <div class="font-display font-black text-4xl text-mja-red">
+                    <span class="stat-counter" data-target="30">0</span>+
+                </div>
+                <div class="text-sm mt-1 text-gray-400 font-display font-semibold">Sympathisants</div>
+            </div>
+            <div>
+                <div class="font-display font-black text-4xl text-mja-blue">
+                    <span class="stat-counter" data-target="500">0</span>+
+                </div>
+                <div class="text-sm mt-1 text-gray-400 font-display font-semibold">Petits-déj organisés</div>
+            </div>
         </div>
     </div>
 </section>
+
+@push('scripts')
+<script>
+(function () {
+    var counters = document.querySelectorAll('.stat-counter');
+    if (!counters.length || !window.IntersectionObserver) {
+        counters.forEach(function(el) { el.textContent = el.dataset.target; });
+        return;
+    }
+    var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+            if (!entry.isIntersecting) return;
+            var el = entry.target;
+            var target = parseInt(el.dataset.target, 10);
+            var duration = 1400;
+            var steps = 50;
+            var interval = duration / steps;
+            var increment = target / steps;
+            var current = 0;
+            var timer = setInterval(function() {
+                current = Math.min(current + increment, target);
+                el.textContent = Math.round(current);
+                if (current >= target) clearInterval(timer);
+            }, interval);
+            observer.unobserve(el);
+        });
+    }, { threshold: 0.6 });
+    counters.forEach(function(el) { observer.observe(el); });
+})();
+</script>
+@endpush
 
 <div class="flex h-1"><div class="flex-1 bg-mja-blue"></div><div class="flex-1 bg-mja-yellow"></div><div class="flex-1 bg-mja-red"></div></div>
 
@@ -111,7 +161,11 @@
                     </a>
                 </div>
                 <div class="shrink-0 grid grid-cols-3 gap-3">
-                    @foreach([['fa-apple-alt','Ti Dèj'],['fa-running','Sport'],['fa-shield-alt','Santé']] as [$icon,$label])
+                    <div class="w-20 h-20 bg-white/10 rounded-2xl flex flex-col items-center justify-center gap-1 text-white">
+                        <span class="text-xl leading-none">🍌</span>
+                        <span class="text-xs font-display font-semibold">Ti Dèj</span>
+                    </div>
+                    @foreach([['fa-running','Sport'],['fa-shield-alt','Santé']] as [$icon,$label])
                     <div class="w-20 h-20 bg-white/10 rounded-2xl flex flex-col items-center justify-center gap-1 text-white">
                         <i class="fas {{ $icon }} text-xl text-mja-yellow"></i>
                         <span class="text-xs font-display font-semibold">{{ $label }}</span>
@@ -161,6 +215,46 @@
                     <p class="text-gray-500 text-sm leading-relaxed line-clamp-2">{{ $project->description_courte }}</p>
                 </div>
             </a>
+            @endforeach
+        </div>
+    </div>
+</section>
+@endif
+
+<!-- ═══ PARTENAIRES ═══ -->
+@if($partenaires->count())
+<section class="py-14 bg-white border-t border-gray-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-10">
+            <div class="inline-flex items-center gap-3 mb-3">
+                <span class="w-10 h-0.5 bg-mja-yellow"></span>
+                <span class="text-mja-yellow font-display font-bold text-xs uppercase tracking-widest">Ils nous font confiance</span>
+                <span class="w-10 h-0.5 bg-mja-yellow"></span>
+            </div>
+            <h2 class="font-display font-black text-2xl sm:text-3xl text-mja-gray">Nos partenaires</h2>
+        </div>
+        <div class="flex flex-wrap justify-center items-center gap-5">
+            @foreach($partenaires as $partenaire)
+            @if($partenaire->url)
+            <a href="{{ $partenaire->url }}" target="_blank" rel="noopener noreferrer"
+               class="group flex items-center justify-center bg-gray-50 hover:bg-mja-blue/5 border border-gray-100 hover:border-mja-blue/25 hover:shadow-md rounded-2xl px-7 py-5 transition-all min-w-[130px] min-h-[80px]">
+            @else
+            <div class="group flex items-center justify-center bg-gray-50 border border-gray-100 rounded-2xl px-7 py-5 min-w-[130px] min-h-[80px]">
+            @endif
+                @if($partenaire->logo)
+                <img src="{{ asset('storage/'.$partenaire->logo) }}" alt="{{ $partenaire->nom }}"
+                     class="h-10 max-w-[120px] w-auto object-contain grayscale group-hover:grayscale-0 opacity-70 group-hover:opacity-100 transition-all"
+                     loading="lazy" title="{{ $partenaire->nom }}">
+                @else
+                <span class="font-display font-black text-sm text-gray-400 group-hover:text-mja-blue transition-colors text-center leading-tight">
+                    {{ $partenaire->nom }}
+                </span>
+                @endif
+            @if($partenaire->url)
+            </a>
+            @else
+            </div>
+            @endif
             @endforeach
         </div>
     </div>

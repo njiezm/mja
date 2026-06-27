@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Article;
 use App\Models\Event;
+use App\Models\Partenaire;
 use App\Models\Project;
 use App\Models\TeamMember;
 use Illuminate\Http\Request;
@@ -12,11 +13,12 @@ class HomeController extends Controller
 {
     public function index()
     {
-        $articles = Article::publie()->limit(3)->get();
-        $events = Event::avenir()->limit(3)->get();
-        $projects = Project::actif()->limit(3)->get();
+        $articles    = Article::publie()->limit(3)->get();
+        $events      = Event::avenir()->limit(3)->get();
+        $projects    = Project::actif()->limit(3)->get();
+        $partenaires = Partenaire::actif()->orderBy('ordre')->orderBy('nom')->get();
 
-        return view('home', compact('articles', 'events', 'projects'));
+        return view('home', compact('articles', 'events', 'projects', 'partenaires'));
     }
 
     public function about()
