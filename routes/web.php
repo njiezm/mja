@@ -44,6 +44,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::resource('team', Admin\TeamController::class)->except(['show']);
     Route::resource('partenaires', Admin\PartenaireController::class)->except(['show']);
 
+    Route::middleware('super_admin')->group(function () {
+        Route::resource('users', Admin\UserController::class)->except(['show']);
+    });
+
     Route::get('contacts', [Admin\ContactController::class, 'index'])->name('contacts.index');
     Route::get('contacts/{contact}', [Admin\ContactController::class, 'show'])->name('contacts.show');
     Route::delete('contacts/{contact}', [Admin\ContactController::class, 'destroy'])->name('contacts.destroy');

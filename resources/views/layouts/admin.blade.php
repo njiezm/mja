@@ -109,6 +109,15 @@
                 <i class="fas fa-handshake w-4 text-center text-mja-yellow"></i> Partenaires
             </a>
 
+            @if(auth()->user()->isSuperAdmin())
+            <div class="pt-4 pb-1 px-3 text-xs text-gray-500 uppercase tracking-wider font-display font-bold">Super Admin</div>
+            <a href="{{ route('admin.users.index') }}"
+               class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-display font-semibold transition-colors
+                      {{ request()->routeIs('admin.users.*') ? 'bg-mja-yellow text-mja-dark' : 'text-gray-400 hover:bg-white/5 hover:text-white' }}">
+                <i class="fas fa-crown w-4 text-center text-mja-yellow"></i> Comptes admin
+            </a>
+            @endif
+
             @php
                 $nonLus = \App\Models\Contact::where('lu', false)->count();
                 $nouvellesAdhesions = \App\Models\Adhesion::where('lu', false)->count();
