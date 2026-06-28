@@ -42,11 +42,13 @@ class UserController extends Controller
         $plainPassword = $validated['password'];
         $user = User::create($validated);
 
+        Log::info('[AdminCreated] has send_mail=' . ($request->has('send_mail') ? 'yes' : 'no') . ' to=' . $user->email);
         if ($request->has('send_mail')) {
             try {
                 Mail::to($user->email)->send(new AdminCreated($user, $plainPassword));
-            } catch (\Exception $e) {
-                Log::error('Mail AdminCreated failed: ' . $e->getMessage());
+                Log::info('[AdminCreated] mail sent OK to ' . $user->email);
+            } catch (\Throwable $e) {
+                Log::error('[AdminCreated] mail FAILED: ' . $e->getMessage());
             }
         }
 
