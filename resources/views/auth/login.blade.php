@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
@@ -11,12 +11,12 @@
                 extend: {
                     colors: {
                         mja: {
-                            blue:     '#4A90E2',
-                            bluedark: '#2d6dbf',
+                            blue:     '#3DAEF5',
+                            bluedark: '#1E93D6',
                             yellow:   '#F5A623',
                             red:      '#D0021B',
-                            dark:     '#1a2744',
-                            navy:     '#0f1b33',
+                            dark:     '#2048A4',
+                            navy:     '#1A3D8A',
                         }
                     },
                     fontFamily: {
@@ -34,7 +34,7 @@
         .font-display { font-family: 'Montserrat', sans-serif; }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4" style="background: linear-gradient(135deg, #0f1b33 0%, #1a2744 50%, #2d4a8a 100%);">
+<body class="min-h-screen flex items-center justify-center p-4" style="background: linear-gradient(135deg, #1A3D8A 0%, #2048A4 50%, #3262CC 100%);">
     <div class="w-full max-w-md">
         <!-- Logo -->
         <div class="text-center mb-8">
@@ -44,7 +44,7 @@
                 </div>
             </div>
             <div class="font-display font-black text-3xl leading-none mb-1">
-                <span style="color:#4A90E2">M</span><span style="color:#F5A623">J</span><span style="color:#D0021B">A</span>
+                <span style="color:#3DAEF5">M</span><span style="color:#F5A623">J</span><span style="color:#D0021B">A</span>
             </div>
             <div class="text-white/50 text-xs font-display font-semibold uppercase tracking-widest mt-1">Madin' Jeunes Ambition</div>
         </div>
@@ -53,7 +53,7 @@
         <div class="bg-white rounded-3xl shadow-2xl overflow-hidden">
             <!-- Barre tricolore -->
             <div class="flex h-1.5">
-                <div class="flex-1" style="background:#4A90E2"></div>
+                <div class="flex-1" style="background:#3DAEF5"></div>
                 <div class="flex-1" style="background:#F5A623"></div>
                 <div class="flex-1" style="background:#D0021B"></div>
             </div>
@@ -76,7 +76,7 @@
                         <input type="email" name="email" value="{{ old('email') }}" required autofocus
                                class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl px-4 py-3 text-sm outline-none transition-colors"
                                placeholder="admin@mja-martinique.com"
-                               style="--tw-ring-color: #4A90E2;">
+                               style="--tw-ring-color: #3DAEF5;">
                     </div>
                     <div>
                         <label class="block text-sm font-display font-bold text-gray-700 mb-1.5">
@@ -93,8 +93,8 @@
                     </div>
                     <button type="submit"
                             class="w-full text-white font-display font-bold py-3.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-sm"
-                            style="background:#4A90E2;"
-                            onmouseover="this.style.background='#2d6dbf'" onmouseout="this.style.background='#4A90E2'">
+                            style="background:#3DAEF5;"
+                            onmouseover="this.style.background='#1E93D6'" onmouseout="this.style.background='#3DAEF5'">
                         <i class="fas fa-sign-in-alt"></i> Se connecter
                     </button>
                 </form>

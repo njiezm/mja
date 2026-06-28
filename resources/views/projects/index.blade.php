@@ -1,11 +1,11 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('title', "Nos projets — Madin'Jeunes Ambition")
 @section('meta_description', "Découvrez les projets de Madin'Jeunes Ambition : Fwi Ti Dèj, Sport Day MJA, Madin'Santé Challenge et autres initiatives pour la jeunesse martiniquaise.")
 
 @section('content')
 <section class="hero-gradient text-white py-16 relative overflow-hidden">
     <div class="absolute -right-10 -top-10 w-64 h-64 opacity-10 pointer-events-none">
-        <svg viewBox="0 0 200 200" fill="none"><circle cx="100" cy="100" r="95" stroke="#4A90E2" stroke-width="2"/><circle cx="100" cy="100" r="70" stroke="#F5A623" stroke-width="2"/><circle cx="100" cy="100" r="45" stroke="#D0021B" stroke-width="2"/></svg>
+        <svg viewBox="0 0 200 200" fill="none"><circle cx="100" cy="100" r="95" stroke="#3DAEF5" stroke-width="2"/><circle cx="100" cy="100" r="70" stroke="#F5A623" stroke-width="2"/><circle cx="100" cy="100" r="45" stroke="#D0021B" stroke-width="2"/></svg>
     </div>
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div class="text-sm text-gray-400 mb-3 font-display font-semibold">

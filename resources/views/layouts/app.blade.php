@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
@@ -44,12 +44,12 @@
                 extend: {
                     colors: {
                         mja: {
-                            blue:   '#4A90E2',
-                            bluedark: '#2d6dbf',
+                            blue:   '#3DAEF5',
+                            bluedark: '#1E93D6',
                             yellow: '#F5A623',
                             red:    '#D0021B',
-                            dark:   '#1a2744',
-                            navy:   '#0f1b33',
+                            dark:   '#2048A4',
+                            navy:   '#1A3D8A',
                             light:  '#EBF4FF',
                             gray:   '#333333',
                         }
@@ -72,17 +72,18 @@
           onerror="this.onerror=null;var l=document.createElement('link');l.rel='stylesheet';l.href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css';document.head.appendChild(l)">
 
     <style>
+        html, body { margin: 0; padding: 0; }
         body { font-family: 'Open Sans', sans-serif; color: #333333; }
         h1,h2,h3,h4,h5,h6,.font-display { font-family: 'Montserrat', sans-serif; }
 
         .hero-gradient {
-            background: linear-gradient(135deg, #0f1b33 0%, #1a2744 45%, #2d4a8a 100%);
+            background: linear-gradient(135deg, #1A3D8A 0%, #2048A4 45%, #3262CC 100%);
         }
         .card-hover { transition: transform .2s ease, box-shadow .2s ease; }
         .card-hover:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(74,144,226,.15); }
 
         /* Accent bar top of cards */
-        .card-accent-blue  { border-top: 3px solid #4A90E2; }
+        .card-accent-blue  { border-top: 3px solid #3DAEF5; }
         .card-accent-yellow{ border-top: 3px solid #F5A623; }
         .card-accent-red   { border-top: 3px solid #D0021B; }
 
@@ -92,7 +93,7 @@
             content: '';
             position: absolute;
             inset: 0;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Ccircle cx='100' cy='100' r='90' fill='none' stroke='%234A90E2' stroke-width='1' opacity='0.12'/%3E%3Ccircle cx='100' cy='100' r='70' fill='none' stroke='%23F5A623' stroke-width='1' opacity='0.09'/%3E%3Ccircle cx='100' cy='100' r='50' fill='none' stroke='%23D0021B' stroke-width='1' opacity='0.07'/%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Ccircle cx='100' cy='100' r='90' fill='none' stroke='%233DAEF5' stroke-width='1' opacity='0.12'/%3E%3Ccircle cx='100' cy='100' r='70' fill='none' stroke='%23F5A623' stroke-width='1' opacity='0.09'/%3E%3Ccircle cx='100' cy='100' r='50' fill='none' stroke='%23D0021B' stroke-width='1' opacity='0.07'/%3E%3C/svg%3E");
             background-size: 280px;
             pointer-events: none;
             z-index: 0;
@@ -102,9 +103,9 @@
         .nav-link { transition: color .15s; }
         .nav-link:hover { color: #F5A623; }
         .nav-link.active { color: #F5A623; }
-        .btn-blue { background: #4A90E2; color: white; }
-        .btn-blue:hover { background: #2d6dbf; }
-        .btn-yellow { background: #F5A623; color: #1a2744; }
+        .btn-blue { background: #3DAEF5; color: white; }
+        .btn-blue:hover { background: #1E93D6; }
+        .btn-yellow { background: #F5A623; color: #2048A4; }
         .btn-yellow:hover { background: #e0941a; }
     </style>
 

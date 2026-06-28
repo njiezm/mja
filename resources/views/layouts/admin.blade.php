@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
@@ -16,12 +16,12 @@
                 extend: {
                     colors: {
                         mja: {
-                            blue:     '#4A90E2',
-                            bluedark: '#2d6dbf',
+                            blue:     '#3DAEF5',
+                            bluedark: '#1E93D6',
                             yellow:   '#F5A623',
                             red:      '#D0021B',
-                            dark:     '#1a2744',
-                            navy:     '#0f1b33',
+                            dark:     '#2048A4',
+                            navy:     '#1A3D8A',
                             light:    '#EBF4FF',
                             gray:     '#333333',
                         }

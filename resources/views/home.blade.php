@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('title', "Madin'Jeunes Ambition – Les jeunes de la Martinique se mobilisent !")
 @section('meta_description', "Association de jeunes bénévoles à Fort-de-France, Martinique. Fwi Ti Dèj, Sport, Santé, Culture — MJA mobilise la jeunesse ultramarine depuis 2011.")
 @section('og_image', asset('images/logomjat.png'))
@@ -9,10 +9,10 @@
 <section class="hero-gradient text-white py-24 relative overflow-hidden">
     <!-- Anneaux décoratifs inline (pas de ring-watermark pour éviter le conflit CSS) -->
     <div class="absolute -top-20 -right-20 w-96 h-96 opacity-10 pointer-events-none" aria-hidden="true">
-        <svg viewBox="0 0 200 200" fill="none"><circle cx="100" cy="100" r="95" stroke="#4A90E2" stroke-width="2"/><circle cx="100" cy="100" r="75" stroke="#F5A623" stroke-width="2"/><circle cx="100" cy="100" r="55" stroke="#D0021B" stroke-width="2"/></svg>
+        <svg viewBox="0 0 200 200" fill="none"><circle cx="100" cy="100" r="95" stroke="#3DAEF5" stroke-width="2"/><circle cx="100" cy="100" r="75" stroke="#F5A623" stroke-width="2"/><circle cx="100" cy="100" r="55" stroke="#D0021B" stroke-width="2"/></svg>
     </div>
     <div class="absolute -bottom-16 -left-16 w-72 h-72 opacity-10 pointer-events-none" aria-hidden="true">
-        <svg viewBox="0 0 200 200" fill="none"><circle cx="100" cy="100" r="90" stroke="#F5A623" stroke-width="2"/><circle cx="100" cy="100" r="65" stroke="#4A90E2" stroke-width="2"/></svg>
+        <svg viewBox="0 0 200 200" fill="none"><circle cx="100" cy="100" r="90" stroke="#F5A623" stroke-width="2"/><circle cx="100" cy="100" r="65" stroke="#3DAEF5" stroke-width="2"/></svg>
     </div>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -144,7 +144,7 @@
                 <svg class="w-full h-full" viewBox="0 0 800 200" fill="none">
                     <circle cx="700" cy="100" r="180" stroke="#F5A623" stroke-width="2"/>
                     <circle cx="700" cy="100" r="130" stroke="#D0021B" stroke-width="2"/>
-                    <circle cx="700" cy="100" r="80" stroke="#4A90E2" stroke-width="2"/>
+                    <circle cx="700" cy="100" r="80" stroke="#3DAEF5" stroke-width="2"/>
                 </svg>
             </div>
             <div class="relative z-10 p-8 md:p-12 flex flex-col md:flex-row items-center gap-8">
@@ -403,7 +403,7 @@
 <section class="py-20 bg-mja-dark relative overflow-hidden">
     <div class="absolute inset-0 opacity-10 pointer-events-none">
         <svg class="w-full h-full" viewBox="0 0 1000 300" fill="none">
-            <circle cx="800" cy="150" r="250" stroke="#4A90E2" stroke-width="2"/>
+            <circle cx="800" cy="150" r="250" stroke="#3DAEF5" stroke-width="2"/>
             <circle cx="800" cy="150" r="190" stroke="#F5A623" stroke-width="2"/>
             <circle cx="800" cy="150" r="130" stroke="#D0021B" stroke-width="2"/>
             <circle cx="100" cy="150" r="180" stroke="#F5A623" stroke-width="1.5"/>

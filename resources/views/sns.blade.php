@@ -7,7 +7,7 @@
 
 {{-- ═══════════════════════════════════════════════════════ HERO ══ --}}
 <section class="relative text-white py-20 overflow-hidden"
-    style="background: linear-gradient(135deg, #1a0600 0%, #3d1400 35%, #1a2744 75%, #0f1b33 100%);">
+    style="background: linear-gradient(135deg, #1a0600 0%, #3d1400 35%, #2048A4 75%, #1A3D8A 100%);">
 
     {{-- Anneaux filigrane --}}
     <div class="absolute -right-16 top-1/2 -translate-y-1/2 w-96 h-96 opacity-[0.12] pointer-events-none">
@@ -89,7 +89,7 @@
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
             @foreach([
-                ['Santé',     '#4A90E2', 'border-l-blue-500',   'bg-blue-500',   'text-blue-500',   'fa-heartbeat', 'Prévention, sensibilisation aux maladies chroniques (diabète, obésité), bilan de santé pour les jeunes. Partenariat avec les acteurs de santé martiniquais.'],
+                ['Santé',     '#3DAEF5', 'border-l-blue-500',   'bg-blue-500',   'text-blue-500',   'fa-heartbeat', 'Prévention, sensibilisation aux maladies chroniques (diabète, obésité), bilan de santé pour les jeunes. Partenariat avec les acteurs de santé martiniquais.'],
                 ['Nutrition', '#F5820A', 'border-l-orange-500', 'bg-orange-500', 'text-orange-500', 'fa-apple-alt', 'Le programme Fwi Ti Dèj lutte contre le saut du petit-déjeuner. Ateliers cuisine, courses solidaires et éducation alimentaire adaptée aux réalités ultramarines.'],
                 ['Sport',     '#D0021B', 'border-l-red-600',    'bg-red-600',    'text-red-600',    'fa-running',   'Sport Day MJA, courses solidaires, ateliers bien-être. Le sport comme vecteur de cohésion sociale et d\'épanouissement pour les jeunes des quartiers.'],
             ] as [$titre, $hex, $border, $bg, $fg, $icon, $desc])
@@ -313,7 +313,7 @@
 </section>
 
 {{-- ═══════════════════════════════════════════════ FWI TI DÈJ ══ --}}
-<section class="py-20 ring-watermark" style="background: linear-gradient(135deg, #0f1b33 0%, #1a2744 60%, #2d1000 100%);">
+<section class="py-20 ring-watermark" style="background: linear-gradient(135deg, #1A3D8A 0%, #2048A4 60%, #2d1000 100%);">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex flex-col lg:flex-row gap-14 items-center">
             <div class="lg:w-80 shrink-0 text-center">
@@ -400,7 +400,7 @@
 @endif
 
 {{-- ═══════════════════════════════════════════════════════ CTA ══ --}}
-<section class="py-20 relative overflow-hidden" style="background: linear-gradient(135deg, #1a0600 0%, #3d1400 50%, #1a2744 100%);">
+<section class="py-20 relative overflow-hidden" style="background: linear-gradient(135deg, #1a0600 0%, #3d1400 50%, #2048A4 100%);">
     <div class="absolute inset-0 opacity-[0.08] pointer-events-none">
         <svg viewBox="0 0 400 200" fill="none" class="w-full h-full"><circle cx="200" cy="100" r="190" stroke="#F5820A" stroke-width="2"/><circle cx="200" cy="100" r="140" stroke="#F5820A" stroke-width="1.5"/><circle cx="200" cy="100" r="90" stroke="#F5820A" stroke-width="1"/></svg>
     </div>
