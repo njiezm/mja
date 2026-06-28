@@ -34,14 +34,27 @@
                 </select>
             </div>
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1.5">Mot de passe <span class="text-red-500">*</span></label>
+                <div class="flex items-center justify-between mb-1.5">
+                    <label class="block text-sm font-semibold text-gray-700">Mot de passe <span class="text-red-500">*</span></label>
+                    <button type="button" onclick="generatePassword()" class="text-xs text-mja-blue hover:text-mja-bluedark font-display font-bold flex items-center gap-1 transition-colors">
+                        <i class="fas fa-wand-magic-sparkles text-[10px]"></i> Suggérer un mot de passe
+                    </button>
+                </div>
                 <div class="relative">
                     <input type="password" name="password" id="pw" required minlength="8"
-                        class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-mja-blue pr-12 @error('password') border-red-400 @enderror"
+                        class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-mja-blue pr-20 @error('password') border-red-400 @enderror"
                         placeholder="Minimum 8 caractères">
-                    <button type="button" onclick="togglePw('pw','eyePw')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1">
-                        <i id="eyePw" class="fas fa-eye text-sm"></i>
-                    </button>
+                    <div class="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
+                        <button type="button" id="copyBtn" onclick="copyPassword()" title="Copier" class="hidden w-7 h-7 text-gray-400 hover:text-mja-blue flex items-center justify-center transition-colors">
+                            <i id="copyIcon" class="fas fa-copy text-xs"></i>
+                        </button>
+                        <button type="button" onclick="togglePw('pw','eyePw')" class="w-7 h-7 text-gray-400 hover:text-gray-600 flex items-center justify-center">
+                            <i id="eyePw" class="fas fa-eye text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="pw-strength" class="hidden mt-2 h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                    <div id="pw-strength-bar" class="h-full rounded-full transition-all duration-300"></div>
                 </div>
             </div>
             <div>
@@ -77,10 +90,56 @@
 </div>
 <script>
 function togglePw(id, eyeId) {
-    var f = document.getElementById(id);
-    var e = document.getElementById(eyeId);
+    var f = document.getElementById(id), e = document.getElementById(eyeId);
     if (f.type === 'password') { f.type = 'text'; e.className = 'fas fa-eye-slash text-sm'; }
     else { f.type = 'password'; e.className = 'fas fa-eye text-sm'; }
 }
+
+function generatePassword() {
+    var chars = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%-_';
+    var pw = '';
+    var arr = new Uint8Array(14);
+    window.crypto.getRandomValues(arr);
+    arr.forEach(function(b) { pw += chars[b % chars.length]; });
+
+    var f1 = document.getElementById('pw'), f2 = document.getElementById('pw2');
+    f1.value = pw; f2.value = pw;
+    f1.type = 'text'; f2.type = 'text';
+    document.getElementById('eyePw').className  = 'fas fa-eye-slash text-sm';
+    document.getElementById('eyePw2').className = 'fas fa-eye-slash text-sm';
+    document.getElementById('copyBtn').classList.remove('hidden');
+    updateStrength(pw);
+    f1.focus();
+}
+
+function copyPassword() {
+    var val = document.getElementById('pw').value;
+    navigator.clipboard.writeText(val).then(function() {
+        var icon = document.getElementById('copyIcon');
+        icon.className = 'fas fa-check text-xs text-green-500';
+        setTimeout(function() { icon.className = 'fas fa-copy text-xs'; }, 2000);
+    });
+}
+
+function updateStrength(pw) {
+    var score = 0;
+    if (pw.length >= 8)  score++;
+    if (pw.length >= 12) score++;
+    if (/[A-Z]/.test(pw)) score++;
+    if (/[0-9]/.test(pw)) score++;
+    if (/[^a-zA-Z0-9]/.test(pw)) score++;
+
+    var bar = document.getElementById('pw-strength-bar');
+    var wrap = document.getElementById('pw-strength');
+    wrap.classList.remove('hidden');
+    var colors = ['#ef4444','#f97316','#eab308','#22c55e','#16a34a'];
+    bar.style.width = (score * 20) + '%';
+    bar.style.background = colors[score - 1] || '#ef4444';
+}
+
+document.getElementById('pw').addEventListener('input', function() {
+    if (this.value) updateStrength(this.value);
+    else document.getElementById('pw-strength').classList.add('hidden');
+});
 </script>
 @endsection
