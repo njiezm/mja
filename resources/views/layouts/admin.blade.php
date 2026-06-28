@@ -363,9 +363,10 @@
 
         document.getElementById('confirm-ok-btn').addEventListener('click', function() {
             if (!_form) return;
-            _form.removeAttribute('data-confirm');
+            var f = _form;
+            f.removeAttribute('data-confirm');
             hideModal();
-            _form.submit();
+            f.submit();
         });
         document.getElementById('confirm-cancel-btn').addEventListener('click', hideModal);
         modal.addEventListener('click', function(e) { if (e.target === modal) hideModal(); });
