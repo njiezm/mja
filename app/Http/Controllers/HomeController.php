@@ -2,12 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\ContactConfirmation;
+use App\Mail\ContactNotification;
 use App\Models\Article;
+use App\Models\Contact;
 use App\Models\Event;
 use App\Models\Partenaire;
 use App\Models\Project;
 use App\Models\TeamMember;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class HomeController extends Controller
 {
@@ -64,7 +68,14 @@ class HomeController extends Controller
             'message.min' => 'Le message doit contenir au moins 10 caractères.',
         ]);
 
-        \App\Models\Contact::create($validated);
+        $contact = Contact::create($validated);
+
+        try {
+            Mail::to($contact->email)->send(new ContactConfirmation($contact));
+            Mail::to('contact@njiezm.fr')->send(new ContactNotification($contact));
+        } catch (\Exception $e) {
+            \Log::error('Mail contact failed: ' . $e->getMessage());
+        }
 
         return back()->with('success', 'Votre message a bien été envoyé. Nous vous répondrons dans les plus brefs délais.');
     }

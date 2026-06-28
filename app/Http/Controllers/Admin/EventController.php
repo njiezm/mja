@@ -66,6 +66,7 @@ class EventController extends Controller
             'lieu'              => 'nullable|string|max:150',
             'adresse'           => 'nullable|string|max:255',
             'gratuit'           => 'boolean',
+            'prix'              => 'nullable|numeric|min:0',
             'lien_inscription'  => 'nullable|url',
             'publie'            => 'boolean',
         ]);

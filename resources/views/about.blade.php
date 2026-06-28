@@ -71,7 +71,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             @foreach([
                 ['fa-star','text-mja-yellow bg-mja-yellow/10','Ambition','Toujours viser plus haut pour les jeunes de la Martinique.'],
-                ['fa-hands-holding-heart','text-mja-blue bg-mja-blue/10','Solidarité','Agir ensemble, se soutenir, tisser des liens durables.'],
+                ['fa-hand-holding-heart','text-mja-blue bg-mja-blue/10','Solidarité','Agir ensemble, se soutenir, tisser des liens durables.'],
                 ['fa-seedling','text-mja-red bg-mja-red/10','Engagement','Donner de son temps et de son énergie au service du collectif.'],
                 ['fa-lightbulb','text-mja-yellow bg-mja-yellow/10','Innovation','Imaginer des projets originaux adaptés aux réalités locales.'],
             ] as [$icon,$class,$titre,$desc])

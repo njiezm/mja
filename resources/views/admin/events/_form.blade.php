@@ -46,11 +46,25 @@
         <input type="file" name="image" accept="image/*" class="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-mja-blue/10 file:text-mja-blue file:font-semibold">
         @isset($event) @if($event->image)<div class="mt-2"><img src="{{ asset('storage/'.$event->image) }}" class="w-24 h-16 rounded-lg object-cover border"></div>@endif @endisset
     </div>
-    <div class="flex gap-8">
-        <div class="flex items-center gap-3">
-            <input type="hidden" name="gratuit" value="0">
-            <input type="checkbox" name="gratuit" id="gratuit" value="1" {{ old('gratuit', ($event->gratuit ?? true) ? '1' : '0') == '1' ? 'checked' : '' }} class="w-5 h-5 rounded text-mja-blue cursor-pointer">
-            <label for="gratuit" class="text-sm font-semibold text-gray-700 cursor-pointer">Entrée gratuite</label>
+    <div class="flex flex-wrap items-start gap-6">
+        <div>
+            <div class="flex items-center gap-3 mb-3">
+                <input type="hidden" name="gratuit" value="0">
+                <input type="checkbox" name="gratuit" id="gratuit" value="1"
+                    {{ old('gratuit', ($event->gratuit ?? true) ? '1' : '0') == '1' ? 'checked' : '' }}
+                    class="w-5 h-5 rounded text-mja-blue cursor-pointer">
+                <label for="gratuit" class="text-sm font-semibold text-gray-700 cursor-pointer">Entrée gratuite</label>
+            </div>
+            <div id="prix-field" class="{{ old('gratuit', ($event->gratuit ?? true) ? '1' : '0') == '1' ? 'hidden' : '' }}">
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">Prix (€) <span class="text-red-500">*</span></label>
+                <div class="relative">
+                    <input type="number" name="prix" id="prix" step="0.01" min="0"
+                        value="{{ old('prix', $event->prix ?? '') }}"
+                        class="w-40 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-mja-blue pr-10"
+                        placeholder="Ex : 5.00">
+                    <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">€</span>
+                </div>
+            </div>
         </div>
         <div class="flex items-center gap-3">
             <input type="hidden" name="publie" value="0">
@@ -58,4 +72,17 @@
             <label for="publie" class="text-sm font-semibold text-gray-700 cursor-pointer">Publier</label>
         </div>
     </div>
+    <script>
+    document.getElementById('gratuit').addEventListener('change', function() {
+        var pf = document.getElementById('prix-field');
+        var px = document.getElementById('prix');
+        if (this.checked) {
+            pf.classList.add('hidden');
+            px.value = '';
+        } else {
+            pf.classList.remove('hidden');
+            px.focus();
+        }
+    });
+    </script>
 </div>

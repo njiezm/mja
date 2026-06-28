@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\AdhesionConfirmation;
+use App\Mail\AdhesionNotification;
 use App\Models\Adhesion;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class AdhesionController extends Controller
 {
@@ -51,7 +54,14 @@ class AdhesionController extends Controller
 
         $validated['droit_image'] = true;
 
-        Adhesion::create($validated);
+        $adhesion = Adhesion::create($validated);
+
+        try {
+            Mail::to($adhesion->email)->send(new AdhesionConfirmation($adhesion));
+            Mail::to('contact@njiezm.fr')->send(new AdhesionNotification($adhesion));
+        } catch (\Exception $e) {
+            \Log::error('Mail adhesion failed: ' . $e->getMessage());
+        }
 
         return back()->with('success', true);
     }

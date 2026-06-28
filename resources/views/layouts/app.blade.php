@@ -192,12 +192,12 @@
     </nav>@include('partials.seasonal-banner')</div>{{-- /sticky --}}
 
     <!-- Flash -->
-    @if(session('success'))
+    @if(is_string(session('success')))
     <div class="bg-green-50 border-l-4 border-green-500 text-green-800 px-6 py-3 text-sm flex items-center gap-2 font-display font-semibold">
         <i class="fas fa-check-circle text-green-500"></i> {{ session('success') }}
     </div>
     @endif
-    @if(session('error'))
+    @if(is_string(session('error')))
     <div class="bg-red-50 border-l-4 border-mja-red text-red-800 px-6 py-3 text-sm flex items-center gap-2 font-display font-semibold">
         <i class="fas fa-exclamation-circle text-mja-red"></i> {{ session('error') }}
     </div>

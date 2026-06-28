@@ -24,7 +24,11 @@
             <span><i class="fas fa-calendar mr-1 text-mja-yellow"></i>{{ $event->date_debut->locale('fr')->isoFormat('dddd D MMMM Y') }}</span>
             <span><i class="fas fa-clock mr-1 text-mja-yellow"></i>{{ $event->date_debut->format('H\hi') }}</span>
             @if($event->lieu)<span><i class="fas fa-map-marker-alt mr-1 text-mja-yellow"></i>{{ $event->lieu }}</span>@endif
-            @if($event->gratuit)<span class="text-green-400"><i class="fas fa-tag mr-1"></i>Entrée gratuite</span>@endif
+            @if($event->gratuit)
+            <span class="text-green-400"><i class="fas fa-tag mr-1"></i>Entrée gratuite</span>
+            @else
+            <span class="text-orange-300"><i class="fas fa-ticket-alt mr-1"></i>{{ $event->prix ? number_format($event->prix, 2, ',', ' ').' €' : 'Payant' }}</span>
+            @endif
         </div>
     </div>
 </section>
@@ -63,7 +67,13 @@
                     <i class="fas fa-ticket-alt text-mja-red mr-1"></i>Tarif
                 </div>
                 <div class="font-display font-bold {{ $event->gratuit ? 'text-green-600' : 'text-orange-600' }}">
-                    {{ $event->gratuit ? 'Gratuit' : 'Payant' }}
+                    @if($event->gratuit)
+                        Gratuit
+                    @elseif($event->prix)
+                        {{ number_format($event->prix, 2, ',', ' ') }} €
+                    @else
+                        Payant
+                    @endif
                 </div>
                 @if($event->lien_inscription)
                 <a href="{{ $event->lien_inscription }}" target="_blank"

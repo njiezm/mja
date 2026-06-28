@@ -10,12 +10,13 @@ class Event extends Model
     protected $fillable = [
         'titre', 'slug', 'description_courte', 'description',
         'image', 'date_debut', 'date_fin', 'lieu', 'adresse',
-        'gratuit', 'lien_inscription', 'publie',
+        'gratuit', 'prix', 'lien_inscription', 'publie',
     ];
 
     protected $casts = [
         'publie' => 'boolean',
         'gratuit' => 'boolean',
+        'prix' => 'decimal:2',
         'date_debut' => 'datetime',
         'date_fin' => 'datetime',
     ];

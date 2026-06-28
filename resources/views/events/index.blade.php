@@ -136,7 +136,10 @@ foreach ($avenir as $ev) {
                         @if($event->lieu)<span><i class="fas fa-map-marker-alt mr-1"></i>{{ $event->lieu }}</span>@endif
                         <span><i class="fas fa-clock mr-1"></i>{{ $event->date_debut->format('H') }}h{{ $event->date_debut->format('i') }}</span>
                         <span class="{{ $event->gratuit ? 'text-green-600' : 'text-orange-500' }} font-semibold">
-                            {{ $event->gratuit ? 'Gratuit' : 'Payant' }}
+                            @if($event->gratuit) Gratuit
+                            @elseif($event->prix) {{ number_format($event->prix, 2, ',', ' ') }} €
+                            @else Payant
+                            @endif
                         </span>
                     </div>
                 </div>
