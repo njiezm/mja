@@ -6,9 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Mail\AdminCreated;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Str;
 
 class UserController extends Controller
 {
@@ -43,11 +42,11 @@ class UserController extends Controller
         $plainPassword = $validated['password'];
         $user = User::create($validated);
 
-        if ($request->boolean('send_mail')) {
+        if ($request->has('send_mail')) {
             try {
                 Mail::to($user->email)->send(new AdminCreated($user, $plainPassword));
             } catch (\Exception $e) {
-                \Log::error('Mail AdminCreated failed: ' . $e->getMessage());
+                Log::error('Mail AdminCreated failed: ' . $e->getMessage());
             }
         }
 
