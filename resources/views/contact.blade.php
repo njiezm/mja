@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('title', "Contact — Madin'Jeunes Ambition")
 @section('meta_description', "Contactez Madin'Jeunes Ambition — association basée à Fort-de-France, Martinique. Pour toute question, partenariat ou information sur nos programmes.")
 

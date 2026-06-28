@@ -1,4 +1,4 @@
-﻿﻿@extends('layouts.admin')
+﻿@extends('layouts.admin')
 @section('title', "Adhésion de {$adhesion->prenom} {$adhesion->nom}")
 @section('page-title', 'Dossier d\'adhésion')
 @section('content')

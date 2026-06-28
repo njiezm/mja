@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('title', "Fwi Ti Dèj · Santé Nutrition Sport — Madin'Jeunes Ambition")
 @section('meta_description', "Le programme SNS de MJA : petits-déjeuners solidaires Fwi Ti Dèj, sport, prévention santé pour les jeunes de Martinique, Guadeloupe et Guyane.")
 @section('og_image', asset('images/fwitidejllogo.png'))

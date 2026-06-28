@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('title', "Rejoindre MJA — Adhésion Madin'Jeunes Ambition")
 @section('meta_description', "Rejoins Madin'Jeunes Ambition ! Adhère en ligne pour intégrer notre équipe de jeunes bénévoles engagés en Martinique. Gratuit et ouvert à tous.")
 @section('twitter_card', 'summary')
@@ -37,13 +37,33 @@
 
                 <div class="bg-mja-light rounded-2xl p-5 border-l-4 border-mja-yellow">
                     <h3 class="font-display font-bold text-mja-gray mb-3 flex items-center gap-2">
-                        <i class="fas fa-info-circle text-mja-yellow"></i> Informations
+                        <i class="fas fa-info-circle text-mja-yellow"></i> Modalités d'inscription
                     </h3>
                     <ul class="space-y-2 text-sm text-gray-600">
                         <li class="flex items-start gap-2"><i class="fas fa-check text-mja-blue mt-0.5 shrink-0"></i> Cotisation de <strong>20 €</strong> pour finaliser l'inscription</li>
-                        <li class="flex items-start gap-2"><i class="fas fa-check text-mja-blue mt-0.5 shrink-0"></i> Envoie ta photo au <strong>+596 696 43 88 21</strong> après inscription</li>
+                        <li class="flex items-start gap-2"><i class="fas fa-check text-mja-blue mt-0.5 shrink-0"></i> Envoie ta photo au secrétariat après inscription</li>
                         <li class="flex items-start gap-2"><i class="fas fa-check text-mja-blue mt-0.5 shrink-0"></i> Tu seras présenté(e) aux autres membres</li>
                     </ul>
+                </div>
+
+                <div class="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+                    <h3 class="font-display font-bold text-mja-gray mb-3 flex items-center gap-2">
+                        <i class="fas fa-phone text-mja-blue"></i> Contacts
+                    </h3>
+                    <div class="space-y-3">
+                        <div>
+                            <div class="text-xs font-display font-bold text-gray-400 uppercase tracking-wider mb-0.5">Secrétaire</div>
+                            <a href="tel:+596696438821" class="font-display font-bold text-mja-dark hover:text-mja-blue transition-colors text-sm flex items-center gap-2">
+                                <i class="fas fa-mobile-alt text-mja-blue text-xs"></i> +596 696 43 88 21
+                            </a>
+                        </div>
+                        <div class="border-t border-gray-50 pt-3">
+                            <div class="text-xs font-display font-bold text-gray-400 uppercase tracking-wider mb-0.5">Secrétaire adjointe</div>
+                            <a href="tel:+596696438838" class="font-display font-bold text-mja-dark hover:text-mja-blue transition-colors text-sm flex items-center gap-2">
+                                <i class="fas fa-mobile-alt text-mja-blue text-xs"></i> +596 696 43 88 38
+                            </a>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
@@ -72,7 +92,7 @@
                         </div>
                         <h3 class="font-display font-bold text-lg mb-2">Merci pour ta demande !</h3>
                         <p class="text-sm leading-relaxed mb-2">Nous avons bien reçu ton formulaire d'adhésion. Nous te recontacterons très prochainement.</p>
-                        <p class="text-sm font-semibold">📸 N'oublie pas d'envoyer ta photo au <span class="text-green-700">+596 696 43 88 21</span> pour être présenté(e) aux autres membres !</p>
+                        <p class="text-sm font-semibold"><i class="fas fa-camera mr-1"></i> N'oublie pas d'envoyer ta photo au secrétariat (<span class="text-green-700">+596 696 43 88 21</span> ou <span class="text-green-700">+596 696 43 88 38</span>) pour être présenté(e) aux autres membres !</p>
                     </div>
                     @else
 

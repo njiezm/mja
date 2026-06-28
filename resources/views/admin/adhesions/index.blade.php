@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin')
+@extends('layouts.admin')
 @section('title', 'Demandes d\'adhésion')
 @section('page-title', 'Demandes d\'adhésion')
 @section('content')

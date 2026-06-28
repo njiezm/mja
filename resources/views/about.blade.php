@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('title', "À propos — Madin'Jeunes Ambition")
 @section('meta_description', "Découvrez l'histoire, les valeurs et l'équipe de Madin'Jeunes Ambition — association de jeunes bénévoles fondée en 2011 à Fort-de-France, Martinique.")
 

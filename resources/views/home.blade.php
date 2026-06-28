@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('title', "Madin'Jeunes Ambition – Les jeunes de la Martinique se mobilisent !")
 @section('meta_description', "Association de jeunes bénévoles à Fort-de-France, Martinique. Fwi Ti Dèj, Sport, Santé, Culture — MJA mobilise la jeunesse ultramarine depuis 2011.")
 @section('og_image', asset('images/logomjat.png'))

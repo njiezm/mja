@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin')
+@extends('layouts.admin')
 @section('title', 'Message de ' . $contact->nom)
 @section('page-title', 'Détail du message')
 @section('content')

@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('title', "Ressources — Madin'Jeunes Ambition")
 @section('meta_description', "Documents, guides et ressources utiles mis à disposition par Madin'Jeunes Ambition pour les jeunes de Martinique et des Antilles.")
 

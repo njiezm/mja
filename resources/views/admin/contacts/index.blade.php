@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin')
+@extends('layouts.admin')
 @section('title', 'Messages')
 @section('page-title', 'Messages reçus')
 @section('content')

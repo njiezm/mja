@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('title', "Événements — Madin'Jeunes Ambition")
 @section('meta_description', "Agenda des événements de Madin'Jeunes Ambition en Martinique — Sport Day, Fwi Ti Dèj, conférences et rencontres jeunesse.")
 
