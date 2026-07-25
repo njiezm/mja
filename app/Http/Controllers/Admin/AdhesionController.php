@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AdhesionController extends Controller
 {
@@ -29,6 +30,47 @@ class AdhesionController extends Controller
         $periods = \App\Models\AdhesionPeriod::orderByDesc('date_debut')->get();
 
         return view('admin.adhesions.index', compact('adhesions', 'stats', 'periods'));
+    }
+
+    public function export(Request $request): StreamedResponse
+    {
+        $query = Adhesion::with('period')->orderByDesc('created_at');
+        if ($request->filled('period')) {
+            $query->where('period_id', $request->integer('period'));
+        }
+        $adhesions = $query->get();
+
+        return response()->streamDownload(function () use ($adhesions) {
+            $out = fopen('php://output', 'w');
+            fprintf($out, "\xEF\xBB\xBF"); // BOM UTF-8 (Excel)
+            fputcsv($out, [
+                'Reçue le', 'Statut', 'Type', 'Civilité', 'Nom', 'Prénom', 'Date naissance',
+                'Profession', 'Téléphone', 'Email', 'Adresse', 'T-shirt', 'Permis',
+                'Problèmes santé', 'Contact urgence', 'Moyen paiement', 'Période',
+            ], ';');
+            foreach ($adhesions as $a) {
+                fputcsv($out, [
+                    $a->created_at?->format('d/m/Y H:i'),
+                    $a->label_statut,
+                    $a->label_premiere_adhesion,
+                    $a->civilite,
+                    $a->nom,
+                    $a->prenom,
+                    $a->date_naissance,
+                    $a->profession,
+                    $a->telephone,
+                    $a->email,
+                    str_replace(["\r", "\n"], ' ', (string) $a->adresse_postale),
+                    $a->taille_tshirt,
+                    $a->permis,
+                    str_replace(["\r", "\n"], ' ', (string) $a->problemes_sante),
+                    $a->urgence_contact,
+                    $a->label_moyen_paiement,
+                    $a->period?->label,
+                ], ';');
+            }
+            fclose($out);
+        }, 'adhesions-mja-' . now()->format('Y-m-d') . '.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 
     public function show(Adhesion $adhesion)

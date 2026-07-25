@@ -37,6 +37,16 @@ class SpaceController extends Controller
         return view('member.trombinoscope', compact('membres', 'me'));
     }
 
+    public function card()
+    {
+        $member = Auth::guard('member')->user();
+        $adhesion = $member->adhesion;
+
+        abort_unless($adhesion && $adhesion->isAdherent(), 403, "L'attestation est réservée aux adhérents à jour de cotisation.");
+
+        return view('member.card', compact('member', 'adhesion'));
+    }
+
     public function editProfile()
     {
         $member = Auth::guard('member')->user();

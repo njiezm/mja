@@ -109,6 +109,9 @@
 
                     <form method="POST" action="{{ route('adhesion.store') }}" class="space-y-8" enctype="multipart/form-data">
                         @csrf
+                        <div aria-hidden="true" style="position:absolute;left:-9999px;height:0;overflow:hidden" tabindex="-1">
+                            <label>Ne pas remplir<input type="text" name="site_web" tabindex="-1" autocomplete="off"></label>
+                        </div>
 
                         {{-- Bloc 1 : Type d'adhésion --}}
                         <div>

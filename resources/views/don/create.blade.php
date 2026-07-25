@@ -25,6 +25,9 @@
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
             <form method="POST" action="{{ route('don.store') }}" class="space-y-5" id="don-form">
                 @csrf
+                <div aria-hidden="true" style="position:absolute;left:-9999px;height:0;overflow:hidden" tabindex="-1">
+                    <label>Ne pas remplir<input type="text" name="site_web" tabindex="-1" autocomplete="off"></label>
+                </div>
                 <div>
                     <label for="montant" class="block text-sm font-display font-bold text-mja-gray mb-2">Montant du don <span class="text-mja-red" aria-hidden="true">*</span></label>
                     <div class="grid grid-cols-3 sm:grid-cols-5 gap-2 mb-3">

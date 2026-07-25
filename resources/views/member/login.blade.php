@@ -40,9 +40,12 @@
                         <button type="button" onclick="mjaTogglePw(this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><i class="fas fa-eye"></i></button>
                     </div>
                 </div>
-                <label class="flex items-center gap-2 text-sm text-gray-600">
-                    <input type="checkbox" name="remember" class="rounded border-gray-300 text-mja-blue"> Se souvenir de moi
-                </label>
+                <div class="flex items-center justify-between">
+                    <label class="flex items-center gap-2 text-sm text-gray-600">
+                        <input type="checkbox" name="remember" class="rounded border-gray-300 text-mja-blue"> Se souvenir de moi
+                    </label>
+                    <a href="{{ route('member.password.request') }}" class="text-sm text-mja-blue hover:underline font-display font-semibold">Mot de passe oublié ?</a>
+                </div>
                 <button type="submit" class="w-full btn-blue font-display font-bold py-3.5 rounded-xl transition-colors">
                     <i class="fas fa-sign-in-alt mr-1"></i> Se connecter
                 </button>

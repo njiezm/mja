@@ -192,6 +192,10 @@
                         {{ $label }}
                     </a>
                     @endforeach
+                    <a href="{{ route('search') }}" aria-label="Rechercher sur le site"
+                       class="ml-1 flex items-center justify-center w-10 h-10 rounded-lg transition-colors {{ request()->routeIs('search') ? 'text-mja-blue' : 'text-gray-600 hover:text-mja-blue' }}">
+                        <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
+                    </a>
                     <a href="{{ auth('member')->check() ? route('member.dashboard') : route('member.login') }}"
                        class="ml-1 flex items-center gap-1.5 text-base font-display font-semibold px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('member.*') ? 'text-mja-blue' : 'text-gray-600 hover:text-mja-blue' }}">
                         <i class="fas fa-circle-user"></i> {{ auth('member')->check() ? 'Mon espace' : 'Espace membre' }}
@@ -218,6 +222,7 @@
                 @foreach($navLinks as [$label, $route, $pattern])
                 <a href="{{ route($route) }}" class="block px-3 py-2 text-gray-700 hover:text-mja-blue text-sm font-semibold font-display transition-colors">{{ $label }}</a>
                 @endforeach
+                <a href="{{ route('search') }}" class="block px-3 py-2 text-gray-700 hover:text-mja-blue text-sm font-semibold font-display transition-colors"><i class="fas fa-magnifying-glass mr-1"></i> Rechercher</a>
                 <a href="{{ route('contact') }}" class="block px-3 py-2 text-gray-700 hover:text-mja-blue text-sm font-semibold font-display transition-colors">Contact</a>
                 <a href="{{ route('adhesion') }}" class="block px-3 py-2 text-mja-blue hover:text-mja-bluedark text-sm font-bold font-display transition-colors">Adhérer</a>
                 <a href="{{ auth('member')->check() ? route('member.dashboard') : route('member.login') }}" class="block px-3 py-2 text-gray-700 hover:text-mja-blue text-sm font-semibold font-display transition-colors border-t border-gray-100 mt-1 pt-2">

@@ -75,6 +75,15 @@
                     <span class="inline-flex items-center gap-1.5 text-mja-blue font-display font-bold text-sm">Voir le trombinoscope <i class="fas fa-arrow-right text-xs"></i></span>
                 </a>
 
+                @if($adhesion->isAdherent())
+                <a href="{{ route('member.card') }}" target="_blank" class="block bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
+                    <div class="w-10 h-10 bg-mja-blue/15 text-mja-blue rounded-xl flex items-center justify-center mb-3"><i class="fas fa-id-card"></i></div>
+                    <h3 class="font-display font-bold text-mja-gray mb-1">Carte de membre</h3>
+                    <p class="text-sm text-gray-500 mb-3">Votre carte et votre attestation d'adhésion, à imprimer ou télécharger en PDF.</p>
+                    <span class="inline-flex items-center gap-1.5 text-mja-blue font-display font-bold text-sm">Voir ma carte <i class="fas fa-arrow-right text-xs"></i></span>
+                </a>
+                @endif
+
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                     <h3 class="font-display font-bold text-mja-gray mb-1">Mon compte</h3>
                     <p class="text-sm text-gray-500 mb-4">Vous pouvez supprimer votre compte. Vous aurez <strong>30 jours</strong> pour le restaurer avant sa suppression définitive.</p>

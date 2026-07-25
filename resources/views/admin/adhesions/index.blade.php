@@ -33,18 +33,26 @@
     </div>
 </div>
 
-@if($periods->count())
-<form method="GET" class="mb-4 flex items-center gap-2">
-    <label class="text-sm text-gray-500 font-display font-semibold">Période :</label>
-    <select name="period" onchange="this.form.submit()" class="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-mja-blue">
-        <option value="">Toutes</option>
-        @foreach($periods as $p)
-        <option value="{{ $p->id }}" @selected(request('period') == $p->id)>{{ $p->label }}</option>
-        @endforeach
-    </select>
-    @if(request('period'))<a href="{{ route('admin.adhesions.index') }}" class="text-xs text-mja-blue hover:underline">Réinitialiser</a>@endif
-</form>
-@endif
+<div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+    @if($periods->count())
+    <form method="GET" class="flex items-center gap-2">
+        <label class="text-sm text-gray-500 font-display font-semibold">Période :</label>
+        <select name="period" onchange="this.form.submit()" class="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-mja-blue">
+            <option value="">Toutes</option>
+            @foreach($periods as $p)
+            <option value="{{ $p->id }}" @selected(request('period') == $p->id)>{{ $p->label }}</option>
+            @endforeach
+        </select>
+        @if(request('period'))<a href="{{ route('admin.adhesions.index') }}" class="text-xs text-mja-blue hover:underline">Réinitialiser</a>@endif
+    </form>
+    @else
+    <span></span>
+    @endif
+    <a href="{{ route('admin.adhesions.export', array_filter(['period' => request('period')])) }}"
+       class="inline-flex items-center gap-2 bg-mja-dark hover:bg-mja-navy text-white font-display font-bold text-sm px-4 py-2 rounded-xl transition-colors">
+        <i class="fas fa-file-csv"></i> Exporter en CSV
+    </a>
+</div>
 
 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-x-auto">
     <table class="w-full text-sm min-w-[720px]">

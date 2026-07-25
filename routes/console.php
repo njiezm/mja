@@ -10,3 +10,6 @@ Artisan::command('inspire', function () {
 
 // Purge quotidienne des comptes membres supprimés depuis plus de 30 jours.
 Schedule::command('mja:purge-members')->dailyAt('03:00');
+
+// Sauvegarde hebdomadaire (base de données + fichiers déposés).
+Schedule::command('mja:backup')->weeklyOn(0, '02:00');

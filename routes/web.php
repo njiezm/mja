@@ -7,10 +7,12 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ResourceController;
 use App\Http\Controllers\DonationController;
+use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SourceTrackController;
 use App\Http\Controllers\Member\AccountController as MemberAccountController;
 use App\Http\Controllers\Member\AuthController as MemberAuthController;
+use App\Http\Controllers\Member\PasswordResetController as MemberPasswordResetController;
 use App\Http\Controllers\Member\SpaceController as MemberSpaceController;
 use App\Http\Controllers\Admin;
 use Illuminate\Support\Facades\Route;
@@ -20,7 +22,7 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 Route::get('/a-propos', [HomeController::class, 'about'])->name('about');
 Route::get('/contact', [HomeController::class, 'contact'])->name('contact');
-Route::post('/contact', [HomeController::class, 'contactStore'])->name('contact.store');
+Route::post('/contact', [HomeController::class, 'contactStore'])->name('contact.store')->middleware(['honeypot', 'throttle:5,1']);
 
 Route::get('/actualites', [ArticleController::class, 'index'])->name('articles.index');
 Route::get('/actualites/{article:slug}', [ArticleController::class, 'show'])->name('articles.show');
@@ -36,13 +38,15 @@ Route::get('/ressources', [ResourceController::class, 'index'])->name('resources
 Route::get('/sante-nutrition-sport', [HomeController::class, 'sns'])->name('sns');
 
 Route::get('/adhesion', [AdhesionController::class, 'create'])->name('adhesion');
-Route::post('/adhesion', [AdhesionController::class, 'store'])->name('adhesion.store');
+Route::post('/adhesion', [AdhesionController::class, 'store'])->name('adhesion.store')->middleware(['honeypot', 'throttle:5,1']);
 Route::get('/adhesion/paiement/succes', [AdhesionController::class, 'paiementSucces'])->name('adhesion.paiement.succes');
 Route::get('/adhesion/paiement/annule', [AdhesionController::class, 'paiementAnnule'])->name('adhesion.paiement.annule');
 
 Route::get('/don', [DonationController::class, 'create'])->name('don');
-Route::post('/don', [DonationController::class, 'store'])->name('don.store');
+Route::post('/don', [DonationController::class, 'store'])->name('don.store')->middleware(['honeypot', 'throttle:10,1']);
 Route::get('/don/merci', [DonationController::class, 'merci'])->name('don.merci');
+
+Route::get('/recherche', [SearchController::class, 'index'])->name('search');
 
 Route::get('/mentions-legales', [HomeController::class, 'mentionsLegales'])->name('mentions-legales');
 Route::get('/politique-de-confidentialite', [HomeController::class, 'confidentialite'])->name('confidentialite');
@@ -58,13 +62,20 @@ Route::prefix('espace')->name('member.')->group(function () {
 
     // Connexion
     Route::get('connexion', [MemberAuthController::class, 'showLogin'])->name('login');
-    Route::post('connexion', [MemberAuthController::class, 'login'])->name('login.post');
+    Route::post('connexion', [MemberAuthController::class, 'login'])->name('login.post')->middleware('throttle:6,1');
     Route::post('deconnexion', [MemberAuthController::class, 'logout'])->name('logout');
+
+    // Mot de passe oublié (membre)
+    Route::get('mot-de-passe-oublie', [MemberPasswordResetController::class, 'showLinkRequest'])->name('password.request');
+    Route::post('mot-de-passe-oublie', [MemberPasswordResetController::class, 'sendResetLink'])->name('password.email')->middleware('throttle:4,1');
+    Route::get('reinitialiser/{token}', [MemberPasswordResetController::class, 'showReset'])->name('password.reset');
+    Route::post('reinitialiser', [MemberPasswordResetController::class, 'reset'])->name('password.update')->middleware('throttle:6,1');
 
     // Espace protégé
     Route::middleware('auth:member')->group(function () {
         Route::get('/', [MemberSpaceController::class, 'dashboard'])->name('dashboard');
         Route::get('trombinoscope', [MemberSpaceController::class, 'trombinoscope'])->name('trombinoscope');
+        Route::get('carte', [MemberSpaceController::class, 'card'])->name('card');
         Route::get('profil', [MemberSpaceController::class, 'editProfile'])->name('profile.edit');
         Route::put('profil', [MemberSpaceController::class, 'updateProfile'])->name('profile.update');
         Route::delete('compte', [MemberSpaceController::class, 'destroy'])->name('account.destroy');
@@ -96,6 +107,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
         Route::delete('contacts/{contact}', [Admin\ContactController::class, 'destroy'])->name('contacts.destroy');
 
         Route::get('adhesions', [Admin\AdhesionController::class, 'index'])->name('adhesions.index');
+        Route::get('adhesions/export', [Admin\AdhesionController::class, 'export'])->name('adhesions.export');
         Route::get('adhesions/{adhesion}', [Admin\AdhesionController::class, 'show'])->name('adhesions.show');
         Route::patch('adhesions/{adhesion}/statut', [Admin\AdhesionController::class, 'updateStatut'])->name('adhesions.statut');
         Route::delete('adhesions/{adhesion}', [Admin\AdhesionController::class, 'destroy'])->name('adhesions.destroy');

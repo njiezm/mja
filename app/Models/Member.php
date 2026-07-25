@@ -26,4 +26,9 @@ class Member extends Authenticatable
     {
         return $this->belongsTo(Adhesion::class);
     }
+
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new \App\Notifications\MemberResetPassword($token));
+    }
 }

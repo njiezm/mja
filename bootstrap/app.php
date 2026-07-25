@@ -18,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->alias([
+            'honeypot'    => \App\Http\Middleware\Honeypot::class,
             'content'     => \App\Http\Middleware\EnsureContentManager::class,
             'admin'       => \App\Http\Middleware\EnsureAdmin::class,
             'super_admin' => \App\Http\Middleware\EnsureSuperAdmin::class,
