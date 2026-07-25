@@ -1,9 +1,21 @@
 @import 'tailwindcss';
 
+/* Sources scannées pour ne générer que les classes réellement utilisées */
+@source '../views';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
+/* Thème MJA (couleurs + polices) — équivalent de l'ancienne config Tailwind inline */
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --color-mja-blue: #3DAEF5;
+    --color-mja-bluedark: #1E93D6;
+    --color-mja-yellow: #F5A623;
+    --color-mja-red: #D0021B;
+    --color-mja-dark: #2048A4;
+    --color-mja-navy: #1A3D8A;
+    --color-mja-light: #EBF4FF;
+    --color-mja-gray: #333333;
+
+    --font-display: 'Montserrat', sans-serif;
+    --font-sans: 'Open Sans', sans-serif;
 }

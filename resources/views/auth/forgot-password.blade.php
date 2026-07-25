@@ -4,18 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mot de passe oublié — Administration MJA</title>
-    <script src="{{ asset('vendor/tailwind/tailwind.js') }}"
-            onerror="this.onerror=null;var s=document.createElement('script');s.src='https://cdn.tailwindcss.com';s.onload=function(){window.tailwind&&(tailwind.config=window.__mjaTwConfig)};document.head.appendChild(s)"></script>
-    <script>
-        window.__mjaTwConfig = tailwind.config = {
-            theme: {
-                extend: {
-                    colors: { mja: { blue:'#3DAEF5', bluedark:'#1E93D6', yellow:'#F5A623', red:'#D0021B', dark:'#2048A4', navy:'#1A3D8A' } },
-                    fontFamily: { display:['Montserrat','sans-serif'], sans:['Open Sans','sans-serif'] }
-                }
-            }
-        }
-    </script>
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
     <link rel="stylesheet" href="{{ asset('fonts/fonts.css') }}"
           onerror="this.onerror=null;var l=document.createElement('link');l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Open+Sans:wght@400;500;600&display=swap';document.head.appendChild(l)">
     <link rel="stylesheet" href="{{ asset('vendor/fontawesome/css/all.min.css') }}"

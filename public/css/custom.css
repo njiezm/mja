@@ -1,0 +1,12 @@
+/* =====================================================================
+   custom.css — Retouches CSS manuelles (MJA)
+   ---------------------------------------------------------------------
+   Ce fichier est chargé APRÈS app.css : ce que vous mettez ici a la
+   priorité. Vous pouvez l'éditer directement sur le serveur, sans
+   recompiler Tailwind (aucun build nécessaire).
+
+   app.css (Tailwind compilé) se régénère avec :
+       npx @tailwindcss/cli -i resources/css/app.css -o public/css/app.css --minify
+   (à relancer uniquement si vous ajoutez de NOUVELLES classes Tailwind
+    dans les templates .blade.php)
+   ===================================================================== */

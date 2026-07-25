@@ -35,33 +35,9 @@
     <meta name="twitter:description" content="@yield('meta_description', "Association de jeunes bénévoles à Fort-de-France, Martinique.")">
     <meta name="twitter:image"       content="@yield('og_image', asset('images/logomjat.png'))">
 
-    {{-- ── Tailwind CSS (local → CDN fallback) ────────────────── --}}
-    <script src="{{ asset('vendor/tailwind/tailwind.js') }}"
-            onerror="this.onerror=null;var s=document.createElement('script');s.src='https://cdn.tailwindcss.com';document.head.appendChild(s)"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        mja: {
-                            blue:   '#3DAEF5',
-                            bluedark: '#1E93D6',
-                            yellow: '#F5A623',
-                            red:    '#D0021B',
-                            dark:   '#2048A4',
-                            navy:   '#1A3D8A',
-                            light:  '#EBF4FF',
-                            gray:   '#333333',
-                        }
-                    },
-                    fontFamily: {
-                        display: ['Montserrat', 'sans-serif'],
-                        sans:    ['Open Sans', 'sans-serif'],
-                    }
-                }
-            }
-        }
-    </script>
+    {{-- ── Tailwind CSS (compilé en local, statique) ──────────── --}}
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
 
     {{-- ── Polices Google Fonts (local → CDN fallback) ──────────── --}}
     <link rel="stylesheet" href="{{ asset('fonts/fonts.css') }}"

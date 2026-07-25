@@ -8,32 +8,8 @@
 
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/logomjat.png') }}">
 
-    <script src="{{ asset('vendor/tailwind/tailwind.js') }}"
-            onerror="this.onerror=null;var s=document.createElement('script');s.src='https://cdn.tailwindcss.com';document.head.appendChild(s)"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        mja: {
-                            blue:     '#3DAEF5',
-                            bluedark: '#1E93D6',
-                            yellow:   '#F5A623',
-                            red:      '#D0021B',
-                            dark:     '#2048A4',
-                            navy:     '#1A3D8A',
-                            light:    '#EBF4FF',
-                            gray:     '#333333',
-                        }
-                    },
-                    fontFamily: {
-                        display: ['Montserrat', 'sans-serif'],
-                        sans:    ['Open Sans', 'sans-serif'],
-                    }
-                }
-            }
-        }
-    </script>
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
     <link rel="stylesheet" href="{{ asset('fonts/fonts.css') }}"
           onerror="this.onerror=null;var l=document.createElement('link');l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Open+Sans:wght@400;500;600&display=swap';document.head.appendChild(l)">
     <link rel="stylesheet" href="{{ asset('vendor/fontawesome/css/all.min.css') }}"
