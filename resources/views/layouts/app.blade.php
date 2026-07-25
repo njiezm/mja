@@ -201,7 +201,7 @@
                         <i class="fas fa-circle-user"></i> {{ auth('member')->check() ? 'Mon espace' : 'Espace membre' }}
                     </a>
                     <a href="{{ route('adhesion') }}"
-                       class="ml-1 bg-mja-yellow hover:bg-yellow-400 text-mja-dark font-display font-bold text-sm px-4 py-2 rounded-full transition-colors {{ request()->routeIs('adhesion') ? 'ring-2 ring-mja-yellow ring-offset-2 ring-offset-white' : '' }}">
+                       class="ml-1 bg-mja-yellow hover:bg-yellow-400 text-[#14264D] font-display font-bold text-sm px-4 py-2 rounded-full transition-colors {{ request()->routeIs('adhesion') ? 'ring-2 ring-mja-yellow ring-offset-2 ring-offset-white' : '' }}">
                         Adhérer
                     </a>
                     <a href="{{ route('contact') }}"
@@ -224,7 +224,7 @@
                 @endforeach
                 <a href="{{ route('search') }}" class="block px-3 py-2 text-gray-700 hover:text-mja-blue text-sm font-semibold font-display transition-colors"><i class="fas fa-magnifying-glass mr-1"></i> Rechercher</a>
                 <a href="{{ route('contact') }}" class="block px-3 py-2 text-gray-700 hover:text-mja-blue text-sm font-semibold font-display transition-colors">Contact</a>
-                <a href="{{ route('adhesion') }}" class="block px-3 py-2 text-mja-blue hover:text-mja-bluedark text-sm font-bold font-display transition-colors">Adhérer</a>
+                <a href="{{ route('adhesion') }}" class="block px-3 py-2 text-mja-dark hover:text-mja-navy text-sm font-bold font-display transition-colors">Adhérer</a>
                 <a href="{{ auth('member')->check() ? route('member.dashboard') : route('member.login') }}" class="block px-3 py-2 text-gray-700 hover:text-mja-blue text-sm font-semibold font-display transition-colors border-t border-gray-100 mt-1 pt-2">
                     <i class="fas fa-circle-user mr-1"></i> {{ auth('member')->check() ? 'Mon espace' : 'Espace membre' }}
                 </a>

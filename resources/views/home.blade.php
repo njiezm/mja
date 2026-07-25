@@ -61,7 +61,7 @@
                     <div class="w-56 h-56 lg:w-72 lg:h-72 bg-white rounded-3xl shadow-2xl flex items-center justify-center p-6">
                         <img src="/images/logo.jpg" alt="Madin'Jeunes Ambition" class="w-full h-full object-contain">
                     </div>
-                    <div class="absolute -top-4 -right-4 bg-mja-yellow text-mja-dark font-display font-black text-xs px-3 py-1.5 rounded-full shadow-lg">
+                    <div class="absolute -top-4 -right-4 bg-mja-yellow text-[#14264D] font-display font-black text-xs px-3 py-1.5 rounded-full shadow-lg">
                         43 membres
                     </div>
                     <div class="absolute -bottom-4 -left-4 bg-mja-red text-white font-display font-bold text-xs px-3 py-1.5 rounded-full shadow-lg">
@@ -81,23 +81,23 @@
                 <div class="font-display font-black text-4xl text-mja-blue">
                     <span class="stat-counter" data-target="43">0</span>
                 </div>
-                <div class="text-sm mt-1 text-gray-400 font-display font-semibold">Membres actifs</div>
+                <div class="text-sm mt-1 text-gray-300 font-display font-semibold">Membres actifs</div>
             </div>
             <div>
                 <div class="font-display font-black text-4xl text-mja-yellow">2011</div>
-                <div class="text-sm mt-1 text-gray-400 font-display font-semibold">Année de création</div>
+                <div class="text-sm mt-1 text-gray-300 font-display font-semibold">Année de création</div>
             </div>
             <div>
                 <div class="font-display font-black text-4xl text-mja-red">
                     <span class="stat-counter" data-target="60">0</span>+
                 </div>
-                <div class="text-sm mt-1 text-gray-400 font-display font-semibold">Sympathisants</div>
+                <div class="text-sm mt-1 text-gray-300 font-display font-semibold">Sympathisants</div>
             </div>
             <div>
                 <div class="font-display font-black text-4xl text-mja-blue">
                     <span class="stat-counter" data-target="20000">0</span>+
                 </div>
-                <div class="text-sm mt-1 text-gray-400 font-display font-semibold">Petits-déj organisés</div>
+                <div class="text-sm mt-1 text-gray-300 font-display font-semibold">Petits-déj organisés</div>
             </div>
         </div>
     </div>
@@ -190,11 +190,11 @@
             <div>
                 <div class="inline-flex items-center gap-2 mb-3">
                     <span class="w-8 h-0.5 bg-mja-yellow"></span>
-                    <span class="text-mja-yellow font-display font-bold text-sm uppercase tracking-widest">Ce que nous portons</span>
+                    <span class="text-yellow-700 font-display font-bold text-sm uppercase tracking-widest">Ce que nous portons</span>
                 </div>
                 <h2 class="font-display font-black text-3xl sm:text-4xl text-mja-gray">Nos projets</h2>
             </div>
-            <a href="{{ route('projects.index') }}" class="text-mja-blue hover:text-mja-bluedark font-display font-bold text-sm flex items-center gap-1 transition-colors">
+            <a href="{{ route('projects.index') }}" class="text-mja-dark hover:text-mja-navy font-display font-bold text-sm flex items-center gap-1 transition-colors">
                 Tous <i class="fas fa-arrow-right"></i>
             </a>
         </div>
@@ -213,7 +213,7 @@
                 @endif
                 <div class="p-6">
                     <span class="inline-block text-xs font-display font-bold px-3 py-1 rounded-full mb-3
-                        {{ $project->statut === 'en_cours' ? 'bg-mja-blue/10 text-mja-blue' : ($project->statut === 'a_venir' ? 'bg-mja-yellow/10 text-yellow-700' : 'bg-gray-100 text-gray-500') }}">
+                        {{ $project->statut === 'en_cours' ? 'bg-mja-blue/10 text-mja-dark' : ($project->statut === 'a_venir' ? 'bg-mja-yellow/10 text-yellow-700' : 'bg-gray-100 text-gray-600') }}">
                         {{ $project->statut === 'en_cours' ? '● En cours' : ($project->statut === 'a_venir' ? '○ À venir' : '✓ Terminé') }}
                     </span>
                     <h3 class="font-display font-bold text-lg text-mja-gray mb-2 group-hover:text-mja-blue transition-colors">{{ $project->titre }}</h3>
@@ -233,7 +233,7 @@
         <div class="text-center mb-10">
             <div class="inline-flex items-center gap-3 mb-3">
                 <span class="w-10 h-0.5 bg-mja-yellow"></span>
-                <span class="text-mja-yellow font-display font-bold text-xs uppercase tracking-widest">Ils nous font confiance</span>
+                <span class="text-yellow-700 font-display font-bold text-xs uppercase tracking-widest">Ils nous font confiance</span>
                 <span class="w-10 h-0.5 bg-mja-yellow"></span>
             </div>
             <h2 class="font-display font-black text-2xl sm:text-3xl text-mja-gray">Nos partenaires</h2>
@@ -318,11 +318,11 @@
             <div>
                 <div class="inline-flex items-center gap-2 mb-3">
                     <span class="w-8 h-0.5 bg-mja-blue"></span>
-                    <span class="text-mja-blue font-display font-bold text-sm uppercase tracking-widest">Restez informés</span>
+                    <span class="text-mja-dark font-display font-bold text-sm uppercase tracking-widest">Restez informés</span>
                 </div>
                 <h2 class="font-display font-black text-3xl sm:text-4xl text-mja-gray">Dernières actualités</h2>
             </div>
-            <a href="{{ route('articles.index') }}" class="text-mja-blue hover:text-mja-bluedark font-display font-bold text-sm flex items-center gap-1 transition-colors">
+            <a href="{{ route('articles.index') }}" class="text-mja-dark hover:text-mja-navy font-display font-bold text-sm flex items-center gap-1 transition-colors">
                 Toutes <i class="fas fa-arrow-right"></i>
             </a>
         </div>
@@ -341,13 +341,13 @@
                 @endif
                 <div class="p-6">
                     @if($article->publie_le)
-                    <div class="text-xs text-gray-400 font-display font-semibold mb-2">
+                    <div class="text-xs text-gray-500 font-display font-semibold mb-2">
                         <i class="fas fa-calendar mr-1 text-mja-blue"></i>{{ $article->publie_le->locale('fr')->isoFormat('D MMMM Y') }}
                     </div>
                     @endif
                     <h3 class="font-display font-bold text-lg text-mja-gray mb-2 group-hover:text-mja-blue transition-colors line-clamp-2">{{ $article->titre }}</h3>
                     <p class="text-gray-500 text-sm leading-relaxed line-clamp-3">{{ $article->extrait }}</p>
-                    <div class="mt-4 text-mja-blue text-sm font-display font-bold flex items-center gap-1">
+                    <div class="mt-4 text-mja-dark text-sm font-display font-bold flex items-center gap-1">
                         Lire la suite <i class="fas fa-arrow-right text-xs"></i>
                     </div>
                 </div>
@@ -367,7 +367,7 @@
             <div class="lg:w-96 shrink-0 text-center lg:text-left">
                 <div class="inline-flex items-center gap-2 mb-4">
                     <span class="w-8 h-0.5 bg-mja-blue"></span>
-                    <span class="text-mja-blue font-display font-bold text-sm uppercase tracking-widest">Au-delà de la Martinique</span>
+                    <span class="text-mja-dark font-display font-bold text-sm uppercase tracking-widest">Au-delà de la Martinique</span>
                 </div>
                 <h2 class="font-display font-black text-3xl sm:text-4xl text-mja-gray mb-4">
                     Le réseau <br><span class="text-mja-yellow">Fwi Ti Dèj</span>
@@ -392,7 +392,7 @@
                         <span class="text-xs font-display font-bold {{ $fg }} {{ $bg }} px-2.5 py-0.5 rounded-full">{{ $pays }}</span>
                     </div>
                     <div class="font-display font-black text-base text-mja-gray">{{ $nom }}</div>
-                    <div class="text-xs text-gray-400 font-display font-semibold mb-2">
+                    <div class="text-xs text-gray-500 font-display font-semibold mb-2">
                         <i class="fas fa-map-marker-alt mr-1"></i>{{ $ville }}
                     </div>
                     <p class="text-gray-500 text-xs leading-relaxed">{{ $desc }}</p>
