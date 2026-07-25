@@ -18,6 +18,7 @@
     <style>
         body { font-family: 'Gill Sans', 'Open Sans', sans-serif; }
         h1,h2,h3,h4,.font-display { font-family: 'Gill Sans', 'Montserrat', sans-serif; }
+        .font-display.font-black { font-family: 'AllRound Gothic', 'Gill Sans', sans-serif; }
         a:focus-visible, button:focus-visible, input:focus-visible,
         select:focus-visible, textarea:focus-visible { outline: 3px solid #1E93D6; outline-offset: 2px; border-radius: 4px; }
     </style>

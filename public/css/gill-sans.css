@@ -30,3 +30,33 @@
   font-display: swap;
   src: url(/fonts/Gill_Sans_Italic.otf) format('opentype');
 }
+
+/* ─── AllRound Gothic (police d'accent — titres / logo) ─── */
+@font-face {
+  font-family: 'AllRound Gothic';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(/fonts/AllRoundGothic-Book.ttf) format('truetype');
+}
+@font-face {
+  font-family: 'AllRound Gothic';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(/fonts/AllRoundGothic-Medium.ttf) format('truetype');
+}
+@font-face {
+  font-family: 'AllRound Gothic';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(/fonts/AllRoundGothic-Demi.ttf) format('truetype');
+}
+@font-face {
+  font-family: 'AllRound Gothic';
+  font-style: normal;
+  font-weight: 700 900;
+  font-display: swap;
+  src: url(/fonts/AllRoundGothic-Bold.ttf) format('truetype');
+}

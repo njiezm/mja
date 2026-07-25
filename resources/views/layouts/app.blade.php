@@ -52,6 +52,9 @@
         html, body { margin: 0; padding: 0; }
         body { font-family: 'Gill Sans', 'Open Sans', sans-serif; color: #333333; }
         h1,h2,h3,h4,h5,h6,.font-display { font-family: 'Gill Sans', 'Montserrat', sans-serif; }
+        .font-round { font-family: 'AllRound Gothic', 'Gill Sans', sans-serif; }
+        /* Gros titres (graisse « black ») en AllRound Gothic ; le reste reste en Gill Sans */
+        .font-display.font-black { font-family: 'AllRound Gothic', 'Gill Sans', sans-serif; }
 
         .hero-gradient {
             background: linear-gradient(135deg, #1A3D8A 0%, #2048A4 45%, #3262CC 100%);
@@ -172,7 +175,7 @@
                     <img src="{{ $logoNav }}" alt="MJA Logo"
                          class="h-10 w-auto object-contain">
                     <div class="hidden sm:block leading-tight">
-                        <div class="font-display font-black text-sm tracking-tight">
+                        <div class="font-round font-black text-base tracking-tight">
                             <span class="text-mja-blue">M</span><span class="text-mja-yellow">J</span><span class="text-mja-red">A</span>
                         </div>
                         <div class="text-gray-500 text-xs font-display font-semibold tracking-widest uppercase" style="font-size:9px;">Madin' Jeunes Ambition</div>
@@ -184,13 +187,13 @@
                     @foreach($navLinks as [$label, $route, $pattern])
                     <a href="{{ route($route) }}"
                        @if(request()->routeIs($pattern ?: $route)) aria-current="page" @endif
-                       class="nav-link px-3 py-2 rounded-lg text-sm font-semibold font-display transition-colors
+                       class="nav-link px-3 py-2 rounded-lg text-base font-semibold font-display transition-colors
                               {{ request()->routeIs($pattern ?: $route) ? 'text-mja-blue' : 'text-gray-600' }}">
                         {{ $label }}
                     </a>
                     @endforeach
                     <a href="{{ auth('member')->check() ? route('member.dashboard') : route('member.login') }}"
-                       class="ml-1 flex items-center gap-1.5 text-sm font-display font-semibold px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('member.*') ? 'text-mja-blue' : 'text-gray-600 hover:text-mja-blue' }}">
+                       class="ml-1 flex items-center gap-1.5 text-base font-display font-semibold px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('member.*') ? 'text-mja-blue' : 'text-gray-600 hover:text-mja-blue' }}">
                         <i class="fas fa-circle-user"></i> {{ auth('member')->check() ? 'Mon espace' : 'Espace membre' }}
                     </a>
                     <a href="{{ route('adhesion') }}"
