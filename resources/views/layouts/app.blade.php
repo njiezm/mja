@@ -81,11 +81,11 @@
         .ring-watermark > * { position: relative; z-index: 1; }
 
         .nav-link { transition: color .15s; }
-        .nav-link:hover { color: #1E93D6; }
-        .nav-link.active { color: #1E93D6; }
-        .btn-blue { background: #3DAEF5; color: white; }
-        .btn-blue:hover { background: #1E93D6; }
-        .btn-yellow { background: #F5A623; color: #2048A4; }
+        .nav-link:hover { color: #1A7BB8; }
+        .nav-link.active { color: #1A7BB8; }
+        .btn-blue { background: #1A7BB8; color: white; }
+        .btn-blue:hover { background: #15679B; }
+        .btn-yellow { background: #F5A623; color: #14264D; }
         .btn-yellow:hover { background: #e0941a; }
 
         /* Accessibilité : focus clavier visible */
@@ -188,7 +188,7 @@
                     <a href="{{ route($route) }}"
                        @if(request()->routeIs($pattern ?: $route)) aria-current="page" @endif
                        class="nav-link px-3 py-2 rounded-lg text-base font-semibold font-display transition-colors
-                              {{ request()->routeIs($pattern ?: $route) ? 'text-mja-blue' : 'text-gray-600' }}">
+                              {{ request()->routeIs($pattern ?: $route) ? 'active' : 'text-gray-600' }}">
                         {{ $label }}
                     </a>
                     @endforeach

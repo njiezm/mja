@@ -62,7 +62,7 @@
         @else
         <div class="text-center py-24 text-gray-300">
             <img src="/images/logo.jpg" alt="" class="h-20 w-20 mx-auto mb-6 opacity-20 object-contain">
-            <p class="text-xl font-display font-bold text-gray-400">Aucune actualité pour le moment.</p>
+            <p class="text-xl font-display font-bold text-gray-500">Aucune actualité pour le moment.</p>
         </div>
         @endif
     </div>

@@ -1,62 +1,73 @@
 /* =====================================================================
-   Gill Sans — police de marque MJA
+   Polices de marque MJA — Gill Sans (texte) + AllRound Gothic (gros titres)
    Fichiers sous licence fournis par l'association, dans public/fonts/.
+   WOFF2 servi en priorité (léger) ; OTF/TTF en repli.
    ===================================================================== */
+
+/* ─── Gill Sans ─── */
 @font-face {
   font-family: 'Gill Sans';
   font-style: normal;
   font-weight: 300;
   font-display: swap;
-  src: url(/fonts/Gill_Sans_Light.otf) format('opentype');
+  src: url(/fonts/Gill_Sans_Light.woff2) format('woff2'),
+       url(/fonts/Gill_Sans_Light.otf) format('opentype');
 }
 @font-face {
   font-family: 'Gill Sans';
   font-style: normal;
   font-weight: 400 500;
   font-display: swap;
-  src: url(/fonts/Gill_Sans.otf) format('opentype');
+  src: url(/fonts/Gill_Sans.woff2) format('woff2'),
+       url(/fonts/Gill_Sans.otf) format('opentype');
 }
 @font-face {
   font-family: 'Gill Sans';
   font-style: normal;
   font-weight: 600 900;
   font-display: swap;
-  src: url(/fonts/Gill_Sans_Bold.otf) format('opentype');
+  src: url(/fonts/Gill_Sans_Bold.woff2) format('woff2'),
+       url(/fonts/Gill_Sans_Bold.otf) format('opentype');
 }
 @font-face {
   font-family: 'Gill Sans';
   font-style: italic;
   font-weight: 400;
   font-display: swap;
-  src: url(/fonts/Gill_Sans_Italic.otf) format('opentype');
+  src: url(/fonts/Gill_Sans_Italic.woff2) format('woff2'),
+       url(/fonts/Gill_Sans_Italic.otf) format('opentype');
 }
 
-/* ─── AllRound Gothic (police d'accent — titres / logo) ─── */
+/* ─── AllRound Gothic (police d'accent — gros titres / logo) ─── */
 @font-face {
   font-family: 'AllRound Gothic';
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url(/fonts/AllRoundGothic-Book.ttf) format('truetype');
+  src: url(/fonts/AllRoundGothic-Book.woff2) format('woff2'),
+       url(/fonts/AllRoundGothic-Book.ttf) format('truetype');
 }
 @font-face {
   font-family: 'AllRound Gothic';
   font-style: normal;
   font-weight: 500;
   font-display: swap;
-  src: url(/fonts/AllRoundGothic-Medium.ttf) format('truetype');
+  src: url(/fonts/AllRoundGothic-Medium.woff2) format('woff2'),
+       url(/fonts/AllRoundGothic-Medium.ttf) format('truetype');
 }
 @font-face {
   font-family: 'AllRound Gothic';
   font-style: normal;
   font-weight: 600;
   font-display: swap;
-  src: url(/fonts/AllRoundGothic-Demi.ttf) format('truetype');
+  src: url(/fonts/AllRoundGothic-Demi.woff2) format('woff2'),
+       url(/fonts/AllRoundGothic-Demi.ttf) format('truetype');
 }
 @font-face {
   font-family: 'AllRound Gothic';
   font-style: normal;
   font-weight: 700 900;
   font-display: swap;
-  src: url(/fonts/AllRoundGothic-Bold.ttf) format('truetype');
+  src: url(/fonts/AllRoundGothic-Bold.woff2) format('woff2'),
+       url(/fonts/AllRoundGothic-Bold.ttf) format('truetype');
 }

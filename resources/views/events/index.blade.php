@@ -206,7 +206,7 @@ function mjaGoToEvent(id) {
 @if(!$avenir->count() && !$passes->count())
 <div class="py-24 text-center">
     <img src="/images/logomjat.png" alt="" class="h-20 w-auto mx-auto mb-6 opacity-20 object-contain">
-    <p class="text-xl font-display font-bold text-gray-400">Aucun événement pour le moment.</p>
+    <p class="text-xl font-display font-bold text-gray-500">Aucun événement pour le moment.</p>
 </div>
 @endif
 @endsection
