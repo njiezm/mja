@@ -6,7 +6,7 @@
     <meta name="robots" content="noindex, nofollow">
     <title>@yield('title', 'Administration') — MJA</title>
 
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/logomjat.png') }}">
+    <link rel="icon" type="image/jpeg" sizes="any" href="{{ asset('images/logo.jpg') }}">
 
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
     <link rel="stylesheet" href="{{ asset('css/custom.css') }}">

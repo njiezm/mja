@@ -8,8 +8,8 @@
     <title>@yield('title', "Madin'Jeunes Ambition")</title>
 
     {{-- ── Favicon ──────────────────────────────────────────────── --}}
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/logomjat.png') }}">
-    <link rel="apple-touch-icon" href="{{ asset('images/logomjat.png') }}">
+    <link rel="icon" type="image/jpeg" sizes="any" href="{{ asset('images/logo.jpg') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/logo.jpg') }}">
 
     {{-- ── SEO ─────────────────────────────────────────────────── --}}
     <meta name="description" content="@yield('meta_description', "Madin'Jeunes Ambition — Association de jeunes bénévoles à Fort-de-France, Martinique. Actions éducatives, culturelles, sociales, sportives et de santé.")">
