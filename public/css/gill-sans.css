@@ -1,0 +1,32 @@
+/* =====================================================================
+   Gill Sans — police de marque MJA
+   Fichiers sous licence fournis par l'association, dans public/fonts/.
+   ===================================================================== */
+@font-face {
+  font-family: 'Gill Sans';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url(/fonts/Gill_Sans_Light.otf) format('opentype');
+}
+@font-face {
+  font-family: 'Gill Sans';
+  font-style: normal;
+  font-weight: 400 500;
+  font-display: swap;
+  src: url(/fonts/Gill_Sans.otf) format('opentype');
+}
+@font-face {
+  font-family: 'Gill Sans';
+  font-style: normal;
+  font-weight: 600 900;
+  font-display: swap;
+  src: url(/fonts/Gill_Sans_Bold.otf) format('opentype');
+}
+@font-face {
+  font-family: 'Gill Sans';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url(/fonts/Gill_Sans_Italic.otf) format('opentype');
+}

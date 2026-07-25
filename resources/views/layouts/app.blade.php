@@ -40,6 +40,7 @@
     <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
 
     {{-- ── Polices Google Fonts (local → CDN fallback) ──────────── --}}
+    <link rel="stylesheet" href="{{ asset('css/gill-sans.css') }}">
     <link rel="stylesheet" href="{{ asset('fonts/fonts.css') }}"
           onerror="this.onerror=null;var l=document.createElement('link');l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Open+Sans:wght@400;500;600&display=swap';document.head.appendChild(l)">
 
@@ -49,8 +50,8 @@
 
     <style>
         html, body { margin: 0; padding: 0; }
-        body { font-family: 'Open Sans', sans-serif; color: #333333; }
-        h1,h2,h3,h4,h5,h6,.font-display { font-family: 'Montserrat', sans-serif; }
+        body { font-family: 'Gill Sans', 'Open Sans', sans-serif; color: #333333; }
+        h1,h2,h3,h4,h5,h6,.font-display { font-family: 'Gill Sans', 'Montserrat', sans-serif; }
 
         .hero-gradient {
             background: linear-gradient(135deg, #1A3D8A 0%, #2048A4 45%, #3262CC 100%);

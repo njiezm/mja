@@ -80,7 +80,7 @@
                     <i class="fas {{ $icon }} text-2xl"></i>
                 </div>
                 <h3 class="font-display font-bold text-xl mb-3">{{ $titre }}</h3>
-                <p class="text-gray-400 text-sm leading-relaxed">{{ $desc }}</p>
+                <p class="text-gray-500 text-sm leading-relaxed">{{ $desc }}</p>
             </div>
             @endforeach
         </div>

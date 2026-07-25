@@ -10,13 +10,14 @@
 
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
     <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/gill-sans.css') }}">
     <link rel="stylesheet" href="{{ asset('fonts/fonts.css') }}"
           onerror="this.onerror=null;var l=document.createElement('link');l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Open+Sans:wght@400;500;600&display=swap';document.head.appendChild(l)">
     <link rel="stylesheet" href="{{ asset('vendor/fontawesome/css/all.min.css') }}"
           onerror="this.onerror=null;var l=document.createElement('link');l.rel='stylesheet';l.href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css';document.head.appendChild(l)">
     <style>
-        body { font-family: 'Open Sans', sans-serif; }
-        h1,h2,h3,h4,.font-display { font-family: 'Montserrat', sans-serif; }
+        body { font-family: 'Gill Sans', 'Open Sans', sans-serif; }
+        h1,h2,h3,h4,.font-display { font-family: 'Gill Sans', 'Montserrat', sans-serif; }
         a:focus-visible, button:focus-visible, input:focus-visible,
         select:focus-visible, textarea:focus-visible { outline: 3px solid #1E93D6; outline-offset: 2px; border-radius: 4px; }
     </style>

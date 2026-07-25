@@ -251,7 +251,7 @@
                      class="h-10 max-w-[120px] w-auto object-contain grayscale group-hover:grayscale-0 opacity-70 group-hover:opacity-100 transition-all"
                      loading="lazy" title="{{ $partenaire->nom }}">
                 @else
-                <span class="font-display font-black text-sm text-gray-400 group-hover:text-mja-blue transition-colors text-center leading-tight">
+                <span class="font-display font-black text-sm text-gray-600 group-hover:text-mja-blue transition-colors text-center leading-tight">
                     {{ $partenaire->nom }}
                 </span>
                 @endif

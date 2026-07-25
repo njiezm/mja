@@ -133,7 +133,7 @@ foreach ($avenir as $ev) {
                 <!-- Infos -->
                 <div class="flex-1 min-w-0">
                     <div class="font-display font-bold text-mja-gray group-hover:text-mja-blue transition-colors leading-snug">{{ $event->titre }}</div>
-                    <div class="flex flex-wrap gap-4 text-xs text-gray-400 mt-1">
+                    <div class="flex flex-wrap gap-4 text-xs text-gray-500 mt-1">
                         @if($event->lieu)<span><i class="fas fa-map-marker-alt mr-1"></i>{{ $event->lieu }}</span>@endif
                         <span><i class="fas fa-clock mr-1"></i>{{ $event->date_debut->format('H') }}h{{ $event->date_debut->format('i') }}</span>
                         <span class="{{ $event->gratuit ? 'text-green-600' : 'text-orange-500' }} font-semibold">
@@ -177,11 +177,11 @@ foreach ($avenir as $ev) {
                 <div class="bg-gray-200 text-gray-500 p-4 text-center shrink-0 min-w-[72px] flex flex-col justify-center">
                     <div class="font-display font-black text-2xl leading-none">{{ $event->date_debut->format('d') }}</div>
                     <div class="text-xs uppercase mt-1 font-display font-semibold">{{ $event->date_debut->locale('fr')->isoFormat('MMM') }}</div>
-                    <div class="text-xs mt-0.5 text-gray-400">{{ $event->date_debut->format('Y') }}</div>
+                    <div class="text-xs mt-0.5 text-gray-500">{{ $event->date_debut->format('Y') }}</div>
                 </div>
                 <div class="p-4 flex-1">
                     <h3 class="font-display font-semibold text-mja-gray group-hover:text-mja-blue transition-colors text-sm leading-tight">{{ $event->titre }}</h3>
-                    @if($event->lieu)<p class="text-xs text-gray-400 mt-1.5 flex items-center gap-1"><i class="fas fa-map-marker-alt text-gray-300"></i>{{ $event->lieu }}</p>@endif
+                    @if($event->lieu)<p class="text-xs text-gray-500 mt-1.5 flex items-center gap-1"><i class="fas fa-map-marker-alt text-gray-400"></i>{{ $event->lieu }}</p>@endif
                 </div>
             </a>
             @endforeach

@@ -61,7 +61,7 @@
                     </div>
                     <div class="flex-1 min-w-0">
                         @if($resource->categorie)
-                        <span class="text-xs font-display font-bold text-gray-400 uppercase tracking-wider">{{ $resource->categorie }}</span>
+                        <span class="text-xs font-display font-bold text-gray-500 uppercase tracking-wider">{{ $resource->categorie }}</span>
                         @endif
                         <h3 class="font-display font-bold text-mja-gray mt-0.5 leading-snug">{{ $resource->titre }}</h3>
                     </div>

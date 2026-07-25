@@ -157,15 +157,15 @@
                                 </div>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <label class="block text-sm font-display font-bold text-mja-gray mb-1.5">Nom <span class="text-mja-red">*</span></label>
-                                        <input type="text" name="nom" value="{{ old('nom') }}" required
+                                        <label for="a-nom" class="block text-sm font-display font-bold text-mja-gray mb-1.5">Nom <span class="text-mja-red" aria-hidden="true">*</span></label>
+                                        <input type="text" id="a-nom" name="nom" value="{{ old('nom') }}" required autocomplete="family-name"
                                             class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl px-4 py-3 text-sm outline-none transition-colors @error('nom') border-mja-red @enderror"
                                             placeholder="DUPONT">
                                         @error('nom')<p class="text-mja-red text-xs mt-1 font-display font-semibold">{{ $message }}</p>@enderror
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-display font-bold text-mja-gray mb-1.5">Prénom <span class="text-mja-red">*</span></label>
-                                        <input type="text" name="prenom" value="{{ old('prenom') }}" required
+                                        <label for="a-prenom" class="block text-sm font-display font-bold text-mja-gray mb-1.5">Prénom <span class="text-mja-red" aria-hidden="true">*</span></label>
+                                        <input type="text" id="a-prenom" name="prenom" value="{{ old('prenom') }}" required autocomplete="given-name"
                                             class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl px-4 py-3 text-sm outline-none transition-colors @error('prenom') border-mja-red @enderror"
                                             placeholder="Jean">
                                         @error('prenom')<p class="text-mja-red text-xs mt-1 font-display font-semibold">{{ $message }}</p>@enderror
@@ -173,15 +173,15 @@
                                 </div>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <label class="block text-sm font-display font-bold text-mja-gray mb-1.5">Date de naissance <span class="text-mja-red">*</span></label>
-                                        <input type="text" name="date_naissance" value="{{ old('date_naissance') }}" required
+                                        <label for="a-naissance" class="block text-sm font-display font-bold text-mja-gray mb-1.5">Date de naissance <span class="text-mja-red" aria-hidden="true">*</span></label>
+                                        <input type="text" id="a-naissance" name="date_naissance" value="{{ old('date_naissance') }}" required
                                             class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl px-4 py-3 text-sm outline-none transition-colors @error('date_naissance') border-mja-red @enderror"
                                             placeholder="JJ/MM/AAAA" maxlength="10">
                                         @error('date_naissance')<p class="text-mja-red text-xs mt-1 font-display font-semibold">{{ $message }}</p>@enderror
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-display font-bold text-mja-gray mb-1.5">Profession / Secteur d'activité <span class="text-mja-red">*</span></label>
-                                        <input type="text" name="profession" value="{{ old('profession') }}" required
+                                        <label for="a-profession" class="block text-sm font-display font-bold text-mja-gray mb-1.5">Profession / Secteur d'activité <span class="text-mja-red" aria-hidden="true">*</span></label>
+                                        <input type="text" id="a-profession" name="profession" value="{{ old('profession') }}" required
                                             class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl px-4 py-3 text-sm outline-none transition-colors @error('profession') border-mja-red @enderror"
                                             placeholder="Étudiant, Commerce...">
                                         @error('profession')<p class="text-mja-red text-xs mt-1 font-display font-semibold">{{ $message }}</p>@enderror
@@ -205,16 +205,16 @@
                                         @error('indicatif')<p class="text-mja-red text-xs mt-1 font-display font-semibold">{{ $message }}</p>@enderror
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-display font-bold text-mja-gray mb-1.5">Adresse mail <span class="text-mja-red">*</span></label>
-                                        <input type="email" name="email" value="{{ old('email') }}" required
+                                        <label for="a-email" class="block text-sm font-display font-bold text-mja-gray mb-1.5">Adresse mail <span class="text-mja-red" aria-hidden="true">*</span></label>
+                                        <input type="email" id="a-email" name="email" value="{{ old('email') }}" required autocomplete="email"
                                             class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl px-4 py-3 text-sm outline-none transition-colors @error('email') border-mja-red @enderror"
                                             placeholder="jean@exemple.com">
                                         @error('email')<p class="text-mja-red text-xs mt-1 font-display font-semibold">{{ $message }}</p>@enderror
                                     </div>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-display font-bold text-mja-gray mb-1.5">Adresse postale complète <span class="text-mja-red">*</span></label>
-                                    <textarea name="adresse_postale" rows="2" required
+                                    <label for="a-adresse" class="block text-sm font-display font-bold text-mja-gray mb-1.5">Adresse postale complète <span class="text-mja-red" aria-hidden="true">*</span></label>
+                                    <textarea id="a-adresse" name="adresse_postale" rows="2" required autocomplete="street-address"
                                         class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl px-4 py-3 text-sm outline-none transition-colors resize-none @error('adresse_postale') border-mja-red @enderror"
                                         placeholder="N° rue, quartier, code postal, ville">{{ old('adresse_postale') }}</textarea>
                                     @error('adresse_postale')<p class="text-mja-red text-xs mt-1 font-display font-semibold">{{ $message }}</p>@enderror
@@ -264,15 +264,15 @@
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-display font-bold text-mja-gray mb-1.5">Problèmes de santé, allergies ou intolérances <span class="text-gray-400 font-normal">(facultatif)</span></label>
-                                    <textarea name="problemes_sante" rows="2"
+                                    <label for="a-sante" class="block text-sm font-display font-bold text-mja-gray mb-1.5">Problèmes de santé, allergies ou intolérances <span class="text-gray-500 font-normal">(facultatif)</span></label>
+                                    <textarea id="a-sante" name="problemes_sante" rows="2"
                                         class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl px-4 py-3 text-sm outline-none transition-colors resize-none"
                                         placeholder="Précise ici si tu as des problèmes de santé, des allergies ou des intolérances...">{{ old('problemes_sante') }}</textarea>
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-display font-bold text-mja-gray mb-1.5">Personne à contacter en cas d'urgence <span class="text-mja-red">*</span></label>
-                                    <input type="text" name="urgence_contact" value="{{ old('urgence_contact') }}" required
+                                    <label for="a-urgence" class="block text-sm font-display font-bold text-mja-gray mb-1.5">Personne à contacter en cas d'urgence <span class="text-mja-red" aria-hidden="true">*</span></label>
+                                    <input type="text" id="a-urgence" name="urgence_contact" value="{{ old('urgence_contact') }}" required
                                         class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl px-4 py-3 text-sm outline-none transition-colors @error('urgence_contact') border-mja-red @enderror"
                                         placeholder="Nom — Prénom — Numéro de téléphone">
                                     @error('urgence_contact')<p class="text-mja-red text-xs mt-1 font-display font-semibold">{{ $message }}</p>@enderror

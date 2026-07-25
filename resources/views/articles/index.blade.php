@@ -47,7 +47,7 @@
                 <div class="p-6">
                     <div class="flex items-center gap-3 mb-3">
                         <span class="text-xs font-display font-bold px-3 py-1 bg-mja-blue/10 text-mja-blue rounded-full">{{ $article->categorie }}</span>
-                        @if($article->publie_le)<span class="text-xs text-gray-400 font-display">{{ $article->publie_le->locale('fr')->isoFormat('D MMM Y') }}</span>@endif
+                        @if($article->publie_le)<span class="text-xs text-gray-500 font-display">{{ $article->publie_le->locale('fr')->isoFormat('D MMM Y') }}</span>@endif
                     </div>
                     <h2 class="font-display font-bold text-lg text-mja-gray mb-2 group-hover:text-mja-blue transition-colors line-clamp-2">{{ $article->titre }}</h2>
                     <p class="text-gray-500 text-sm leading-relaxed line-clamp-3">{{ $article->extrait }}</p>

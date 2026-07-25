@@ -45,7 +45,7 @@
                             @else<i class="fas fa-check text-[8px] mr-1"></i> Terminé@endif
                         </span>
                         @if($project->date_debut)
-                        <span class="text-xs text-gray-400 font-display">{{ $project->date_debut->locale('fr')->isoFormat('MMM Y') }}</span>
+                        <span class="text-xs text-gray-500 font-display">{{ $project->date_debut->locale('fr')->isoFormat('MMM Y') }}</span>
                         @endif
                     </div>
                     <h2 class="font-display font-bold text-lg text-mja-gray mb-2 group-hover:text-mja-blue transition-colors">{{ $project->titre }}</h2>
