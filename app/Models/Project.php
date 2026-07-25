@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasUniqueSlug;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
 
 class Project extends Model
 {
+    use HasUniqueSlug;
+
     protected $fillable = [
         'titre', 'slug', 'description_courte', 'description',
         'image', 'statut', 'date_debut', 'date_fin', 'actif', 'ordre',
@@ -18,16 +20,6 @@ class Project extends Model
         'date_fin' => 'date',
         'ordre' => 'integer',
     ];
-
-    protected static function boot(): void
-    {
-        parent::boot();
-        static::creating(function ($project) {
-            if (empty($project->slug)) {
-                $project->slug = Str::slug($project->titre);
-            }
-        });
-    }
 
     public function scopeActif($query)
     {

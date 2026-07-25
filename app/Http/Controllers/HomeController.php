@@ -44,6 +44,16 @@ class HomeController extends Controller
         return view('sns', compact('snsEvents', 'prochains'));
     }
 
+    public function mentionsLegales()
+    {
+        return view('legal.mentions-legales');
+    }
+
+    public function confidentialite()
+    {
+        return view('legal.confidentialite');
+    }
+
     public function contact()
     {
         return view('contact');
@@ -54,7 +64,8 @@ class HomeController extends Controller
         $validated = $request->validate([
             'nom' => 'required|string|max:100',
             'email' => 'required|email',
-            'telephone' => 'nullable|string|max:20',
+            'indicatif' => 'nullable|string|max:6',
+            'telephone' => 'nullable|string|max:30',
             'sujet' => 'required|string|max:150',
             'message' => 'required|string|min:10',
         ], [
@@ -68,11 +79,19 @@ class HomeController extends Controller
             'message.min' => 'Le message doit contenir au moins 10 caractères.',
         ]);
 
+        $indicatif = $validated['indicatif'] ?? null;
+        unset($validated['indicatif']);
+        if (! empty($validated['telephone'])) {
+            $validated['telephone'] = trim(($indicatif ? $indicatif . ' ' : '') . $validated['telephone']);
+        }
+
+        $validated['source_id'] = $request->session()->get('mja_source_id');
+
         $contact = Contact::create($validated);
 
         try {
             Mail::to($contact->email)->send(new ContactConfirmation($contact));
-            Mail::to('contact@njiezm.fr')->send(new ContactNotification($contact));
+            Mail::to(\App\Models\Setting::notificationEmails())->send(new ContactNotification($contact));
         } catch (\Exception $e) {
             \Log::error('Mail contact failed: ' . $e->getMessage());
         }

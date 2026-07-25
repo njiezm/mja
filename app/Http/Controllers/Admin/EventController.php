@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Event;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class EventController extends Controller
 {
@@ -41,6 +42,9 @@ class EventController extends Controller
         $validated = $this->validateEvent($request);
 
         if ($request->hasFile('image')) {
+            if ($event->image) {
+                Storage::disk('public')->delete($event->image);
+            }
             $validated['image'] = $request->file('image')->store('events', 'public');
         }
 
@@ -50,6 +54,9 @@ class EventController extends Controller
 
     public function destroy(Event $event)
     {
+        if ($event->image) {
+            Storage::disk('public')->delete($event->image);
+        }
         $event->delete();
         return redirect()->route('admin.events.index')->with('success', 'Événement supprimé.');
     }

@@ -41,7 +41,7 @@
                     </h3>
                     <ul class="space-y-2 text-sm text-gray-600">
                         <li class="flex items-start gap-2"><i class="fas fa-check text-mja-blue mt-0.5 shrink-0"></i> Cotisation de <strong>20 €</strong> pour finaliser l'inscription</li>
-                        <li class="flex items-start gap-2"><i class="fas fa-check text-mja-blue mt-0.5 shrink-0"></i> Envoie ta photo au secrétariat après inscription</li>
+                        <li class="flex items-start gap-2"><i class="fas fa-check text-mja-blue mt-0.5 shrink-0"></i> Dépose ta photo directement dans le formulaire</li>
                         <li class="flex items-start gap-2"><i class="fas fa-check text-mja-blue mt-0.5 shrink-0"></i> Tu seras présenté(e) aux autres membres</li>
                     </ul>
                 </div>
@@ -90,9 +90,13 @@
                         <div class="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                             <i class="fas fa-check text-green-500 text-2xl"></i>
                         </div>
+                        @if(session('paye'))
+                        <h3 class="font-display font-bold text-lg mb-2">Paiement confirmé — bienvenue ! 🎉</h3>
+                        <p class="text-sm leading-relaxed">Ta cotisation a bien été reçue : tu es désormais officiellement <strong>adhérent(e)</strong> de MJA. Un email de bienvenue vient de t'être envoyé.</p>
+                        @else
                         <h3 class="font-display font-bold text-lg mb-2">Merci pour ta demande !</h3>
-                        <p class="text-sm leading-relaxed mb-2">Nous avons bien reçu ton formulaire d'adhésion. Nous te recontacterons très prochainement.</p>
-                        <p class="text-sm font-semibold"><i class="fas fa-camera mr-1"></i> N'oublie pas d'envoyer ta photo au secrétariat (<span class="text-green-700">+596 696 43 88 21</span> ou <span class="text-green-700">+596 696 43 88 38</span>) pour être présenté(e) aux autres membres !</p>
+                        <p class="text-sm leading-relaxed">Nous avons bien reçu ton formulaire d'adhésion, avec ta photo. Les instructions pour régler ta cotisation t'ont été envoyées par email — dès réception du paiement, tu deviendras officiellement adhérent(e).</p>
+                        @endif
                     </div>
                     @else
 
@@ -103,7 +107,7 @@
                     </div>
                     @endif
 
-                    <form method="POST" action="{{ route('adhesion.store') }}" class="space-y-8">
+                    <form method="POST" action="{{ route('adhesion.store') }}" class="space-y-8" enctype="multipart/form-data">
                         @csrf
 
                         {{-- Bloc 1 : Type d'adhésion --}}
@@ -196,17 +200,9 @@
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-sm font-display font-bold text-mja-gray mb-1.5">Numéro de téléphone <span class="text-mja-red">*</span></label>
-                                        <div class="relative">
-                                            <div class="absolute left-0 top-0 h-full flex items-center pl-3.5 gap-1.5 pointer-events-none select-none">
-                                                <span class="text-base leading-none">🇲🇶</span>
-                                                <span class="text-xs font-bold text-gray-400 font-display">+596</span>
-                                                <span class="text-gray-200 font-light">|</span>
-                                            </div>
-                                            <input type="tel" name="telephone" value="{{ old('telephone') }}" required
-                                                class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl pl-[4.5rem] pr-4 py-3 text-sm outline-none transition-colors @error('telephone') border-mja-red @enderror"
-                                                placeholder="696 00 00 00">
-                                        </div>
+                                        <x-phone-field :value="old('telephone')" :indicatif="old('indicatif', '+596')" :required="true" />
                                         @error('telephone')<p class="text-mja-red text-xs mt-1 font-display font-semibold">{{ $message }}</p>@enderror
+                                        @error('indicatif')<p class="text-mja-red text-xs mt-1 font-display font-semibold">{{ $message }}</p>@enderror
                                     </div>
                                     <div>
                                         <label class="block text-sm font-display font-bold text-mja-gray mb-1.5">Adresse mail <span class="text-mja-red">*</span></label>
@@ -309,6 +305,70 @@
                             @error('droit_image')<p class="text-mja-red text-xs mt-1.5 font-display font-semibold">{{ $message }}</p>@enderror
                         </div>
 
+                        {{-- Bloc : Cotisation & photo (adhésion / réadhésion uniquement) --}}
+                        <div id="bloc-cotisation" class="space-y-6" style="display:none">
+                            <div>
+                                <h3 class="font-display font-bold text-mja-gray text-sm uppercase tracking-wider mb-4 flex items-center gap-2">
+                                    <span class="w-6 h-6 bg-mja-blue text-white rounded-full flex items-center justify-center text-xs"><i class="fas fa-id-card"></i></span>
+                                    Cotisation &amp; photo
+                                </h3>
+
+                                {{-- Photo --}}
+                                <label class="block text-sm font-display font-bold text-mja-gray mb-1.5">Ta photo <span class="text-mja-red">*</span></label>
+                                <div class="flex items-center gap-4">
+                                    <div id="photo-preview" class="w-16 h-16 rounded-xl bg-gray-100 border-2 border-dashed border-gray-200 flex items-center justify-center text-gray-300 shrink-0 overflow-hidden">
+                                        <i class="fas fa-user text-xl"></i>
+                                    </div>
+                                    <label class="flex-1 cursor-pointer">
+                                        <input type="file" name="photo" id="photo-input" accept="image/*"
+                                            class="block w-full text-sm text-gray-500 file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-display file:font-bold file:bg-mja-blue file:text-white hover:file:bg-mja-bluedark file:cursor-pointer border-2 border-gray-100 rounded-xl @error('photo') border-mja-red @enderror">
+                                    </label>
+                                </div>
+                                <p class="text-xs text-gray-400 mt-1.5">Format JPG ou PNG, 5 Mo max. Elle servira à te présenter aux autres membres (plus besoin d'envoyer par WhatsApp).</p>
+                                @error('photo')<p class="text-mja-red text-xs mt-1 font-display font-semibold">{{ $message }}</p>@enderror
+
+                                {{-- Moyen de paiement --}}
+                                @php
+                                    $moyens = ['cheque' => ['Chèque','fa-money-check-alt'], 'espece' => ['Espèces','fa-money-bill-wave'], 'virement' => ['Virement','fa-university']];
+                                    if (!empty($stripeEnabled)) { $moyens['en_ligne'] = ['Carte bancaire','fa-credit-card']; }
+                                @endphp
+                                <label class="block text-sm font-display font-bold text-mja-gray mt-6 mb-2">Comment souhaites-tu régler la cotisation de {{ rtrim(rtrim(number_format((float)($cotisationAmount ?? 20), 2, ',', ' '), '0'), ',') }} € ? <span class="text-mja-red">*</span></label>
+                                <div class="grid grid-cols-2 {{ !empty($stripeEnabled) ? 'sm:grid-cols-4' : 'sm:grid-cols-3' }} gap-3">
+                                    @foreach($moyens as $val => [$label, $icon])
+                                    <label class="relative cursor-pointer">
+                                        <input type="radio" name="moyen_paiement" value="{{ $val }}" {{ old('moyen_paiement') === $val ? 'checked' : '' }} class="peer sr-only">
+                                        <div class="border-2 border-gray-100 peer-checked:border-mja-blue peer-checked:bg-mja-blue/5 rounded-xl p-3 text-center text-sm font-display font-bold text-gray-500 peer-checked:text-mja-blue transition-all hover:border-gray-200 flex flex-col items-center gap-1.5">
+                                            <i class="fas {{ $icon }} text-lg"></i> {{ $label }}
+                                        </div>
+                                    </label>
+                                    @endforeach
+                                </div>
+                                @if(!empty($stripeEnabled))
+                                <p class="text-xs text-gray-400 mt-2"><i class="fas fa-lock mr-1"></i> Paiement par carte 100 % sécurisé via Stripe. Les autres moyens : instructions envoyées par email.</p>
+                                @else
+                                <p class="text-xs text-gray-400 mt-2"><i class="fas fa-circle-info mr-1"></i> Les instructions de règlement te seront envoyées par email.</p>
+                                @endif
+                                @error('moyen_paiement')<p class="text-mja-red text-xs mt-1 font-display font-semibold">{{ $message }}</p>@enderror
+                            </div>
+                        </div>
+
+                        <!-- Consentement RGPD -->
+                        <div class="bg-mja-blue/5 border border-mja-blue/20 rounded-2xl p-5">
+                            <div class="text-sm text-gray-600 leading-relaxed mb-4">
+                                Les informations recueillies sont enregistrées par l'association <strong>Madin'Jeunes Ambition</strong> pour la gestion de votre adhésion et de la vie associative. Les données relatives à votre santé, que vous choisissez de renseigner, servent uniquement à assurer votre sécurité lors des activités et font l'objet d'un accès restreint. Vous disposez d'un droit d'accès, de rectification et de suppression de vos données ; pour en savoir plus, consultez notre
+                                <a href="{{ route('confidentialite') }}" target="_blank" class="text-mja-blue font-semibold hover:underline">Politique de confidentialité</a>.
+                            </div>
+                            <label class="flex items-start gap-3 cursor-pointer group">
+                                <input type="checkbox" name="rgpd_consentement" value="1"
+                                    {{ old('rgpd_consentement') ? 'checked' : '' }}
+                                    class="mt-0.5 w-5 h-5 rounded border-2 border-gray-300 text-mja-blue focus:ring-mja-blue shrink-0 @error('rgpd_consentement') border-mja-red @enderror">
+                                <span class="text-sm font-display font-bold text-mja-gray group-hover:text-mja-blue transition-colors">
+                                    Je consens à la collecte et au traitement de mes données personnelles, y compris les données de santé renseignées, dans les conditions décrites ci-dessus <span class="text-mja-red">*</span>
+                                </span>
+                            </label>
+                            @error('rgpd_consentement')<p class="text-mja-red text-xs mt-1.5 font-display font-semibold">{{ $message }}</p>@enderror
+                        </div>
+
                         <button type="submit"
                             class="w-full btn-blue font-display font-bold py-4 rounded-xl transition-colors flex items-center justify-center gap-2 text-base">
                             <i class="fas fa-paper-plane"></i> Envoyer ma demande d'adhésion
@@ -321,5 +381,39 @@
         </div>
     </div>
 </section>
+
+@push('scripts')
+<script>
+(function () {
+    var radios  = document.querySelectorAll('input[name="premiere_adhesion"]');
+    var bloc    = document.getElementById('bloc-cotisation');
+    var photo   = document.getElementById('photo-input');
+    var moyens  = document.querySelectorAll('input[name="moyen_paiement"]');
+    if (!bloc) return;
+
+    function refresh() {
+        var val = document.querySelector('input[name="premiere_adhesion"]:checked');
+        // Affiché pour première adhésion et réadhésion, masqué pour prise d'informations.
+        var show = val && (val.value === 'premiere' || val.value === 'readhesion');
+        bloc.style.display = show ? '' : 'none';
+        if (photo) photo.required = show;
+        moyens.forEach(function (m) { m.required = show; });
+    }
+    radios.forEach(function (r) { r.addEventListener('change', refresh); });
+    refresh();
+
+    // Aperçu de la photo
+    var preview = document.getElementById('photo-preview');
+    if (photo && preview) {
+        photo.addEventListener('change', function () {
+            var f = this.files && this.files[0];
+            if (!f) return;
+            var url = URL.createObjectURL(f);
+            preview.innerHTML = '<img src="' + url + '" class="w-full h-full object-cover" alt="Aperçu">';
+        });
+    }
+})();
+</script>
+@endpush
 
 @endsection

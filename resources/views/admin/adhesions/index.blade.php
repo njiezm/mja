@@ -27,8 +27,8 @@
             <i class="fas fa-check-circle text-green-500"></i>
         </div>
         <div>
-            <div class="text-2xl font-display font-black text-mja-gray">{{ $stats['acceptees'] }}</div>
-            <div class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Acceptées</div>
+            <div class="text-2xl font-display font-black text-mja-gray">{{ $stats['adherents'] }}</div>
+            <div class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Adhérents (payés)</div>
         </div>
     </div>
 </div>
@@ -64,7 +64,7 @@
                     </span>
                 </td>
                 <td class="px-4 py-4">
-                    @php $statutColors = ['nouvelle' => 'bg-orange-100 text-orange-700', 'traitee' => 'bg-blue-100 text-blue-700', 'acceptee' => 'bg-green-100 text-green-700', 'refusee' => 'bg-red-100 text-red-700']; @endphp
+                    @php $statutColors = ['nouvelle' => 'bg-orange-100 text-orange-700', 'prise_infos' => 'bg-sky-100 text-sky-700', 'en_attente_paiement' => 'bg-amber-100 text-amber-700', 'payee' => 'bg-green-100 text-green-700', 'refusee' => 'bg-red-100 text-red-700', 'desistement' => 'bg-gray-200 text-gray-600', 'traitee' => 'bg-blue-100 text-blue-700', 'acceptee' => 'bg-green-100 text-green-700']; @endphp
                     <span class="px-2 py-0.5 rounded-full text-xs font-semibold {{ $statutColors[$adhesion->statut] ?? 'bg-gray-100 text-gray-600' }}">
                         {{ $adhesion->label_statut }}
                     </span>

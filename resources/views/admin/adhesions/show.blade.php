@@ -17,10 +17,18 @@
         {{-- En-tête candidat --}}
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div class="bg-mja-blue/5 border-b border-gray-100 p-6 flex items-start justify-between gap-4">
-                <div>
-                    <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">{{ $adhesion->label_premiere_adhesion }}</div>
-                    <h2 class="font-display font-black text-2xl text-gray-900">{{ $adhesion->civilite }} {{ $adhesion->prenom }} {{ $adhesion->nom }}</h2>
-                    <p class="text-sm text-gray-500 mt-1">Reçue le {{ $adhesion->created_at->locale('fr')->isoFormat('dddd D MMMM Y à H[h]mm') }}</p>
+                <div class="flex items-start gap-4">
+                    @if($adhesion->photo)
+                    <a href="{{ Storage::url($adhesion->photo) }}" target="_blank" class="shrink-0">
+                        <img src="{{ Storage::url($adhesion->photo) }}" alt="Photo de {{ $adhesion->prenom }}"
+                             class="w-16 h-16 rounded-2xl object-cover border-2 border-white shadow">
+                    </a>
+                    @endif
+                    <div>
+                        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">{{ $adhesion->label_premiere_adhesion }}</div>
+                        <h2 class="font-display font-black text-2xl text-gray-900">{{ $adhesion->civilite }} {{ $adhesion->prenom }} {{ $adhesion->nom }}</h2>
+                        <p class="text-sm text-gray-500 mt-1">Reçue le {{ $adhesion->created_at->locale('fr')->isoFormat('dddd D MMMM Y à H[h]mm') }}</p>
+                    </div>
                 </div>
                 <span class="px-3 py-1 text-xs font-semibold rounded-full shrink-0 {{ !$adhesion->lu ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500' }}">
                     {{ $adhesion->lu ? 'Lu' : 'Non lu' }}
@@ -55,6 +63,10 @@
                     <div>
                         <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">T-Shirt</div>
                         <div class="font-semibold text-gray-900">{{ $adhesion->taille_tshirt }}</div>
+                    </div>
+                    <div>
+                        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Moyen de paiement</div>
+                        <div class="font-semibold text-gray-900">{{ $adhesion->label_moyen_paiement }}</div>
                     </div>
                     <div class="col-span-2 sm:col-span-3">
                         <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Adresse postale</div>
@@ -102,7 +114,7 @@
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <h3 class="font-display font-bold text-mja-gray mb-4">Statut de la demande</h3>
             @php
-                $statutColors = ['nouvelle' => 'bg-orange-100 text-orange-700', 'traitee' => 'bg-blue-100 text-blue-700', 'acceptee' => 'bg-green-100 text-green-700', 'refusee' => 'bg-red-100 text-red-700'];
+                $statutColors = ['nouvelle' => 'bg-orange-100 text-orange-700', 'prise_infos' => 'bg-sky-100 text-sky-700', 'en_attente_paiement' => 'bg-amber-100 text-amber-700', 'payee' => 'bg-green-100 text-green-700', 'refusee' => 'bg-red-100 text-red-700', 'desistement' => 'bg-gray-200 text-gray-600', 'traitee' => 'bg-blue-100 text-blue-700', 'acceptee' => 'bg-green-100 text-green-700'];
             @endphp
             <div class="mb-4">
                 <span class="px-3 py-1.5 rounded-full text-sm font-bold {{ $statutColors[$adhesion->statut] ?? 'bg-gray-100 text-gray-600' }}">
@@ -112,10 +124,11 @@
             <form method="POST" action="{{ route('admin.adhesions.statut', $adhesion) }}" class="space-y-3">
                 @csrf @method('PATCH')
                 <select name="statut" class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl px-3 py-2.5 text-sm outline-none">
-                    @foreach(['nouvelle' => 'Nouvelle', 'traitee' => 'Traitée', 'acceptee' => 'Acceptée', 'refusee' => 'Refusée'] as $val => $label)
+                    @foreach(\App\Models\Adhesion::STATUTS as $val => $label)
                         <option value="{{ $val }}" {{ $adhesion->statut === $val ? 'selected' : '' }}>{{ $label }}</option>
                     @endforeach
                 </select>
+                <p class="text-xs text-gray-400">Passer au statut « Payée » enverra automatiquement l'email de bienvenue adhérent.</p>
                 <button type="submit" class="w-full bg-mja-blue hover:bg-mja-bluedark text-white font-semibold py-2.5 rounded-xl transition-colors text-sm">
                     Mettre à jour
                 </button>

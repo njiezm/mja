@@ -46,7 +46,7 @@
 <body class="bg-gray-50 min-h-screen flex">
 
     <!-- Sidebar -->
-    <aside id="sidebar" class="w-72 sm:w-64 bg-mja-navy min-h-screen flex flex-col fixed left-0 top-0 z-40
+    <aside id="sidebar" class="w-72 sm:w-64 bg-mja-navy h-screen flex flex-col fixed left-0 top-0 z-40
         -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out shadow-2xl">
         <!-- Logo -->
         <div class="p-5 border-b border-white/10">
@@ -109,19 +109,12 @@
                 <i class="fas fa-handshake w-4 text-center text-mja-yellow"></i> Partenaires
             </a>
 
-            @if(auth()->user()->isSuperAdmin())
-            <div class="pt-4 pb-1 px-3 text-xs text-gray-500 uppercase tracking-wider font-display font-bold">Super Admin</div>
-            <a href="{{ route('admin.users.index') }}"
-               class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-display font-semibold transition-colors
-                      {{ request()->routeIs('admin.users.*') ? 'bg-mja-yellow text-mja-dark' : 'text-gray-400 hover:bg-white/5 hover:text-white' }}">
-                <i class="fas fa-crown w-4 text-center text-mja-yellow"></i> Comptes admin
-            </a>
-            @endif
-
+            @if(auth()->user()->canAccessManagement())
             @php
                 $nonLus = \App\Models\Contact::where('lu', false)->count();
                 $nouvellesAdhesions = \App\Models\Adhesion::where('lu', false)->count();
             @endphp
+            <div class="pt-4 pb-1 px-3 text-xs text-gray-500 uppercase tracking-wider font-display font-bold">Gestion</div>
             <a href="{{ route('admin.adhesions.index') }}"
                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-display font-semibold transition-colors
                       {{ request()->routeIs('admin.adhesions.*') ? 'bg-mja-blue text-white' : 'text-gray-400 hover:bg-white/5 hover:text-white' }}">
@@ -138,6 +131,30 @@
                 <span class="ml-auto bg-mja-red text-white text-xs px-2 py-0.5 rounded-full">{{ $nonLus }}</span>
                 @endif
             </a>
+            <a href="{{ route('admin.sources.index') }}"
+               class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-display font-semibold transition-colors
+                      {{ request()->routeIs('admin.sources.*') ? 'bg-mja-blue text-white' : 'text-gray-400 hover:bg-white/5 hover:text-white' }}">
+                <i class="fas fa-bullseye w-4 text-center text-mja-blue"></i> Sources
+            </a>
+            @endif
+
+            @if(auth()->user()->canManageUsers())
+            <div class="pt-4 pb-1 px-3 text-xs text-gray-500 uppercase tracking-wider font-display font-bold">Comptes</div>
+            <a href="{{ route('admin.users.index') }}"
+               class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-display font-semibold transition-colors
+                      {{ request()->routeIs('admin.users.*') ? 'bg-mja-yellow text-mja-dark' : 'text-gray-400 hover:bg-white/5 hover:text-white' }}">
+                <i class="fas fa-crown w-4 text-center text-mja-yellow"></i>
+                {{ auth()->user()->isSuperAdmin() ? 'Comptes admin' : 'Gestionnaires' }}
+            </a>
+            @endif
+
+            @if(auth()->user()->isSuperAdmin())
+            <a href="{{ route('admin.settings.edit') }}"
+               class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-display font-semibold transition-colors
+                      {{ request()->routeIs('admin.settings.*') ? 'bg-mja-blue text-white' : 'text-gray-400 hover:bg-white/5 hover:text-white' }}">
+                <i class="fas fa-sliders-h w-4 text-center text-mja-blue"></i> Paramètres
+            </a>
+            @endif
         </nav>
 
         <!-- User / logout -->
@@ -213,13 +230,23 @@
     <nav class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-100 shadow-lg">
         <div class="grid grid-cols-5 h-16">
             @php
-                $mobileNav = [
-                    ['icon' => 'fa-tachometer-alt', 'label' => 'Accueil', 'route' => 'admin.dashboard',   'pattern' => 'admin.dashboard',   'badge' => 0,                   'color' => 'text-mja-blue'],
-                    ['icon' => 'fa-newspaper',       'label' => 'Contenu',  'route' => 'admin.articles.index', 'pattern' => 'admin.articles.*', 'badge' => 0,               'color' => 'text-mja-blue'],
-                    ['icon' => 'fa-user-plus',       'label' => 'Adhésions','route' => 'admin.adhesions.index','pattern' => 'admin.adhesions.*','badge' => $nouvellesAdhesions ?? 0, 'color' => 'text-mja-yellow'],
-                    ['icon' => 'fa-envelope',        'label' => 'Messages', 'route' => 'admin.contacts.index', 'pattern' => 'admin.contacts.*', 'badge' => $nonLus ?? 0,   'color' => 'text-mja-red'],
-                    ['icon' => 'fa-ellipsis-h',      'label' => 'Plus',     'route' => null,                   'pattern' => null,               'badge' => 0,               'color' => 'text-gray-500'],
-                ];
+                if (auth()->user()->canAccessManagement()) {
+                    $mobileNav = [
+                        ['icon' => 'fa-tachometer-alt', 'label' => 'Accueil', 'route' => 'admin.dashboard',   'pattern' => 'admin.dashboard',   'badge' => 0,                       'color' => 'text-mja-blue'],
+                        ['icon' => 'fa-newspaper',       'label' => 'Contenu',  'route' => 'admin.articles.index', 'pattern' => 'admin.articles.*', 'badge' => 0,                       'color' => 'text-mja-blue'],
+                        ['icon' => 'fa-user-plus',       'label' => 'Adhésions','route' => 'admin.adhesions.index','pattern' => 'admin.adhesions.*','badge' => $nouvellesAdhesions ?? 0, 'color' => 'text-mja-yellow'],
+                        ['icon' => 'fa-envelope',        'label' => 'Messages', 'route' => 'admin.contacts.index', 'pattern' => 'admin.contacts.*', 'badge' => $nonLus ?? 0,             'color' => 'text-mja-red'],
+                        ['icon' => 'fa-ellipsis-h',      'label' => 'Plus',     'route' => null,                   'pattern' => null,               'badge' => 0,                       'color' => 'text-gray-500'],
+                    ];
+                } else {
+                    $mobileNav = [
+                        ['icon' => 'fa-tachometer-alt', 'label' => 'Accueil',    'route' => 'admin.dashboard',      'pattern' => 'admin.dashboard',   'badge' => 0, 'color' => 'text-mja-blue'],
+                        ['icon' => 'fa-newspaper',       'label' => 'Actualités', 'route' => 'admin.articles.index', 'pattern' => 'admin.articles.*', 'badge' => 0, 'color' => 'text-mja-blue'],
+                        ['icon' => 'fa-project-diagram', 'label' => 'Projets',    'route' => 'admin.projects.index', 'pattern' => 'admin.projects.*', 'badge' => 0, 'color' => 'text-mja-yellow'],
+                        ['icon' => 'fa-calendar-alt',    'label' => 'Événements', 'route' => 'admin.events.index',    'pattern' => 'admin.events.*',   'badge' => 0, 'color' => 'text-mja-red'],
+                        ['icon' => 'fa-ellipsis-h',      'label' => 'Plus',       'route' => null,                   'pattern' => null,               'badge' => 0, 'color' => 'text-gray-500'],
+                    ];
+                }
             @endphp
             @foreach($mobileNav as $item)
                 @if($item['route'])

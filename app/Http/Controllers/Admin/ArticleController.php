@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Article;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ArticleController extends Controller
 {
@@ -45,6 +46,9 @@ class ArticleController extends Controller
         $validated = $this->validateArticle($request, $article->id);
 
         if ($request->hasFile('image')) {
+            if ($article->image) {
+                Storage::disk('public')->delete($article->image);
+            }
             $validated['image'] = $request->file('image')->store('articles', 'public');
         }
 
@@ -58,6 +62,9 @@ class ArticleController extends Controller
 
     public function destroy(Article $article)
     {
+        if ($article->image) {
+            Storage::disk('public')->delete($article->image);
+        }
         $article->delete();
         return redirect()->route('admin.articles.index')->with('success', 'Article supprimé.');
     }

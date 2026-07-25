@@ -12,9 +12,23 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Capture des visites UTM sur tout le site public.
+        $middleware->web(append: [
+            \App\Http\Middleware\TrackVisit::class,
+        ]);
+
         $middleware->alias([
+            'content'     => \App\Http\Middleware\EnsureContentManager::class,
+            'admin'       => \App\Http\Middleware\EnsureAdmin::class,
             'super_admin' => \App\Http\Middleware\EnsureSuperAdmin::class,
         ]);
+
+        // Redirection des visiteurs non authentifiés : espace membre vs administration.
+        $middleware->redirectGuestsTo(function (Request $request) {
+            return $request->is('espace', 'espace/*')
+                ? route('member.login')
+                : route('login');
+        });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

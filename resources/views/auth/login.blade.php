@@ -4,9 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Connexion — Administration MJA</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="{{ asset('vendor/tailwind/tailwind.js') }}"
+            onerror="this.onerror=null;var s=document.createElement('script');s.src='https://cdn.tailwindcss.com';s.onload=function(){window.tailwind&&(tailwind.config=window.__mjaTwConfig)};document.head.appendChild(s)"></script>
     <script>
-        tailwind.config = {
+        window.__mjaTwConfig = tailwind.config = {
             theme: {
                 extend: {
                     colors: {
@@ -27,8 +28,10 @@
             }
         }
     </script>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ asset('fonts/fonts.css') }}"
+          onerror="this.onerror=null;var l=document.createElement('link');l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Open+Sans:wght@400;500;600&display=swap';document.head.appendChild(l)">
+    <link rel="stylesheet" href="{{ asset('vendor/fontawesome/css/all.min.css') }}"
+          onerror="this.onerror=null;var l=document.createElement('link');l.rel='stylesheet';l.href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css';document.head.appendChild(l)">
     <style>
         body { font-family: 'Open Sans', sans-serif; }
         .font-display { font-family: 'Montserrat', sans-serif; }

@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasUniqueSlug;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
 
 class Event extends Model
 {
+    use HasUniqueSlug;
+
     protected $fillable = [
         'titre', 'slug', 'description_courte', 'description',
         'image', 'date_debut', 'date_fin', 'lieu', 'adresse',
@@ -20,16 +22,6 @@ class Event extends Model
         'date_debut' => 'datetime',
         'date_fin' => 'datetime',
     ];
-
-    protected static function boot(): void
-    {
-        parent::boot();
-        static::creating(function ($event) {
-            if (empty($event->slug)) {
-                $event->slug = Str::slug($event->titre);
-            }
-        });
-    }
 
     public function scopePublie($query)
     {

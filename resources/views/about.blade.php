@@ -36,7 +36,7 @@
                 <div class="space-y-4 text-gray-600 leading-relaxed">
                     <p>Madin'Jeunes Ambition (MJA) a été créée le <strong class="text-mja-gray font-display font-bold">5 novembre 2011</strong> à Fort-de-France, Martinique. L'association est née de la volonté de jeunes bénévoles dynamiques de créer du lien entre les jeunes de l'île et de porter des actions concrètes en faveur de leur épanouissement.</p>
                     <p>Depuis sa création, l'association est portée entièrement par des bénévoles qui œuvrent au quotidien pour organiser des actions éducatives, culturelles, sociales, sportives et de santé, tout en entretenant des liens intergénérationnels précieux.</p>
-                    <p>Avec plus de <strong class="text-mja-gray font-display font-bold">70 membres</strong> et une trentaine de sympathisants, MJA est un acteur reconnu de la jeunesse martiniquaise.</p>
+                    <p>Avec <strong class="text-mja-gray font-display font-bold">43 membres</strong> et une soixantaine de sympathisants, MJA est un acteur reconnu de la jeunesse martiniquaise.</p>
                 </div>
             </div>
             <!-- Timeline -->

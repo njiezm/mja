@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\TeamMember;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class TeamController extends Controller
 {
@@ -41,6 +42,9 @@ class TeamController extends Controller
         $validated = $this->validateMember($request);
 
         if ($request->hasFile('photo')) {
+            if ($team->photo) {
+                Storage::disk('public')->delete($team->photo);
+            }
             $validated['photo'] = $request->file('photo')->store('team', 'public');
         }
 
@@ -50,6 +54,9 @@ class TeamController extends Controller
 
     public function destroy(TeamMember $team)
     {
+        if ($team->photo) {
+            Storage::disk('public')->delete($team->photo);
+        }
         $team->delete();
         return redirect()->route('admin.team.index')->with('success', 'Membre supprimé.');
     }

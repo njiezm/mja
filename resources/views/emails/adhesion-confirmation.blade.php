@@ -64,17 +64,35 @@
         <table width="100%" cellpadding="0" cellspacing="0" style="background:#fffbeb;border-left:4px solid #F5A623;border-radius:0 8px 8px 0;margin-bottom:28px">
           <tr><td style="padding:16px 20px">
             <p style="margin:0 0 10px;font-weight:800;font-size:14px;color:#92400e">Prochaines étapes</p>
-            <p style="margin:0 0 6px;font-size:13px;color:#555;line-height:1.6">
-              1. Régler la <strong>cotisation de 20 €</strong> pour finaliser votre inscription.
-            </p>
-            <p style="margin:0 0 6px;font-size:13px;color:#555;line-height:1.6">
-              2. Envoyer votre photo au secrétariat :<br>
-              &nbsp;&nbsp;&nbsp;<strong>+596 696 43 88 21</strong> (Secrétaire)<br>
-              &nbsp;&nbsp;&nbsp;<strong>+596 696 43 88 38</strong> (Secrétaire adjointe)
-            </p>
-            <p style="margin:0;font-size:13px;color:#555;line-height:1.6">
-              3. Vous serez présenté(e) aux autres membres très prochainement.
-            </p>
+            @if($adhesion->moyen_paiement)
+              <p style="margin:0 0 6px;font-size:13px;color:#555;line-height:1.6">
+                Votre photo a bien été reçue &#10004;
+              </p>
+              @switch($adhesion->moyen_paiement)
+                @case('cheque')
+                  <p style="margin:0 0 6px;font-size:13px;color:#555;line-height:1.6">
+                    Réglez votre <strong>cotisation de 20 €</strong> par <strong>chèque</strong> à l'ordre de « Madin'Jeunes Ambition », à remettre ou envoyer au local : 22 passage du Cœur sur la Main, 97200 Fort-de-France.
+                  </p>
+                  @break
+                @case('espece')
+                  <p style="margin:0 0 6px;font-size:13px;color:#555;line-height:1.6">
+                    Réglez votre <strong>cotisation de 20 €</strong> en <strong>espèces</strong> directement au local de l'association.
+                  </p>
+                  @break
+                @case('virement')
+                  <p style="margin:0 0 6px;font-size:13px;color:#555;line-height:1.6">
+                    Effectuez un <strong>virement de 20 €</strong> — IBAN : <strong>[À COMPLÉTER]</strong> (indiquez votre nom en référence).
+                  </p>
+                  @break
+              @endswitch
+              <p style="margin:0;font-size:13px;color:#555;line-height:1.6">
+                Dès validation de votre paiement, vous deviendrez officiellement <strong>adhérent(e)</strong> et recevrez un lien pour créer votre espace membre.
+              </p>
+            @else
+              <p style="margin:0;font-size:13px;color:#555;line-height:1.6">
+                Nous avons bien noté votre demande d'informations. Un membre de l'équipe reviendra vers vous très rapidement.
+              </p>
+            @endif
           </td></tr>
         </table>
 

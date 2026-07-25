@@ -6,6 +6,39 @@
 @section('og_image', asset('storage/'.$event->image))
 @endif
 
+@push('head')
+<script type="application/ld+json">
+{
+    "@@context": "https://schema.org",
+    "@@type": "Event",
+    "name": @json($event->titre),
+    "startDate": "{{ $event->date_debut->toAtomString() }}",
+    @if($event->date_fin)"endDate": "{{ $event->date_fin->toAtomString() }}",@endif
+    "eventStatus": "https://schema.org/EventScheduled",
+    "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+    "description": @json(\Illuminate\Support\Str::limit(strip_tags($event->description ?? ''), 300)),
+    @if($event->image)"image": "{{ asset('storage/'.$event->image) }}",@endif
+    "location": {
+        "@@type": "Place",
+        "name": @json($event->lieu ?: "Martinique"),
+        "address": @json($event->adresse ?: ($event->lieu ?: "Fort-de-France, Martinique"))
+    },
+    "organizer": {
+        "@@type": "Organization",
+        "name": "Madin'Jeunes Ambition",
+        "url": "{{ url('/') }}"
+    }@if(!$event->gratuit && $event->prix),
+    "offers": {
+        "@@type": "Offer",
+        "price": "{{ $event->prix }}",
+        "priceCurrency": "EUR",
+        "url": "{{ route('events.show', $event->slug) }}"
+    }@elseif($event->gratuit),
+    "isAccessibleForFree": true@endif
+}
+</script>
+@endpush
+
 @section('content')
 <section class="hero-gradient text-white py-16 relative overflow-hidden">
     <div class="absolute -right-10 -top-10 w-64 h-64 opacity-10 pointer-events-none">

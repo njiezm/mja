@@ -6,6 +6,34 @@
 @section('og_image', asset('storage/'.$article->image))
 @endif
 
+@push('head')
+<script type="application/ld+json">
+{
+    "@@context": "https://schema.org",
+    "@@type": "NewsArticle",
+    "headline": @json($article->titre),
+    "description": @json($article->extrait ?? \Illuminate\Support\Str::limit(strip_tags($article->contenu ?? ''), 155)),
+    @if($article->image)"image": "{{ asset('storage/'.$article->image) }}",@endif
+    @if($article->publie_le)"datePublished": "{{ $article->publie_le->toAtomString() }}",@endif
+    "dateModified": "{{ ($article->updated_at ?? $article->publie_le)?->toAtomString() }}",
+    "articleSection": @json($article->categorie),
+    "author": {
+        "@@type": @if($article->auteur)"Person"@else"Organization"@endif,
+        "name": @json($article->auteur ?: "Madin'Jeunes Ambition")
+    },
+    "publisher": {
+        "@@type": "Organization",
+        "name": "Madin'Jeunes Ambition",
+        "logo": {
+            "@@type": "ImageObject",
+            "url": "{{ asset('images/logomjat.png') }}"
+        }
+    },
+    "mainEntityOfPage": "{{ route('articles.show', $article->slug) }}"
+}
+</script>
+@endpush
+
 @section('content')
 
 <section class="hero-gradient text-white py-16 relative overflow-hidden">

@@ -133,16 +133,7 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                             <div>
                                 <label class="block text-sm font-display font-bold text-mja-gray mb-1.5">Téléphone</label>
-                                <div class="relative">
-                                    <div class="absolute left-0 top-0 h-full flex items-center pl-3.5 gap-1.5 pointer-events-none select-none">
-                                        <span class="text-base leading-none">🇲🇶</span>
-                                        <span class="text-xs font-bold text-gray-400 font-display">+596</span>
-                                        <span class="text-gray-200 font-light">|</span>
-                                    </div>
-                                    <input type="tel" name="telephone" value="{{ old('telephone') }}"
-                                        class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl pl-[4.5rem] pr-4 py-3 text-sm outline-none transition-colors"
-                                        placeholder="696 00 00 00">
-                                </div>
+                                <x-phone-field :value="old('telephone')" :indicatif="old('indicatif', '+596')" />
                             </div>
                             <div>
                                 <label class="block text-sm font-display font-bold text-mja-gray mb-1.5">Sujet <span class="text-mja-red">*</span></label>
@@ -163,6 +154,10 @@
                             class="w-full btn-blue font-display font-bold py-3.5 rounded-xl transition-colors flex items-center justify-center gap-2">
                             <i class="fas fa-paper-plane"></i> Envoyer le message
                         </button>
+                        <p class="text-xs text-gray-400 leading-relaxed">
+                            Les données transmises via ce formulaire sont utilisées uniquement pour répondre à votre demande et ne sont jamais cédées à des tiers.
+                            En savoir plus dans notre <a href="{{ route('confidentialite') }}" class="text-mja-blue hover:underline">Politique de confidentialité</a>.
+                        </p>
                     </form>
                 </div>
             </div>

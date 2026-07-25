@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('title', "Madin'Jeunes Ambition – Les jeunes de la Martinique se mobilisent !")
-@section('meta_description', "Association de jeunes bénévoles à Fort-de-France, Martinique. Fwi Ti Dèj, Sport, Santé, Culture — MJA mobilise la jeunesse ultramarine depuis 2011.")
+@section('meta_description', "Association de jeunes bénévoles à Fort-de-France, Martinique. Sport, santé, culture et engagement — MJA mobilise la jeunesse depuis 2011.")
 @section('og_image', asset('images/logomjat.png'))
 
 @section('content')
@@ -62,7 +62,7 @@
                         <img src="/images/logo.jpg" alt="Madin'Jeunes Ambition" class="w-full h-full object-contain">
                     </div>
                     <div class="absolute -top-4 -right-4 bg-mja-yellow text-mja-dark font-display font-black text-xs px-3 py-1.5 rounded-full shadow-lg">
-                        70+ membres
+                        43 membres
                     </div>
                     <div class="absolute -bottom-4 -left-4 bg-mja-red text-white font-display font-bold text-xs px-3 py-1.5 rounded-full shadow-lg">
                         Depuis 2011
@@ -79,7 +79,7 @@
         <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center text-white">
             <div>
                 <div class="font-display font-black text-4xl text-mja-blue">
-                    <span class="stat-counter" data-target="70">0</span>+
+                    <span class="stat-counter" data-target="43">0</span>
                 </div>
                 <div class="text-sm mt-1 text-gray-400 font-display font-semibold">Membres actifs</div>
             </div>
@@ -89,13 +89,13 @@
             </div>
             <div>
                 <div class="font-display font-black text-4xl text-mja-red">
-                    <span class="stat-counter" data-target="30">0</span>+
+                    <span class="stat-counter" data-target="60">0</span>+
                 </div>
                 <div class="text-sm mt-1 text-gray-400 font-display font-semibold">Sympathisants</div>
             </div>
             <div>
                 <div class="font-display font-black text-4xl text-mja-blue">
-                    <span class="stat-counter" data-target="500">0</span>+
+                    <span class="stat-counter" data-target="20000">0</span>+
                 </div>
                 <div class="text-sm mt-1 text-gray-400 font-display font-semibold">Petits-déj organisés</div>
             </div>
@@ -107,8 +107,9 @@
 <script>
 (function () {
     var counters = document.querySelectorAll('.stat-counter');
+    var fmt = function(n) { return Number(n).toLocaleString('fr-FR'); };
     if (!counters.length || !window.IntersectionObserver) {
-        counters.forEach(function(el) { el.textContent = el.dataset.target; });
+        counters.forEach(function(el) { el.textContent = fmt(el.dataset.target); });
         return;
     }
     var observer = new IntersectionObserver(function(entries) {
@@ -123,7 +124,7 @@
             var current = 0;
             var timer = setInterval(function() {
                 current = Math.min(current + increment, target);
-                el.textContent = Math.round(current);
+                el.textContent = fmt(Math.round(current));
                 if (current >= target) clearInterval(timer);
             }, interval);
             observer.unobserve(el);
@@ -136,7 +137,8 @@
 
 <div class="flex h-1"><div class="flex-1 bg-mja-blue"></div><div class="flex-1 bg-mja-yellow"></div><div class="flex-1 bg-mja-red"></div></div>
 
-<!-- ═══ SNS BANNIÈRE ═══ -->
+<!-- ═══ SNS BANNIÈRE ═══ (masquée tant que config('mja.show_sns') = false) -->
+@if(config('mja.show_sns'))
 <section class="py-16 bg-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="bg-gradient-to-r from-mja-dark via-[#1a3a6a] to-mja-blue rounded-3xl overflow-hidden relative">
@@ -178,6 +180,7 @@
         </div>
     </div>
 </section>
+@endif
 
 <!-- ═══ PROJETS ═══ -->
 @if($projects->count())
@@ -355,7 +358,8 @@
 </section>
 @endif
 
-<!-- ═══ RÉSEAU ULTRAMARIN ═══ -->
+<!-- ═══ RÉSEAU ULTRAMARIN ═══ (masqué tant que config('mja.show_sns') = false) -->
+@if(config('mja.show_sns'))
 <section class="py-20 bg-gray-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex flex-col lg:flex-row gap-12 items-center">
@@ -398,6 +402,7 @@
         </div>
     </div>
 </section>
+@endif
 
 <!-- ═══ CTA ═══ -->
 <section class="py-20 bg-mja-dark relative overflow-hidden">

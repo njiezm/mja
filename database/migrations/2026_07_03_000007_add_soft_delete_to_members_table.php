@@ -1,0 +1,24 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('members', function (Blueprint $table) {
+            $table->softDeletes();                               // deleted_at : période de grâce
+            $table->string('restore_token', 64)->nullable()->index()->after('remember_token');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('members', function (Blueprint $table) {
+            $table->dropSoftDeletes();
+            $table->dropColumn('restore_token');
+        });
+    }
+};

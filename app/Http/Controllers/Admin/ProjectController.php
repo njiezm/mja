@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Project;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ProjectController extends Controller
 {
@@ -41,6 +42,9 @@ class ProjectController extends Controller
         $validated = $this->validateProject($request, $project->id);
 
         if ($request->hasFile('image')) {
+            if ($project->image) {
+                Storage::disk('public')->delete($project->image);
+            }
             $validated['image'] = $request->file('image')->store('projects', 'public');
         }
 
@@ -50,6 +54,9 @@ class ProjectController extends Controller
 
     public function destroy(Project $project)
     {
+        if ($project->image) {
+            Storage::disk('public')->delete($project->image);
+        }
         $project->delete();
         return redirect()->route('admin.projects.index')->with('success', 'Projet supprimé.');
     }

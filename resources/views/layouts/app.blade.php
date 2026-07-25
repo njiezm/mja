@@ -12,8 +12,8 @@
     <link rel="apple-touch-icon" href="{{ asset('images/logomjat.png') }}">
 
     {{-- ── SEO ─────────────────────────────────────────────────── --}}
-    <meta name="description" content="@yield('meta_description', "Madin'Jeunes Ambition — Association de jeunes bénévoles à Fort-de-France, Martinique. Initiative Fwi Ti Dèj pour le petit-déjeuner scolaire.")">
-    <meta name="keywords" content="MJA, Madin'Jeunes Ambition, Martinique, jeunesse, bénévolat, Fwi Ti Dèj, Fort-de-France, santé, nutrition, sport">
+    <meta name="description" content="@yield('meta_description', "Madin'Jeunes Ambition — Association de jeunes bénévoles à Fort-de-France, Martinique. Actions éducatives, culturelles, sociales, sportives et de santé.")">
+    <meta name="keywords" content="MJA, Madin'Jeunes Ambition, Martinique, jeunesse, bénévolat, Fort-de-France, association, engagement">
     <meta name="author" content="Madin'Jeunes Ambition">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="{{ url()->current() }}">
@@ -101,21 +101,49 @@
         .ring-watermark > * { position: relative; z-index: 1; }
 
         .nav-link { transition: color .15s; }
-        .nav-link:hover { color: #F5A623; }
-        .nav-link.active { color: #F5A623; }
+        .nav-link:hover { color: #1E93D6; }
+        .nav-link.active { color: #1E93D6; }
         .btn-blue { background: #3DAEF5; color: white; }
         .btn-blue:hover { background: #1E93D6; }
         .btn-yellow { background: #F5A623; color: #2048A4; }
         .btn-yellow:hover { background: #e0941a; }
     </style>
 
+    {{-- ── Données structurées (JSON-LD) ────────────────────────── --}}
+    <script type="application/ld+json">
+    {
+        "@@context": "https://schema.org",
+        "@@type": "NGO",
+        "name": "Madin'Jeunes Ambition",
+        "alternateName": "MJA",
+        "url": "{{ url('/') }}",
+        "logo": "{{ asset('images/logomjat.png') }}",
+        "foundingDate": "2011",
+        "description": "Association de jeunes bénévoles à Fort-de-France, Martinique. Actions éducatives, culturelles, sociales, sportives et de santé.",
+        "address": {
+            "@@type": "PostalAddress",
+            "streetAddress": "22, passage du Cœur sur la Main",
+            "postalCode": "97200",
+            "addressLocality": "Fort-de-France",
+            "addressRegion": "Martinique",
+            "addressCountry": "FR"
+        },
+        "sameAs": [
+            "https://www.facebook.com/MadinJeunesAmbition/",
+            "https://www.instagram.com/madin_jeunes_ambition/",
+            "https://www.tiktok.com/@fwi_ti_dej",
+            "https://www.youtube.com/channel/UCX6nyVEv_QyFuLREyVvOMLw"
+        ]
+    }
+    </script>
+
     @stack('head')
 </head>
 <body class="bg-white">
 
     <!-- Navbar + bandeau saisonnier dans un seul bloc sticky -->
-    <div class="sticky top-0 z-50 shadow-lg">
-    <nav class="bg-mja-dark">
+    <div class="sticky top-0 z-50 shadow-sm">
+    <nav class="bg-white border-b border-gray-100">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
 
@@ -133,6 +161,21 @@
                 $logoNav = ($logoSaisonnier && file_exists(public_path(ltrim($logoSaisonnier,'/'))))
                     ? $logoSaisonnier
                     : '/images/logomjat.png';
+
+                // Liens de navigation (SNS masqué tant que config('mja.show_sns') = false)
+                $navLinks = [
+                    ['Accueil', 'home', ''],
+                    ['À propos', 'about', ''],
+                    ['Projets', 'projects.index', 'projects.*'],
+                ];
+                if (config('mja.show_sns')) {
+                    $navLinks[] = ['SNS', 'sns', 'sns'];
+                }
+                $navLinks = array_merge($navLinks, [
+                    ['Événements', 'events.index', 'events.*'],
+                    ['Actualités', 'articles.index', 'articles.*'],
+                    ['Ressources', 'resources.index', 'resources.*'],
+                ]);
                 @endphp
                 <a href="{{ route('home') }}" class="flex items-center gap-3 shrink-0">
                     <img src="{{ $logoNav }}" alt="MJA Logo"
@@ -141,52 +184,50 @@
                         <div class="font-display font-black text-sm tracking-tight">
                             <span class="text-mja-blue">M</span><span class="text-mja-yellow">J</span><span class="text-mja-red">A</span>
                         </div>
-                        <div class="text-gray-300 text-xs font-display font-semibold tracking-widest uppercase" style="font-size:9px;">Madin' Jeunes Ambition</div>
+                        <div class="text-gray-500 text-xs font-display font-semibold tracking-widest uppercase" style="font-size:9px;">Madin' Jeunes Ambition</div>
                     </div>
                 </a>
 
                 <!-- Desktop nav -->
                 <div class="hidden md:flex items-center gap-1">
-                    @foreach([
-                        ['Accueil', 'home', ''],
-                        ['À propos', 'about', ''],
-                        ['Projets', 'projects.index', 'projects.*'],
-                        ['SNS', 'sns', 'sns'],
-                        ['Événements', 'events.index', 'events.*'],
-                        ['Actualités', 'articles.index', 'articles.*'],
-                        ['Ressources', 'resources.index', 'resources.*'],
-                    ] as [$label, $route, $pattern])
+                    @foreach($navLinks as [$label, $route, $pattern])
                     <a href="{{ route($route) }}"
                        class="nav-link px-3 py-2 rounded-lg text-sm font-semibold font-display transition-colors
-                              {{ request()->routeIs($pattern ?: $route) ? 'text-mja-yellow' : 'text-gray-300' }}">
+                              {{ request()->routeIs($pattern ?: $route) ? 'text-mja-blue' : 'text-gray-600' }}">
                         {{ $label }}
                     </a>
                     @endforeach
+                    <a href="{{ auth('member')->check() ? route('member.dashboard') : route('member.login') }}"
+                       class="ml-1 flex items-center gap-1.5 text-sm font-display font-semibold px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('member.*') ? 'text-mja-blue' : 'text-gray-600 hover:text-mja-blue' }}">
+                        <i class="fas fa-circle-user"></i> {{ auth('member')->check() ? 'Mon espace' : 'Espace membre' }}
+                    </a>
                     <a href="{{ route('adhesion') }}"
-                       class="ml-1 bg-mja-yellow hover:bg-yellow-400 text-mja-dark font-display font-bold text-sm px-4 py-2 rounded-full transition-colors {{ request()->routeIs('adhesion') ? 'ring-2 ring-mja-yellow ring-offset-2 ring-offset-mja-dark' : '' }}">
+                       class="ml-1 bg-mja-yellow hover:bg-yellow-400 text-mja-dark font-display font-bold text-sm px-4 py-2 rounded-full transition-colors {{ request()->routeIs('adhesion') ? 'ring-2 ring-mja-yellow ring-offset-2 ring-offset-white' : '' }}">
                         Adhérer
                     </a>
                     <a href="{{ route('contact') }}"
-                       class="ml-1 btn-blue font-display font-bold text-sm px-4 py-2 rounded-full transition-colors {{ request()->routeIs('contact') ? 'ring-2 ring-mja-blue ring-offset-2 ring-offset-mja-dark' : '' }}">
+                       class="ml-1 btn-blue font-display font-bold text-sm px-4 py-2 rounded-full transition-colors {{ request()->routeIs('contact') ? 'ring-2 ring-mja-blue ring-offset-2 ring-offset-white' : '' }}">
                         Contact
                     </a>
                 </div>
 
                 <!-- Mobile toggle -->
-                <button id="menu-btn" class="md:hidden text-gray-300 hover:text-white p-2">
-                    <i class="fas fa-bars text-xl"></i>
+                <button id="menu-btn" type="button" class="md:hidden text-mja-dark hover:text-mja-blue p-2"
+                        aria-label="Ouvrir le menu de navigation" aria-controls="mobile-menu" aria-expanded="false">
+                    <i class="fas fa-bars text-xl" aria-hidden="true"></i>
                 </button>
             </div>
 
             <!-- Mobile menu -->
-            <div id="mobile-menu" class="hidden md:hidden pb-4 border-t border-mja-blue/20 mt-1 pt-3 space-y-1">
-                @foreach([
-                    ['Accueil', 'home'], ['À propos', 'about'], ['Projets', 'projects.index'],
-                    ['SNS', 'sns'], ['Événements', 'events.index'], ['Actualités', 'articles.index'],
-                    ['Ressources', 'resources.index'], ['Contact', 'contact'], ['Adhérer', 'adhesion'],
-                ] as [$label, $route])
-                <a href="{{ route($route) }}" class="block px-3 py-2 text-gray-300 hover:text-mja-yellow text-sm font-semibold font-display transition-colors">{{ $label }}</a>
+            <div id="mobile-menu" class="hidden md:hidden pb-4 border-t border-gray-100 mt-1 pt-3 space-y-1">
+                @foreach($navLinks as [$label, $route, $pattern])
+                <a href="{{ route($route) }}" class="block px-3 py-2 text-gray-700 hover:text-mja-blue text-sm font-semibold font-display transition-colors">{{ $label }}</a>
                 @endforeach
+                <a href="{{ route('contact') }}" class="block px-3 py-2 text-gray-700 hover:text-mja-blue text-sm font-semibold font-display transition-colors">Contact</a>
+                <a href="{{ route('adhesion') }}" class="block px-3 py-2 text-mja-blue hover:text-mja-bluedark text-sm font-bold font-display transition-colors">Adhérer</a>
+                <a href="{{ auth('member')->check() ? route('member.dashboard') : route('member.login') }}" class="block px-3 py-2 text-gray-700 hover:text-mja-blue text-sm font-semibold font-display transition-colors border-t border-gray-100 mt-1 pt-2">
+                    <i class="fas fa-circle-user mr-1"></i> {{ auth('member')->check() ? 'Mon espace' : 'Espace membre' }}
+                </a>
             </div>
         </div>
     </nav>@include('partials.seasonal-banner')</div>{{-- /sticky --}}
@@ -225,29 +266,29 @@
                         Créée en 2011 à Fort-de-France, Martinique. Nous rassemblons les jeunes autour d'actions éducatives, culturelles, sociales, sportives et de santé.
                     </p>
                     <div class="flex flex-wrap gap-3 mt-5">
-                        <a href="https://www.facebook.com/MadinJeunesAmbition/" target="_blank" title="Facebook"
+                        <a href="https://www.facebook.com/MadinJeunesAmbition/" target="_blank" rel="noopener" title="Facebook" aria-label="MJA sur Facebook"
                            class="w-9 h-9 bg-white/5 hover:bg-[#1877F2] rounded-xl flex items-center justify-center transition-colors text-sm">
-                            <i class="fab fa-facebook"></i>
+                            <i class="fab fa-facebook" aria-hidden="true"></i>
                         </a>
-                        <a href="https://www.instagram.com/madin_jeunes_ambition/" target="_blank" title="Instagram"
+                        <a href="https://www.instagram.com/madin_jeunes_ambition/" target="_blank" rel="noopener" title="Instagram" aria-label="MJA sur Instagram"
                            class="w-9 h-9 bg-white/5 hover:bg-[#E1306C] rounded-xl flex items-center justify-center transition-colors text-sm">
-                            <i class="fab fa-instagram"></i>
+                            <i class="fab fa-instagram" aria-hidden="true"></i>
                         </a>
-                        <a href="https://www.tiktok.com/@fwi_ti_dej" target="_blank" title="TikTok"
+                        <a href="https://www.tiktok.com/@fwi_ti_dej" target="_blank" rel="noopener" title="TikTok" aria-label="MJA sur TikTok"
                            class="w-9 h-9 bg-white/5 hover:bg-[#010101] rounded-xl flex items-center justify-center transition-colors text-sm">
-                            <i class="fab fa-tiktok"></i>
+                            <i class="fab fa-tiktok" aria-hidden="true"></i>
                         </a>
-                        <a href="https://www.snapchat.com/" target="_blank" title="Snapchat"
+                        <a href="https://www.snapchat.com/" target="_blank" rel="noopener" title="Snapchat" aria-label="MJA sur Snapchat"
                            class="w-9 h-9 bg-white/5 hover:bg-[#FFFC00] hover:text-black rounded-xl flex items-center justify-center transition-colors text-sm">
-                            <i class="fab fa-snapchat"></i>
+                            <i class="fab fa-snapchat" aria-hidden="true"></i>
                         </a>
-                        <a href="https://www.youtube.com/channel/UCX6nyVEv_QyFuLREyVvOMLw" target="_blank" title="YouTube"
+                        <a href="https://www.youtube.com/channel/UCX6nyVEv_QyFuLREyVvOMLw" target="_blank" rel="noopener" title="YouTube" aria-label="MJA sur YouTube"
                            class="w-9 h-9 bg-white/5 hover:bg-[#FF0000] rounded-xl flex items-center justify-center transition-colors text-sm">
-                            <i class="fab fa-youtube"></i>
+                            <i class="fab fa-youtube" aria-hidden="true"></i>
                         </a>
-                        <a href="mailto:contact@mja-martinique.com" title="Email"
+                        <a href="mailto:contact@mja-martinique.com" title="Email" aria-label="Envoyer un email à MJA"
                            class="w-9 h-9 bg-white/5 hover:bg-mja-blue rounded-xl flex items-center justify-center transition-colors text-sm">
-                            <i class="fas fa-envelope"></i>
+                            <i class="fas fa-envelope" aria-hidden="true"></i>
                         </a>
                     </div>
                 </div>
@@ -256,7 +297,12 @@
                 <div>
                     <h4 class="font-display font-bold text-white mb-4 text-sm uppercase tracking-wider">Navigation</h4>
                     <ul class="space-y-2 text-sm">
-                        @foreach([['À propos','about'],['Nos projets','projects.index'],['SNS','sns'],['Événements','events.index'],['Actualités','articles.index'],['Ressources','resources.index']] as [$l,$r])
+                        @php
+                        $footerLinks = [['À propos','about'],['Nos projets','projects.index']];
+                        if (config('mja.show_sns')) { $footerLinks[] = ['SNS','sns']; }
+                        $footerLinks = array_merge($footerLinks, [['Événements','events.index'],['Actualités','articles.index'],['Ressources','resources.index']]);
+                        @endphp
+                        @foreach($footerLinks as [$l,$r])
                         <li><a href="{{ route($r) }}" class="hover:text-mja-yellow transition-colors">{{ $l }}</a></li>
                         @endforeach
                     </ul>
@@ -289,24 +335,31 @@
                 <div class="flex-1 bg-mja-red"></div>
             </div>
 
-            <div class="flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-gray-500">
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-3 text-xs text-gray-500">
                 <span>&copy; {{ date('Y') }} Madin'Jeunes Ambition — Tous droits réservés</span>
-                @auth
-                <a href="{{ route('admin.dashboard') }}" class="hover:text-mja-yellow transition-colors font-semibold">
-                    <i class="fas fa-cog mr-1"></i>Administration
-                </a>
-                @else
-                <a href="{{ route('login') }}" class="hover:text-mja-yellow transition-colors">
-                    <i class="fas fa-lock mr-1"></i>Administration
-                </a>
-                @endauth
+                <div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+                    <a href="{{ route('mentions-legales') }}" class="hover:text-mja-yellow transition-colors">Mentions légales</a>
+                    <a href="{{ route('confidentialite') }}" class="hover:text-mja-yellow transition-colors">Confidentialité</a>
+                    @auth
+                    <a href="{{ route('admin.dashboard') }}" class="hover:text-mja-yellow transition-colors font-semibold">
+                        <i class="fas fa-cog mr-1" aria-hidden="true"></i>Administration
+                    </a>
+                    @else
+                    <a href="{{ route('login') }}" class="hover:text-mja-yellow transition-colors">
+                        <i class="fas fa-lock mr-1" aria-hidden="true"></i>Administration
+                    </a>
+                    @endauth
+                </div>
             </div>
         </div>
     </footer>
 
     <script>
-        document.getElementById('menu-btn').addEventListener('click', () => {
-            document.getElementById('mobile-menu').classList.toggle('hidden');
+        document.getElementById('menu-btn').addEventListener('click', function () {
+            const menu = document.getElementById('mobile-menu');
+            const isOpen = menu.classList.toggle('hidden') === false;
+            this.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            this.setAttribute('aria-label', isOpen ? 'Fermer le menu de navigation' : 'Ouvrir le menu de navigation');
         });
     </script>
     @stack('scripts')

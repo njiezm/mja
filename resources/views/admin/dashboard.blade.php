@@ -24,6 +24,7 @@
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+    @if(auth()->user()->canAccessManagement())
     <!-- Messages non lus -->
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex items-center gap-4">
         <div class="w-12 h-12 bg-red-50 text-red-600 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -35,6 +36,7 @@
         </div>
         <a href="{{ route('admin.contacts.index') }}" class="ml-auto text-sm text-mja-blue font-semibold hover:text-mja-dark">Voir →</a>
     </div>
+    @endif
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex items-center gap-4">
         <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center flex-shrink-0">
             <i class="fas fa-users text-lg"></i>
@@ -56,6 +58,7 @@
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    @if(auth()->user()->canAccessManagement())
     <!-- Derniers messages -->
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100">
         <div class="flex items-center justify-between p-5 border-b border-gray-50">
@@ -84,6 +87,7 @@
         <div class="p-8 text-center text-gray-400 text-sm">Aucun message</div>
         @endif
     </div>
+    @endif
 
     <!-- Prochains événements -->
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100">

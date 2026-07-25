@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasUniqueSlug;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
 
 class Article extends Model
 {
+    use HasUniqueSlug;
+
     protected $fillable = [
         'titre', 'slug', 'extrait', 'contenu', 'image',
         'categorie', 'auteur', 'publie', 'publie_le',
@@ -16,16 +18,6 @@ class Article extends Model
         'publie' => 'boolean',
         'publie_le' => 'datetime',
     ];
-
-    protected static function boot(): void
-    {
-        parent::boot();
-        static::creating(function ($article) {
-            if (empty($article->slug)) {
-                $article->slug = Str::slug($article->titre);
-            }
-        });
-    }
 
     public function scopePublie($query)
     {

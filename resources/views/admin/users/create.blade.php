@@ -29,9 +29,11 @@
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1.5">Rôle <span class="text-red-500">*</span></label>
                 <select name="role" required class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-mja-blue">
-                    <option value="admin"       {{ old('role','admin') === 'admin'       ? 'selected' : '' }}>Administrateur</option>
-                    <option value="super_admin" {{ old('role') === 'super_admin' ? 'selected' : '' }}>Super Administrateur</option>
+                    @foreach($roles as $value => $label)
+                    <option value="{{ $value }}" {{ old('role', array_key_first($roles)) === $value ? 'selected' : '' }}>{{ $label }}</option>
+                    @endforeach
                 </select>
+                <p class="text-xs text-gray-400 mt-1.5">Le gestionnaire de contenu n'accède qu'aux actualités, projets, événements, ressources, équipe et partenaires.</p>
             </div>
             <div>
                 <div class="flex items-center justify-between mb-1.5">

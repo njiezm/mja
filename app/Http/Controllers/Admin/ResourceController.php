@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Resource;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ResourceController extends Controller
 {
@@ -41,6 +42,9 @@ class ResourceController extends Controller
         $validated = $this->validateResource($request);
 
         if ($request->hasFile('fichier')) {
+            if ($resource->fichier) {
+                Storage::disk('public')->delete($resource->fichier);
+            }
             $validated['fichier'] = $request->file('fichier')->store('resources', 'public');
         }
 
@@ -50,6 +54,9 @@ class ResourceController extends Controller
 
     public function destroy(Resource $resource)
     {
+        if ($resource->fichier) {
+            Storage::disk('public')->delete($resource->fichier);
+        }
         $resource->delete();
         return redirect()->route('admin.resources.index')->with('success', 'Ressource supprimée.');
     }
