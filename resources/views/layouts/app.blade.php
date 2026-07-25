@@ -310,7 +310,7 @@
 
                 <!-- Nav -->
                 <div>
-                    <h4 class="font-display font-bold text-white mb-4 text-sm uppercase tracking-wider">Navigation</h4>
+                    <h2 class="font-display font-bold text-white mb-4 text-sm uppercase tracking-wider">Navigation</h2>
                     <ul class="space-y-2 text-sm">
                         @php
                         $footerLinks = [['À propos','about'],['Nos projets','projects.index']];
@@ -325,7 +325,7 @@
 
                 <!-- Contact -->
                 <div>
-                    <h4 class="font-display font-bold text-white mb-4 text-sm uppercase tracking-wider">Contact</h4>
+                    <h2 class="font-display font-bold text-white mb-4 text-sm uppercase tracking-wider">Contact</h2>
                     <ul class="space-y-3 text-sm">
                         <li class="flex gap-2 items-start">
                             <i class="fas fa-map-marker-alt text-mja-yellow mt-0.5 w-4 shrink-0"></i>

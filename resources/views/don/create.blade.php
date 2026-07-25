@@ -26,7 +26,7 @@
             <form method="POST" action="{{ route('don.store') }}" class="space-y-5" id="don-form">
                 @csrf
                 <div>
-                    <label class="block text-sm font-display font-bold text-mja-gray mb-2">Montant du don <span class="text-mja-red">*</span></label>
+                    <label for="montant" class="block text-sm font-display font-bold text-mja-gray mb-2">Montant du don <span class="text-mja-red" aria-hidden="true">*</span></label>
                     <div class="grid grid-cols-3 sm:grid-cols-5 gap-2 mb-3">
                         @foreach($presets as $amount)
                         <button type="button" onclick="setAmount({{ $amount }}, this)" class="preset border-2 border-gray-100 hover:border-mja-blue rounded-xl py-2.5 text-sm font-display font-bold text-gray-600 transition-colors">{{ $amount }} €</button>
@@ -40,15 +40,15 @@
                     @error('montant')<p class="text-mja-red text-xs mt-1 font-display font-semibold">{{ $message }}</p>@enderror
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <input type="text" name="prenom" value="{{ old('prenom') }}" placeholder="Prénom" class="border-2 border-gray-100 focus:border-mja-blue rounded-xl px-4 py-3 text-sm outline-none transition-colors">
-                    <input type="text" name="nom" value="{{ old('nom') }}" placeholder="Nom" class="border-2 border-gray-100 focus:border-mja-blue rounded-xl px-4 py-3 text-sm outline-none transition-colors">
+                    <input type="text" name="prenom" value="{{ old('prenom') }}" placeholder="Prénom" aria-label="Prénom" autocomplete="given-name" class="border-2 border-gray-100 focus:border-mja-blue rounded-xl px-4 py-3 text-sm outline-none transition-colors">
+                    <input type="text" name="nom" value="{{ old('nom') }}" placeholder="Nom" aria-label="Nom" autocomplete="family-name" class="border-2 border-gray-100 focus:border-mja-blue rounded-xl px-4 py-3 text-sm outline-none transition-colors">
                 </div>
                 <div>
-                    <input type="email" name="email" value="{{ old('email') }}" required placeholder="Email (pour le reçu)"
+                    <input type="email" name="email" value="{{ old('email') }}" required placeholder="Email (pour le reçu)" aria-label="Adresse email pour le reçu" autocomplete="email"
                         class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl px-4 py-3 text-sm outline-none transition-colors @error('email') border-mja-red @enderror">
                     @error('email')<p class="text-mja-red text-xs mt-1 font-display font-semibold">{{ $message }}</p>@enderror
                 </div>
-                <textarea name="message" rows="2" placeholder="Un message (facultatif)" class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl px-4 py-3 text-sm outline-none transition-colors resize-none">{{ old('message') }}</textarea>
+                <textarea name="message" rows="2" placeholder="Un message (facultatif)" aria-label="Message (facultatif)" class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl px-4 py-3 text-sm outline-none transition-colors resize-none">{{ old('message') }}</textarea>
                 <button type="submit" class="w-full btn-blue font-display font-bold py-3.5 rounded-xl transition-colors flex items-center justify-center gap-2">
                     <i class="fas fa-lock"></i> Donner par carte bancaire
                 </button>

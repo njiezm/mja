@@ -41,15 +41,15 @@
                 <!-- Réseaux sociaux -->
                 <div class="flex gap-3 mt-8 justify-center lg:justify-start">
                     @foreach([
-                        ['fab fa-facebook','https://www.facebook.com/MadinJeunesAmbition/','#1877F2'],
-                        ['fab fa-instagram','https://www.instagram.com/madin_jeunes_ambition/','#E1306C'],
-                        ['fab fa-tiktok','https://www.tiktok.com/@fwi_ti_dej','#010101'],
-                        ['fab fa-snapchat','https://www.snapchat.com/','#FFFC00'],
-                        ['fab fa-youtube','https://www.youtube.com/channel/UCX6nyVEv_QyFuLREyVvOMLw','#FF0000'],
-                    ] as [$icon,$url,$color])
-                    <a href="{{ $url }}" target="_blank"
+                        ['fab fa-facebook','https://www.facebook.com/MadinJeunesAmbition/','Facebook'],
+                        ['fab fa-instagram','https://www.instagram.com/madin_jeunes_ambition/','Instagram'],
+                        ['fab fa-tiktok','https://www.tiktok.com/@fwi_ti_dej','TikTok'],
+                        ['fab fa-snapchat','https://www.snapchat.com/','Snapchat'],
+                        ['fab fa-youtube','https://www.youtube.com/channel/UCX6nyVEv_QyFuLREyVvOMLw','YouTube'],
+                    ] as [$icon,$url,$reseau])
+                    <a href="{{ $url }}" target="_blank" rel="noopener" aria-label="MJA sur {{ $reseau }}"
                        class="w-9 h-9 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center transition-colors text-white text-sm">
-                        <i class="{{ $icon }}"></i>
+                        <i class="{{ $icon }}" aria-hidden="true"></i>
                     </a>
                     @endforeach
                 </div>

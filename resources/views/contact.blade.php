@@ -126,15 +126,15 @@
                         @csrf
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                             <div>
-                                <label class="block text-sm font-display font-bold text-mja-gray mb-1.5">Nom complet <span class="text-mja-red">*</span></label>
-                                <input type="text" name="nom" value="{{ old('nom') }}" required
+                                <label for="c-nom" class="block text-sm font-display font-bold text-mja-gray mb-1.5">Nom complet <span class="text-mja-red" aria-hidden="true">*</span></label>
+                                <input type="text" id="c-nom" name="nom" value="{{ old('nom') }}" required autocomplete="name"
                                     class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl px-4 py-3 text-sm outline-none transition-colors @error('nom') border-mja-red @enderror"
                                     placeholder="Jean Dupont">
                                 @error('nom')<p class="text-mja-red text-xs mt-1 font-display font-semibold">{{ $message }}</p>@enderror
                             </div>
                             <div>
-                                <label class="block text-sm font-display font-bold text-mja-gray mb-1.5">Email <span class="text-mja-red">*</span></label>
-                                <input type="email" name="email" value="{{ old('email') }}" required
+                                <label for="c-email" class="block text-sm font-display font-bold text-mja-gray mb-1.5">Email <span class="text-mja-red" aria-hidden="true">*</span></label>
+                                <input type="email" id="c-email" name="email" value="{{ old('email') }}" required autocomplete="email"
                                     class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl px-4 py-3 text-sm outline-none transition-colors @error('email') border-mja-red @enderror"
                                     placeholder="jean@exemple.com">
                                 @error('email')<p class="text-mja-red text-xs mt-1 font-display font-semibold">{{ $message }}</p>@enderror
@@ -142,20 +142,20 @@
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                             <div>
-                                <label class="block text-sm font-display font-bold text-mja-gray mb-1.5">Téléphone</label>
+                                <span class="block text-sm font-display font-bold text-mja-gray mb-1.5">Téléphone</span>
                                 <x-phone-field :value="old('telephone')" :indicatif="old('indicatif', '+596')" />
                             </div>
                             <div>
-                                <label class="block text-sm font-display font-bold text-mja-gray mb-1.5">Sujet <span class="text-mja-red">*</span></label>
-                                <input type="text" name="sujet" value="{{ old('sujet') }}" required
+                                <label for="c-sujet" class="block text-sm font-display font-bold text-mja-gray mb-1.5">Sujet <span class="text-mja-red" aria-hidden="true">*</span></label>
+                                <input type="text" id="c-sujet" name="sujet" value="{{ old('sujet') }}" required
                                     class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl px-4 py-3 text-sm outline-none transition-colors @error('sujet') border-mja-red @enderror"
                                     placeholder="Adhésion, partenariat...">
                                 @error('sujet')<p class="text-mja-red text-xs mt-1 font-display font-semibold">{{ $message }}</p>@enderror
                             </div>
                         </div>
                         <div>
-                            <label class="block text-sm font-display font-bold text-mja-gray mb-1.5">Message <span class="text-mja-red">*</span></label>
-                            <textarea name="message" rows="5" required
+                            <label for="c-message" class="block text-sm font-display font-bold text-mja-gray mb-1.5">Message <span class="text-mja-red" aria-hidden="true">*</span></label>
+                            <textarea id="c-message" name="message" rows="5" required
                                 class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl px-4 py-3 text-sm outline-none transition-colors resize-none @error('message') border-mja-red @enderror"
                                 placeholder="Votre message...">{{ old('message') }}</textarea>
                             @error('message')<p class="text-mja-red text-xs mt-1 font-display font-semibold">{{ $message }}</p>@enderror
