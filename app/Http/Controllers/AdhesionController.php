@@ -77,6 +77,7 @@ class AdhesionController extends Controller
         $validated['telephone'] = trim(($indicatif ? $indicatif . ' ' : '') . $validated['telephone']);
 
         $validated['source_id'] = $request->session()->get('mja_source_id');
+        $validated['period_id'] = \App\Models\AdhesionPeriod::current()?->id;
 
         if ($request->hasFile('photo')) {
             $validated['photo'] = $request->file('photo')->store('adhesions/photos', 'public');

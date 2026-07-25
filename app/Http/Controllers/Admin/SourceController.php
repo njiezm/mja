@@ -20,7 +20,7 @@ class SourceController extends Controller
         'admin', 'contact', 'adhesion', 'connexion', 'deconnexion', 'a-propos',
         'projets', 'evenements', 'actualites', 'ressources', 'sante-nutrition-sport',
         'mentions-legales', 'politique-de-confidentialite', 'sitemap.xml', 'robots.txt',
-        'espace', 'mot-de-passe-oublie', 'reinitialiser-mot-de-passe', 'up', 'storage', 'images',
+        'espace', 'don', 'mot-de-passe-oublie', 'reinitialiser-mot-de-passe', 'up', 'storage', 'images',
         'vendor', 'fonts', 'build', 'css', 'js', 'favicon.ico',
     ];
 

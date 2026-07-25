@@ -17,6 +17,7 @@ class SettingController extends Controller
             'stripe_webhook_set'   => Setting::has('stripe_webhook_secret'),
             'cotisation_amount'    => Setting::get('cotisation_amount', 20),
             'notification_emails'  => Setting::get('notification_emails'),
+            'helloasso_url'        => Setting::get('helloasso_url'),
         ];
 
         return view('admin.settings.edit', compact('settings'));
@@ -30,7 +31,10 @@ class SettingController extends Controller
             'stripe_webhook_secret' => 'nullable|string|max:255',
             'cotisation_amount'  => 'required|numeric|min:0|max:10000',
             'notification_emails' => 'nullable|string|max:2000',
+            'helloasso_url'      => 'nullable|url|max:255',
         ]);
+
+        Setting::set('helloasso_url', $validated['helloasso_url']);
 
         // Normalise la liste d'emails : découpe, valide, dédoublonne.
         $emails = preg_split('/[\s,;]+/', (string) $validated['notification_emails'], -1, PREG_SPLIT_NO_EMPTY) ?: [];

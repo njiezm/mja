@@ -27,7 +27,9 @@
                     <div class="text-gray-400 text-xs mt-0.5">{{ Str::limit($resource->description, 60) }}</div>
                 </td>
                 <td class="px-4 py-4">
-                    <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">{{ $resource->type }}</span>
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">
+                        <i class="fas {{ $resource->typeIcon() }}"></i> {{ $resource->typeLabel() }}
+                    </span>
                 </td>
                 <td class="px-4 py-4 text-gray-500 text-xs">{{ $resource->categorie ?? '—' }}</td>
                 <td class="px-4 py-4">

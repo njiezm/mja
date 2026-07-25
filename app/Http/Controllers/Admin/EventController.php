@@ -75,6 +75,7 @@ class EventController extends Controller
             'gratuit'           => 'boolean',
             'prix'              => 'nullable|numeric|min:0',
             'lien_inscription'  => 'nullable|url',
+            'project_id'        => 'nullable|exists:projects,id',
             'publie'            => 'boolean',
         ]);
     }

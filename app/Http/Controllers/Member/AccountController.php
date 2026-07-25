@@ -47,9 +47,12 @@ class AccountController extends Controller
         }
 
         $validated = $request->validate([
+            'email'             => 'required|email|max:150|unique:members,email',
             'password'          => 'required|string|min:8|confirmed',
             'show_in_directory' => 'boolean',
         ], [
+            'email.required'     => "L'adresse email est obligatoire.",
+            'email.unique'       => 'Un compte existe déjà avec cette adresse email.',
             'password.required'  => 'Choisissez un mot de passe.',
             'password.min'       => 'Le mot de passe doit contenir au moins 8 caractères.',
             'password.confirmed' => 'Les mots de passe ne correspondent pas.',
@@ -57,10 +60,13 @@ class AccountController extends Controller
 
         $member = Member::create([
             'adhesion_id'       => $adhesion->id,
-            'email'             => $adhesion->email,
+            'email'             => $validated['email'],
             'password'          => $validated['password'],
             'show_in_directory' => $request->boolean('show_in_directory', true),
         ]);
+
+        // Le compte est lié par le jeton/adhésion : on synchronise l'email de l'adhésion.
+        $adhesion->update(['email' => $validated['email']]);
 
         // Le jeton est consommé.
         $adhesion->update(['account_token' => null, 'account_token_expires_at' => null]);

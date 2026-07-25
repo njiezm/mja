@@ -34,8 +34,11 @@
                 </div>
                 <div>
                     <label class="block text-sm font-display font-bold text-mja-gray mb-1.5">Mot de passe</label>
-                    <input type="password" name="password" required
-                        class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl px-4 py-3 text-sm outline-none transition-colors">
+                    <div class="relative">
+                        <input type="password" name="password" required
+                            class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl px-4 py-3 pr-11 text-sm outline-none transition-colors">
+                        <button type="button" onclick="mjaTogglePw(this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><i class="fas fa-eye"></i></button>
+                    </div>
                 </div>
                 <label class="flex items-center gap-2 text-sm text-gray-600">
                     <input type="checkbox" name="remember" class="rounded border-gray-300 text-mja-blue"> Se souvenir de moi

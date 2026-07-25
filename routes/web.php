@@ -6,6 +6,7 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ResourceController;
+use App\Http\Controllers\DonationController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SourceTrackController;
 use App\Http\Controllers\Member\AccountController as MemberAccountController;
@@ -29,6 +30,7 @@ Route::get('/projets/{project:slug}', [ProjectController::class, 'show'])->name(
 
 Route::get('/evenements', [EventController::class, 'index'])->name('events.index');
 Route::get('/evenements/{event:slug}', [EventController::class, 'show'])->name('events.show');
+Route::get('/evenements/{event:slug}/ics', [EventController::class, 'ics'])->name('events.ics');
 
 Route::get('/ressources', [ResourceController::class, 'index'])->name('resources.index');
 Route::get('/sante-nutrition-sport', [HomeController::class, 'sns'])->name('sns');
@@ -37,6 +39,10 @@ Route::get('/adhesion', [AdhesionController::class, 'create'])->name('adhesion')
 Route::post('/adhesion', [AdhesionController::class, 'store'])->name('adhesion.store');
 Route::get('/adhesion/paiement/succes', [AdhesionController::class, 'paiementSucces'])->name('adhesion.paiement.succes');
 Route::get('/adhesion/paiement/annule', [AdhesionController::class, 'paiementAnnule'])->name('adhesion.paiement.annule');
+
+Route::get('/don', [DonationController::class, 'create'])->name('don');
+Route::post('/don', [DonationController::class, 'store'])->name('don.store');
+Route::get('/don/merci', [DonationController::class, 'merci'])->name('don.merci');
 
 Route::get('/mentions-legales', [HomeController::class, 'mentionsLegales'])->name('mentions-legales');
 Route::get('/politique-de-confidentialite', [HomeController::class, 'confidentialite'])->name('confidentialite');
@@ -101,6 +107,17 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
         Route::get('sources/{source}/edit', [Admin\SourceController::class, 'edit'])->name('sources.edit');
         Route::put('sources/{source}', [Admin\SourceController::class, 'update'])->name('sources.update');
         Route::delete('sources/{source}', [Admin\SourceController::class, 'destroy'])->name('sources.destroy');
+
+        // Dons
+        Route::get('dons', [Admin\DonationController::class, 'index'])->name('donations.index');
+        Route::delete('dons/{donation}', [Admin\DonationController::class, 'destroy'])->name('donations.destroy');
+
+        // Périodes d'adhésion (saisons)
+        Route::get('periodes', [Admin\PeriodController::class, 'index'])->name('periods.index');
+        Route::post('periodes', [Admin\PeriodController::class, 'store'])->name('periods.store');
+        Route::get('periodes/{period}/edit', [Admin\PeriodController::class, 'edit'])->name('periods.edit');
+        Route::put('periodes/{period}', [Admin\PeriodController::class, 'update'])->name('periods.update');
+        Route::delete('periodes/{period}', [Admin\PeriodController::class, 'destroy'])->name('periods.destroy');
     });
 
     // ── Comptes ── admin (gestionnaires seulement) et super admin (tous).

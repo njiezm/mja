@@ -29,8 +29,8 @@
 @endphp
 
 <div class="phone-field flex items-stretch border-2 border-gray-100 focus-within:border-mja-blue rounded-xl overflow-hidden transition-colors">
-    <div class="pf-flag w-7 flex items-center justify-center pl-3 shrink-0"></div>
-    <select name="{{ $indicatifName }}" class="pf-code bg-transparent border-0 text-xs font-bold text-gray-500 font-display pl-1.5 pr-1 py-3 outline-none cursor-pointer">
+    <div class="pf-flag w-7 flex items-center justify-center pl-3 shrink-0" aria-hidden="true"></div>
+    <select name="{{ $indicatifName }}" aria-label="Indicatif téléphonique du pays" class="pf-code bg-transparent border-0 text-xs font-bold text-gray-500 font-display pl-1.5 pr-1 py-3 outline-none cursor-pointer">
         @foreach($pays as [$code, $label, $file])
         @php $isSel = (! $picked && $code === $selCode); if ($isSel) $picked = true; @endphp
         <option value="{{ $code }}" data-flag="{{ asset('images/flags/'.$file) }}" @selected($isSel)>
@@ -40,6 +40,7 @@
     </select>
     <span class="w-px bg-gray-200 my-2"></span>
     <input type="tel" name="{{ $name }}" value="{{ old($name, $value) }}" @if($required) required @endif
+        aria-label="Numéro de téléphone" autocomplete="tel-national"
         class="pf-number flex-1 bg-transparent border-0 px-3 py-3 text-sm outline-none min-w-0"
         placeholder="{{ $placeholder }}">
 </div>

@@ -34,7 +34,8 @@
         "priceCurrency": "EUR",
         "url": "{{ route('events.show', $event->slug) }}"
     }@elseif($event->gratuit),
-    "isAccessibleForFree": true@endif
+    "isAccessibleForFree": true
+    @endif
 }
 </script>
 @endpush
@@ -114,8 +115,19 @@
                     S'inscrire <i class="fas fa-external-link-alt"></i>
                 </a>
                 @endif
+                <a href="{{ route('events.ics', $event->slug) }}"
+                   class="inline-flex items-center gap-1.5 mt-3 text-xs font-display font-bold text-gray-500 hover:text-mja-blue transition-colors">
+                    <i class="fas fa-calendar-plus"></i> Ajouter à mon agenda
+                </a>
             </div>
         </div>
+
+        @if($event->project)
+        <a href="{{ route('projects.show', $event->project->slug) }}"
+           class="inline-flex items-center gap-2 mb-6 text-sm font-display font-bold text-mja-blue bg-mja-blue/10 hover:bg-mja-blue/20 px-3 py-1.5 rounded-full transition-colors">
+            <i class="fas fa-project-diagram"></i> Dans le cadre du projet : {{ $event->project->titre }}
+        </a>
+        @endif
 
         @if($event->description_courte)
         <p class="text-xl text-gray-600 font-display font-semibold leading-relaxed mb-8 border-l-4 border-mja-red pl-5 py-1">

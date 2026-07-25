@@ -41,6 +41,8 @@
     <style>
         body { font-family: 'Open Sans', sans-serif; }
         h1,h2,h3,h4,.font-display { font-family: 'Montserrat', sans-serif; }
+        a:focus-visible, button:focus-visible, input:focus-visible,
+        select:focus-visible, textarea:focus-visible { outline: 3px solid #1E93D6; outline-offset: 2px; border-radius: 4px; }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen flex">
@@ -131,10 +133,20 @@
                 <span class="ml-auto bg-mja-red text-white text-xs px-2 py-0.5 rounded-full">{{ $nonLus }}</span>
                 @endif
             </a>
+            <a href="{{ route('admin.donations.index') }}"
+               class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-display font-semibold transition-colors
+                      {{ request()->routeIs('admin.donations.*') ? 'bg-mja-blue text-white' : 'text-gray-400 hover:bg-white/5 hover:text-white' }}">
+                <i class="fas fa-heart w-4 text-center text-mja-red"></i> Dons
+            </a>
             <a href="{{ route('admin.sources.index') }}"
                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-display font-semibold transition-colors
                       {{ request()->routeIs('admin.sources.*') ? 'bg-mja-blue text-white' : 'text-gray-400 hover:bg-white/5 hover:text-white' }}">
                 <i class="fas fa-bullseye w-4 text-center text-mja-blue"></i> Sources
+            </a>
+            <a href="{{ route('admin.periods.index') }}"
+               class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-display font-semibold transition-colors
+                      {{ request()->routeIs('admin.periods.*') ? 'bg-mja-blue text-white' : 'text-gray-400 hover:bg-white/5 hover:text-white' }}">
+                <i class="fas fa-calendar-week w-4 text-center text-mja-yellow"></i> Périodes
             </a>
             @endif
 

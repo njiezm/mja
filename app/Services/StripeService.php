@@ -54,6 +54,30 @@ class StripeService
         return $resp->json('url');
     }
 
+    /** Crée une session Checkout pour un don ; renvoie l'URL de paiement (ou null). */
+    public static function createDonationCheckout(\App\Models\Donation $don, string $successUrl, string $cancelUrl): ?string
+    {
+        $resp = Http::asForm()->withToken(self::secret())->post(self::API . '/checkout/sessions', [
+            'mode'                                          => 'payment',
+            'success_url'                                   => $successUrl,
+            'cancel_url'                                    => $cancelUrl,
+            'client_reference_id'                           => $don->id,
+            'customer_email'                                => $don->email,
+            'metadata[donation_id]'                         => $don->id,
+            'line_items[0][quantity]'                       => 1,
+            'line_items[0][price_data][currency]'           => 'eur',
+            'line_items[0][price_data][unit_amount]'        => (int) round(((float) $don->montant) * 100),
+            'line_items[0][price_data][product_data][name]' => "Don à Madin'Jeunes Ambition",
+        ]);
+
+        if ($resp->failed()) {
+            Log::error('Stripe donation session failed: ' . $resp->body());
+            return null;
+        }
+
+        return $resp->json('url');
+    }
+
     /** Récupère une session Checkout (tableau) ou null. */
     public static function retrieveSession(string $sessionId): ?array
     {

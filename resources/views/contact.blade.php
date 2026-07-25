@@ -93,6 +93,16 @@
                         Formulaire d'adhésion <i class="fas fa-arrow-right text-xs"></i>
                     </span>
                 </a>
+
+                <a href="{{ route('don') }}" class="group block bg-mja-red/5 hover:bg-mja-red/10 rounded-2xl p-5 border-l-4 border-mja-red transition-colors">
+                    <h3 class="font-display font-bold text-mja-gray mb-2 group-hover:text-mja-red transition-colors flex items-center gap-2">
+                        <i class="fas fa-heart text-mja-red"></i> Soutenir l'association
+                    </h3>
+                    <p class="text-gray-600 text-sm leading-relaxed mb-3">Un don, même modeste, nous aide à mener nos actions auprès des jeunes.</p>
+                    <span class="inline-flex items-center gap-2 text-mja-red font-display font-bold text-sm">
+                        Faire un don <i class="fas fa-arrow-right text-xs"></i>
+                    </span>
+                </a>
             </div>
 
             <!-- Formulaire -->

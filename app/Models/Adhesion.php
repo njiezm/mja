@@ -12,7 +12,7 @@ class Adhesion extends Model
         'premiere_adhesion', 'civilite', 'nom', 'prenom', 'date_naissance',
         'profession', 'telephone', 'email', 'adresse_postale', 'taille_tshirt',
         'permis', 'problemes_sante', 'urgence_contact', 'photo', 'moyen_paiement',
-        'droit_image', 'rgpd_consentement', 'statut', 'lu', 'source_id',
+        'droit_image', 'rgpd_consentement', 'statut', 'lu', 'source_id', 'period_id',
         'account_token', 'account_token_expires_at',
     ];
 
@@ -26,6 +26,11 @@ class Adhesion extends Model
     public function member(): HasOne
     {
         return $this->hasOne(Member::class);
+    }
+
+    public function period(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(AdhesionPeriod::class, 'period_id');
     }
 
     /**

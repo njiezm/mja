@@ -85,9 +85,12 @@
                         <label class="block text-sm font-display font-bold text-gray-700 mb-1.5">
                             <i class="fas fa-lock text-mja-blue mr-1"></i> Mot de passe
                         </label>
-                        <input type="password" name="password" required
-                               class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl px-4 py-3 text-sm outline-none transition-colors"
-                               placeholder="••••••••">
+                        <div class="relative">
+                            <input type="password" name="password" required
+                                   class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl px-4 py-3 pr-11 text-sm outline-none transition-colors"
+                                   placeholder="••••••••">
+                            <button type="button" onclick="mjaTogglePw(this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><i class="fas fa-eye text-sm"></i></button>
+                        </div>
                     </div>
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
@@ -115,5 +118,14 @@
             </a>
         </div>
     </div>
+    <script>
+        function mjaTogglePw(btn) {
+            var input = btn.parentNode.querySelector('input');
+            var icon = btn.querySelector('i');
+            if (!input) return;
+            if (input.type === 'password') { input.type = 'text'; icon && icon.classList.replace('fa-eye', 'fa-eye-slash'); }
+            else { input.type = 'password'; icon && icon.classList.replace('fa-eye-slash', 'fa-eye'); }
+        }
+    </script>
 </body>
 </html>

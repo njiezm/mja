@@ -21,6 +21,11 @@ class Project extends Model
         'ordre' => 'integer',
     ];
 
+    public function events(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Event::class);
+    }
+
     public function scopeActif($query)
     {
         return $query->where('actif', true)->orderByDesc('created_at');

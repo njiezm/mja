@@ -13,15 +13,22 @@ use Illuminate\Validation\Rule;
 
 class AdhesionController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $adhesions = Adhesion::orderByDesc('created_at')->paginate(20);
+        $query = Adhesion::with('period')->orderByDesc('created_at');
+        if ($request->filled('period')) {
+            $query->where('period_id', $request->integer('period'));
+        }
+        $adhesions = $query->paginate(20)->withQueryString();
+
         $stats = [
             'total'     => Adhesion::count(),
             'nouvelles' => Adhesion::where('statut', 'nouvelle')->count(),
             'adherents' => Adhesion::where('statut', 'payee')->count(),
         ];
-        return view('admin.adhesions.index', compact('adhesions', 'stats'));
+        $periods = \App\Models\AdhesionPeriod::orderByDesc('date_debut')->get();
+
+        return view('admin.adhesions.index', compact('adhesions', 'stats', 'periods'));
     }
 
     public function show(Adhesion $adhesion)

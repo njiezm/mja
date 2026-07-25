@@ -107,6 +107,18 @@
         .btn-blue:hover { background: #1E93D6; }
         .btn-yellow { background: #F5A623; color: #2048A4; }
         .btn-yellow:hover { background: #e0941a; }
+
+        /* Accessibilité : focus clavier visible */
+        a:focus-visible, button:focus-visible, input:focus-visible,
+        select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
+            outline: 3px solid #1E93D6;
+            outline-offset: 2px;
+            border-radius: 4px;
+        }
+        /* Respect de la préférence « animations réduites » */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
+        }
     </style>
 
     {{-- ── Données structurées (JSON-LD) ────────────────────────── --}}
@@ -141,9 +153,11 @@
 </head>
 <body class="bg-white">
 
+    <a href="#contenu" class="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-2 focus:left-2 focus:bg-white focus:text-mja-dark focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg focus:font-display focus:font-bold">Aller au contenu principal</a>
+
     <!-- Navbar + bandeau saisonnier dans un seul bloc sticky -->
     <div class="sticky top-0 z-50 shadow-sm">
-    <nav class="bg-white border-b border-gray-100">
+    <nav class="bg-white border-b border-gray-100" aria-label="Navigation principale">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
 
@@ -192,6 +206,7 @@
                 <div class="hidden md:flex items-center gap-1">
                     @foreach($navLinks as [$label, $route, $pattern])
                     <a href="{{ route($route) }}"
+                       @if(request()->routeIs($pattern ?: $route)) aria-current="page" @endif
                        class="nav-link px-3 py-2 rounded-lg text-sm font-semibold font-display transition-colors
                               {{ request()->routeIs($pattern ?: $route) ? 'text-mja-blue' : 'text-gray-600' }}">
                         {{ $label }}
@@ -234,17 +249,17 @@
 
     <!-- Flash -->
     @if(is_string(session('success')))
-    <div class="bg-green-50 border-l-4 border-green-500 text-green-800 px-6 py-3 text-sm flex items-center gap-2 font-display font-semibold">
-        <i class="fas fa-check-circle text-green-500"></i> {{ session('success') }}
+    <div role="status" class="bg-green-50 border-l-4 border-green-500 text-green-800 px-6 py-3 text-sm flex items-center gap-2 font-display font-semibold">
+        <i class="fas fa-check-circle text-green-500" aria-hidden="true"></i> {{ session('success') }}
     </div>
     @endif
     @if(is_string(session('error')))
-    <div class="bg-red-50 border-l-4 border-mja-red text-red-800 px-6 py-3 text-sm flex items-center gap-2 font-display font-semibold">
-        <i class="fas fa-exclamation-circle text-mja-red"></i> {{ session('error') }}
+    <div role="alert" class="bg-red-50 border-l-4 border-mja-red text-red-800 px-6 py-3 text-sm flex items-center gap-2 font-display font-semibold">
+        <i class="fas fa-exclamation-circle text-mja-red" aria-hidden="true"></i> {{ session('error') }}
     </div>
     @endif
 
-    <main>@yield('content')</main>
+    <main id="contenu" tabindex="-1" class="outline-none">@yield('content')</main>
 
     <!-- Footer -->
     <footer class="bg-mja-navy text-gray-300 pt-16 pb-6 mt-20 ring-watermark">
@@ -324,6 +339,10 @@
                             <i class="fas fa-user-plus text-mja-yellow w-4 shrink-0"></i>
                             <a href="{{ route('adhesion') }}" class="hover:text-mja-yellow transition-colors">Adhérer à MJA</a>
                         </li>
+                        <li class="flex gap-2 items-center">
+                            <i class="fas fa-heart text-mja-red w-4 shrink-0"></i>
+                            <a href="{{ route('don') }}" class="hover:text-mja-yellow transition-colors">Faire un don</a>
+                        </li>
                     </ul>
                 </div>
             </div>
@@ -355,6 +374,15 @@
     </footer>
 
     <script>
+        // Afficher / masquer un champ mot de passe (bouton œil adjacent à l'input)
+        window.mjaTogglePw = function (btn) {
+            var input = btn.parentNode.querySelector('input');
+            var icon = btn.querySelector('i');
+            if (!input) return;
+            if (input.type === 'password') { input.type = 'text'; icon && icon.classList.replace('fa-eye', 'fa-eye-slash'); }
+            else { input.type = 'password'; icon && icon.classList.replace('fa-eye-slash', 'fa-eye'); }
+        };
+
         document.getElementById('menu-btn').addEventListener('click', function () {
             const menu = document.getElementById('mobile-menu');
             const isOpen = menu.classList.toggle('hidden') === false;

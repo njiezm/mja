@@ -50,6 +50,31 @@
         <div class="text-gray-700 leading-loose text-[15px]">
             {!! nl2br(e($project->description)) !!}
         </div>
+
+        @php $projectEvents = $project->events()->where('publie', true)->orderByDesc('date_debut')->get(); @endphp
+        @if($projectEvents->count())
+        <div class="mt-12">
+            <h2 class="font-display font-black text-xl text-mja-gray mb-5 flex items-center gap-2">
+                <i class="fas fa-calendar-alt text-mja-red"></i> Événements liés à ce projet
+            </h2>
+            <div class="space-y-3">
+                @foreach($projectEvents as $ev)
+                <a href="{{ route('events.show', $ev->slug) }}" class="flex items-center gap-4 bg-gray-50 hover:bg-white border border-gray-100 rounded-2xl px-5 py-3.5 transition-colors group">
+                    <div class="bg-mja-dark text-white rounded-xl p-2.5 text-center min-w-[52px] shrink-0">
+                        <div class="font-display font-black text-lg leading-none">{{ $ev->date_debut->format('d') }}</div>
+                        <div class="text-[10px] uppercase text-mja-yellow font-display font-semibold">{{ $ev->date_debut->locale('fr')->isoFormat('MMM') }}</div>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="font-display font-bold text-mja-gray group-hover:text-mja-blue transition-colors">{{ $ev->titre }}</div>
+                        @if($ev->lieu)<div class="text-xs text-gray-400 mt-0.5"><i class="fas fa-map-marker-alt mr-1"></i>{{ $ev->lieu }}</div>@endif
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-300 text-xs shrink-0"></i>
+                </a>
+                @endforeach
+            </div>
+        </div>
+        @endif
+
         <div class="mt-12 pt-6 border-t border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <a href="{{ route('projects.index') }}" class="text-mja-blue hover:text-mja-bluedark font-display font-bold flex items-center gap-2 transition-colors">
                 <i class="fas fa-arrow-left"></i> Retour aux projets

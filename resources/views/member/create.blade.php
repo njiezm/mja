@@ -23,20 +23,26 @@
             <form method="POST" action="{{ route('member.account.store', $token) }}" class="space-y-5">
                 @csrf
                 <div>
-                    <label class="block text-sm font-display font-bold text-mja-gray mb-1.5">Adresse email</label>
-                    <input type="email" value="{{ $adhesion->email }}" disabled
-                        class="w-full border-2 border-gray-100 bg-gray-50 rounded-xl px-4 py-3 text-sm text-gray-500">
+                    <label class="block text-sm font-display font-bold text-mja-gray mb-1.5">Adresse email <span class="text-mja-red">*</span></label>
+                    <input type="email" name="email" value="{{ old('email', $adhesion->email) }}" required
+                        class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl px-4 py-3 text-sm outline-none transition-colors">
+                    <p class="text-[11px] text-gray-400 mt-1">Vous pouvez la modifier — votre compte reste lié à votre adhésion.</p>
                 </div>
                 <div>
                     <label class="block text-sm font-display font-bold text-mja-gray mb-1.5">Mot de passe <span class="text-mja-red">*</span></label>
-                    <input type="password" name="password" required minlength="8"
-                        class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl px-4 py-3 text-sm outline-none transition-colors"
-                        placeholder="Minimum 8 caractères">
+                    <div class="relative">
+                        <input type="password" name="password" required minlength="8"
+                            class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl px-4 py-3 pr-11 text-sm outline-none transition-colors" placeholder="Minimum 8 caractères">
+                        <button type="button" onclick="mjaTogglePw(this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><i class="fas fa-eye"></i></button>
+                    </div>
                 </div>
                 <div>
                     <label class="block text-sm font-display font-bold text-mja-gray mb-1.5">Confirmer le mot de passe <span class="text-mja-red">*</span></label>
-                    <input type="password" name="password_confirmation" required minlength="8"
-                        class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl px-4 py-3 text-sm outline-none transition-colors">
+                    <div class="relative">
+                        <input type="password" name="password_confirmation" required minlength="8"
+                            class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl px-4 py-3 pr-11 text-sm outline-none transition-colors">
+                        <button type="button" onclick="mjaTogglePw(this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><i class="fas fa-eye"></i></button>
+                    </div>
                 </div>
                 <label class="flex items-start gap-3 cursor-pointer bg-mja-blue/5 border border-mja-blue/20 rounded-xl p-4">
                     <input type="checkbox" name="show_in_directory" value="1" checked class="mt-0.5 w-5 h-5 rounded text-mja-blue shrink-0">

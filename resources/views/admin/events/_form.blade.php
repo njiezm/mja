@@ -36,10 +36,21 @@
         <label class="block text-sm font-semibold text-gray-700 mb-1.5">Description complète</label>
         <textarea name="description" rows="8" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-mja-blue resize-y">{{ old('description', $event->description ?? '') }}</textarea>
     </div>
-    <div>
-        <label class="block text-sm font-semibold text-gray-700 mb-1.5">Lien d'inscription (URL)</label>
-        <input type="url" name="lien_inscription" value="{{ old('lien_inscription', $event->lien_inscription ?? '') }}"
-            class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-mja-blue" placeholder="https://...">
+    <div class="grid grid-cols-2 gap-5">
+        <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Lien d'inscription (URL)</label>
+            <input type="url" name="lien_inscription" value="{{ old('lien_inscription', $event->lien_inscription ?? '') }}"
+                class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-mja-blue" placeholder="https://...">
+        </div>
+        <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Projet associé</label>
+            <select name="project_id" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-mja-blue">
+                <option value="">— Aucun —</option>
+                @foreach(\App\Models\Project::orderBy('titre')->get(['id','titre']) as $proj)
+                <option value="{{ $proj->id }}" {{ (string) old('project_id', $event->project_id ?? '') === (string) $proj->id ? 'selected' : '' }}>{{ $proj->titre }}</option>
+                @endforeach
+            </select>
+        </div>
     </div>
     <div>
         <label class="block text-sm font-semibold text-gray-700 mb-1.5">Image</label>

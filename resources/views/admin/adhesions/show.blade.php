@@ -68,6 +68,10 @@
                         <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Moyen de paiement</div>
                         <div class="font-semibold text-gray-900">{{ $adhesion->label_moyen_paiement }}</div>
                     </div>
+                    <div>
+                        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Période</div>
+                        <div class="font-semibold text-gray-900">{{ $adhesion->period?->label ?? '—' }}</div>
+                    </div>
                     <div class="col-span-2 sm:col-span-3">
                         <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Adresse postale</div>
                         <div class="font-semibold text-gray-900 whitespace-pre-line">{{ $adhesion->adresse_postale }}</div>

@@ -33,14 +33,28 @@
     </div>
 </div>
 
-<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-    <table class="w-full text-sm">
+@if($periods->count())
+<form method="GET" class="mb-4 flex items-center gap-2">
+    <label class="text-sm text-gray-500 font-display font-semibold">Période :</label>
+    <select name="period" onchange="this.form.submit()" class="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-mja-blue">
+        <option value="">Toutes</option>
+        @foreach($periods as $p)
+        <option value="{{ $p->id }}" @selected(request('period') == $p->id)>{{ $p->label }}</option>
+        @endforeach
+    </select>
+    @if(request('period'))<a href="{{ route('admin.adhesions.index') }}" class="text-xs text-mja-blue hover:underline">Réinitialiser</a>@endif
+</form>
+@endif
+
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-x-auto">
+    <table class="w-full text-sm min-w-[720px]">
         <thead class="bg-gray-50 text-gray-500 text-xs uppercase">
             <tr>
                 <th class="px-6 py-3 text-left font-semibold w-4"></th>
                 <th class="px-4 py-3 text-left font-semibold">Candidat</th>
                 <th class="px-4 py-3 text-left font-semibold">Type</th>
                 <th class="px-4 py-3 text-left font-semibold">Statut</th>
+                <th class="px-4 py-3 text-left font-semibold">Période</th>
                 <th class="px-4 py-3 text-left font-semibold">Date</th>
                 <th class="px-4 py-3 text-center font-semibold">Actions</th>
             </tr>
@@ -69,6 +83,13 @@
                         {{ $adhesion->label_statut }}
                     </span>
                 </td>
+                <td class="px-4 py-4">
+                    @if($adhesion->period)
+                    <span class="text-xs font-semibold text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full">{{ $adhesion->period->label }}</span>
+                    @else
+                    <span class="text-xs text-gray-300">—</span>
+                    @endif
+                </td>
                 <td class="px-4 py-4 text-gray-400 text-xs">{{ $adhesion->created_at->locale('fr')->isoFormat('D MMM Y, H[h]mm') }}</td>
                 <td class="px-4 py-4">
                     <div class="flex items-center justify-center gap-2">
@@ -81,7 +102,7 @@
                 </td>
             </tr>
             @empty
-            <tr><td colspan="6" class="px-6 py-12 text-center text-gray-400">Aucune demande d'adhésion reçue.</td></tr>
+            <tr><td colspan="7" class="px-6 py-12 text-center text-gray-400">Aucune demande d'adhésion reçue.</td></tr>
             @endforelse
         </tbody>
     </table>

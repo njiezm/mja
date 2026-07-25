@@ -82,8 +82,14 @@
             <div class="border-t border-gray-100 pt-5">
                 <label class="block text-sm font-display font-bold text-mja-gray mb-1.5">Nouveau mot de passe <span class="text-gray-400 font-normal">(laisser vide pour conserver)</span></label>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <input type="password" name="password" minlength="8" placeholder="••••••••" class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl px-4 py-3 text-sm outline-none">
-                    <input type="password" name="password_confirmation" minlength="8" placeholder="Confirmer" class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl px-4 py-3 text-sm outline-none">
+                    <div class="relative">
+                        <input type="password" name="password" minlength="8" placeholder="••••••••" class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl px-4 py-3 pr-11 text-sm outline-none">
+                        <button type="button" onclick="mjaTogglePw(this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><i class="fas fa-eye"></i></button>
+                    </div>
+                    <div class="relative">
+                        <input type="password" name="password_confirmation" minlength="8" placeholder="Confirmer" class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl px-4 py-3 pr-11 text-sm outline-none">
+                        <button type="button" onclick="mjaTogglePw(this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><i class="fas fa-eye"></i></button>
+                    </div>
                 </div>
             </div>
 

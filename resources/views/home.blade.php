@@ -421,9 +421,14 @@
             <span class="text-mja-blue">M</span><span class="text-mja-yellow">J</span><span class="text-mja-red">A</span> !
         </h2>
         <p class="text-gray-300 text-lg mb-8 leading-relaxed">Bénévole, partenaire ou sympathisant — il y a une place pour vous dans notre association.</p>
-        <a href="{{ route('contact') }}" class="btn-yellow font-display font-black px-10 py-4 rounded-full text-lg inline-block transition-colors">
-            Nous contacter <i class="fas fa-arrow-right ml-2"></i>
-        </a>
+        <div class="flex flex-wrap gap-4 justify-center">
+            <a href="{{ route('contact') }}" class="btn-yellow font-display font-black px-8 py-4 rounded-full text-lg inline-block transition-colors">
+                Nous contacter <i class="fas fa-arrow-right ml-2"></i>
+            </a>
+            <a href="{{ route('don') }}" class="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-display font-black px-8 py-4 rounded-full text-lg inline-flex items-center gap-2 transition-colors">
+                <i class="fas fa-heart text-mja-red"></i> Faire un don
+            </a>
+        </div>
     </div>
 </section>
 

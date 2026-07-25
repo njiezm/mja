@@ -73,6 +73,17 @@
                     <p class="text-[11px] text-gray-400 mt-1.5">Une adresse par ligne (ou séparées par des virgules). Ces adresses reçoivent les notifications : nouvelle adhésion, nouveau message de contact, etc. Si vide, l'adresse par défaut est utilisée.</p>
                 </div>
             </div>
+
+            {{-- Dons --}}
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-4">
+                <h2 class="font-display font-bold text-gray-900"><i class="fas fa-heart text-mja-red mr-1"></i> Dons</h2>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Lien HelloAsso <span class="text-gray-400 font-normal">(optionnel)</span></label>
+                    <input type="url" name="helloasso_url" value="{{ old('helloasso_url', $settings['helloasso_url']) }}" placeholder="https://www.helloasso.com/associations/…/formulaires/…"
+                        class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-mja-blue">
+                    <p class="text-[11px] text-gray-400 mt-1.5">Si renseigné, un bouton « Faire un don via HelloAsso » apparaît sur la page de dons (reçus fiscaux gérés par HelloAsso). Le don par carte (Stripe) reste disponible si le paiement en ligne est activé.</p>
+                </div>
+            </div>
         </div>
 
         </div>{{-- /grid --}}

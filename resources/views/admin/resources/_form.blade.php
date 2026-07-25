@@ -8,7 +8,7 @@
         <div>
             <label class="block text-sm font-semibold text-gray-700 mb-1.5">Type <span class="text-red-500">*</span></label>
             <select name="type" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-mja-blue">
-                @foreach(['document'=>'📄 Document','pdf'=>'📕 PDF','guide'=>'📖 Guide','lien'=>'🔗 Lien externe','video'=>'🎬 Vidéo','audio'=>'🎵 Audio','podcast'=>'🎙️ Podcast','infographie'=>'📊 Infographie'] as $key => $label)
+                @foreach(\App\Models\Resource::TYPES as $key => [$label, $icon])
                 <option value="{{ $key }}" {{ old('type', $resource->type ?? 'document') === $key ? 'selected' : '' }}>{{ $label }}</option>
                 @endforeach
             </select>

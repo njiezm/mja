@@ -97,10 +97,11 @@ foreach ($avenir as $ev) {
                     @endphp
                     <div class="relative h-9 flex items-center justify-center rounded-lg
                         {{ $isToday ? 'ring-2 ring-mja-blue' : '' }}
-                        {{ $dayEvents->count() ? 'cursor-pointer' : '' }}
+                        {{ $dayEvents->count() ? 'cursor-pointer hover:ring-2 hover:ring-mja-blue/40' : '' }}
                         {{ $isPast && !$dayEvents->count() ? 'opacity-30' : '' }}"
                         @if($firstEvent)
-                        title="{{ $dayEvents->pluck('titre')->join(' · ') }}"
+                        title="{{ $dayEvents->pluck('titre')->join(' · ') }} — cliquer pour voir"
+                        onclick="mjaGoToEvent({{ $firstEvent->id }})"
                         @endif>
                         @if($dayEvents->count())
                         <div class="absolute inset-0 {{ ['bg-mja-blue/15','bg-mja-yellow/15','bg-mja-red/15'][$colorIdx] }} rounded-lg"></div>
@@ -122,7 +123,7 @@ foreach ($avenir as $ev) {
         <!-- Liste des événements à venir -->
         <div class="divide-y divide-gray-100 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             @foreach($avenir as $event)
-            <a href="{{ route('events.show', $event) }}"
+            <a href="{{ route('events.show', $event) }}" id="event-{{ $event->id }}" style="scroll-margin-top:6rem"
                class="flex items-center gap-5 px-6 py-4 hover:bg-gray-50 transition-colors group">
                 <!-- Date bloc -->
                 <div class="bg-mja-dark text-white rounded-xl p-3 text-center min-w-[56px] shrink-0">
@@ -189,6 +190,18 @@ foreach ($avenir as $ev) {
     </div>
 </section>
 @endif
+
+@push('scripts')
+<script>
+function mjaGoToEvent(id) {
+    var el = document.getElementById('event-' + id);
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.classList.add('ring-2', 'ring-mja-yellow', 'bg-mja-yellow/10');
+    setTimeout(function () { el.classList.remove('ring-2', 'ring-mja-yellow', 'bg-mja-yellow/10'); }, 2000);
+}
+</script>
+@endpush
 
 @if(!$avenir->count() && !$passes->count())
 <div class="py-24 text-center">
