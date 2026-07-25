@@ -35,6 +35,17 @@
     <meta name="twitter:description" content="@yield('meta_description', "Association de jeunes bénévoles à Fort-de-France, Martinique.")">
     <meta name="twitter:image"       content="@yield('og_image', asset('images/logomjat.png'))">
 
+    {{-- ── Préchargement des polices critiques (au-dessus de la ligne de flottaison) ──
+         Gill Sans (corps + gras) et AllRound Gothic Bold (gros titres du hero,
+         classe .font-display.font-black). Servies depuis notre domaine et
+         préchargées, elles arrivent avant le premier rendu : plus aucun échange
+         de police après peinture → supprime le CLS de 0.149 mesuré par Lighthouse.
+         crossorigin est requis même en same-origin (les polices sont toujours
+         récupérées en mode CORS). --}}
+    <link rel="preload" as="font" type="font/woff2" href="{{ asset('fonts/Gill_Sans.woff2') }}" crossorigin>
+    <link rel="preload" as="font" type="font/woff2" href="{{ asset('fonts/Gill_Sans_Bold.woff2') }}" crossorigin>
+    <link rel="preload" as="font" type="font/woff2" href="{{ asset('fonts/AllRoundGothic-Bold.woff2') }}" crossorigin>
+
     {{-- ── Tailwind CSS (compilé en local, statique) ──────────── --}}
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
     <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
