@@ -23,20 +23,30 @@
         @else
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
             @foreach($membres as $m)
-            @php $a = $m->adhesion; @endphp
-            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 text-center card-hover {{ $me && $m->id === $me->id ? 'ring-2 ring-mja-blue' : '' }}">
+            @php
+                $a = $m->adhesion;
+                $nomAffiche = $a->prenom . ' ' . mb_strtoupper(mb_substr($a->nom, 0, 1)) . '.';
+                $initiale = mb_strtoupper(mb_substr($a->prenom, 0, 1));
+            @endphp
+            <button type="button"
+                    class="w-full bg-white rounded-2xl border border-gray-100 shadow-sm p-4 text-center card-hover cursor-pointer focus:outline-none focus:ring-2 focus:ring-mja-blue {{ $me && $m->id === $me->id ? 'ring-2 ring-mja-blue' : '' }}"
+                    data-photo="{{ $a->photo ? Storage::url($a->photo) : '' }}"
+                    data-nom="{{ $nomAffiche }}"
+                    data-initiale="{{ $initiale }}"
+                    data-moi="{{ $me && $m->id === $me->id ? '1' : '' }}"
+                    aria-label="Agrandir la photo de {{ $nomAffiche }}">
                 @if($a->photo)
-                <img src="{{ Storage::url($a->photo) }}" alt="{{ $a->prenom }}" class="w-20 h-20 rounded-2xl object-cover mx-auto mb-3">
+                <img src="{{ Storage::url($a->photo) }}" alt="{{ $a->prenom }}" loading="lazy" class="w-20 h-20 rounded-2xl object-cover mx-auto mb-3">
                 @else
                 <div class="w-20 h-20 rounded-2xl bg-mja-blue/10 text-mja-blue flex items-center justify-center text-2xl font-display font-black mx-auto mb-3">
-                    {{ strtoupper(substr($a->prenom, 0, 1)) }}
+                    {{ $initiale }}
                 </div>
                 @endif
                 <div class="font-display font-bold text-mja-gray text-sm leading-tight">
-                    {{ $a->prenom }} {{ strtoupper(substr($a->nom, 0, 1)) }}.
+                    {{ $nomAffiche }}
                 </div>
                 @if($me && $m->id === $me->id)<div class="text-[11px] text-mja-blue font-semibold mt-0.5">Vous</div>@endif
-            </div>
+            </button>
             @endforeach
         </div>
         <p class="text-xs text-gray-400 text-center mt-8">
@@ -45,4 +55,85 @@
         @endif
     </div>
 </section>
+
+{{-- Modale : photo agrandie --}}
+<div id="photo-modal" class="fixed inset-0 z-[60] hidden items-center justify-center px-4" style="background:rgba(10,20,40,.7)"
+     role="dialog" aria-modal="true" aria-labelledby="photo-modal-nom">
+    <div id="photo-modal-card" class="bg-white rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden transform transition-all duration-200 scale-95 opacity-0">
+        <div class="flex h-1"><div class="flex-1 bg-mja-blue"></div><div class="flex-1 bg-mja-yellow"></div><div class="flex-1 bg-mja-red"></div></div>
+        <div class="p-7 text-center">
+            <img id="photo-modal-img" src="" alt="" class="hidden w-56 h-56 sm:w-64 sm:h-64 rounded-3xl object-cover mx-auto mb-5 bg-gray-100">
+            <div id="photo-modal-initiale" class="hidden w-56 h-56 sm:w-64 sm:h-64 rounded-3xl bg-mja-blue/10 text-mja-blue items-center justify-center text-6xl font-display font-black mx-auto mb-5"></div>
+            <h3 id="photo-modal-nom" class="font-display font-black text-xl text-mja-gray"></h3>
+            <div id="photo-modal-moi" class="hidden text-xs text-mja-blue font-semibold mt-1">Vous</div>
+            <button type="button" onclick="closePhotoModal()"
+                    class="mt-6 w-full py-3 border-2 border-gray-200 hover:border-gray-300 rounded-xl font-display font-bold text-gray-600 hover:bg-gray-50 transition-colors text-sm">
+                Fermer
+            </button>
+        </div>
+    </div>
+</div>
 @endsection
+
+@push('scripts')
+<script>
+(function () {
+    var modal = document.getElementById('photo-modal');
+    if (!modal) return;
+
+    var card     = document.getElementById('photo-modal-card');
+    var img      = document.getElementById('photo-modal-img');
+    var initiale = document.getElementById('photo-modal-initiale');
+    var nom      = document.getElementById('photo-modal-nom');
+    var moi      = document.getElementById('photo-modal-moi');
+    var declencheur = null;
+
+    function openPhotoModal(btn) {
+        declencheur = btn;
+        var photo = btn.dataset.photo;
+
+        if (photo) {
+            img.src = photo;
+            img.alt = btn.dataset.nom;
+            img.classList.remove('hidden');
+            initiale.classList.add('hidden');
+            initiale.classList.remove('flex');
+        } else {
+            img.classList.add('hidden');
+            img.removeAttribute('src');
+            initiale.textContent = btn.dataset.initiale;
+            initiale.classList.remove('hidden');
+            initiale.classList.add('flex');
+        }
+
+        nom.textContent = btn.dataset.nom;
+        moi.classList.toggle('hidden', !btn.dataset.moi);
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        requestAnimationFrame(function () { card.classList.remove('scale-95', 'opacity-0'); });
+    }
+
+    window.closePhotoModal = function () {
+        card.classList.add('scale-95', 'opacity-0');
+        setTimeout(function () {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            if (declencheur) { declencheur.focus(); declencheur = null; }
+        }, 200);
+    };
+
+    document.querySelectorAll('[data-photo]').forEach(function (btn) {
+        btn.addEventListener('click', function () { openPhotoModal(btn); });
+    });
+
+    modal.addEventListener('click', function (e) {
+        if (e.target === this) window.closePhotoModal();
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && !modal.classList.contains('hidden')) window.closePhotoModal();
+    });
+})();
+</script>
+@endpush
