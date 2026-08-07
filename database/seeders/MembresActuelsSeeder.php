@@ -111,14 +111,15 @@ class MembresActuelsSeeder extends Seeder
                 continue; // compte déjà existant : on ne touche pas au mot de passe
             }
 
-            $motDePasse = $this->motDePasseTemporaire();
+            $motDePasse = Member::motDePasseTemporaire();
 
-            Member::create([
-                'adhesion_id'       => $adhesion->id,
-                'email'             => $email,
-                'password'          => $motDePasse,   // hashé par le cast du modèle
-                'show_in_directory' => true,
-            ]);
+            $member = new Member();
+            $member->adhesion_id = $adhesion->id;
+            $member->email = $email;
+            $member->show_in_directory = true;
+            // Hash + copie chiffrée : le mot de passe reste consultable en back-office.
+            $member->setPasswordAndCopy($motDePasse);
+            $member->save();
 
             $credentials[] = [
                 $ligne['nom'],
@@ -141,6 +142,7 @@ class MembresActuelsSeeder extends Seeder
 
         if ($credentials) {
             $this->command?->info('Identifiants : storage/app/private/membres-actus-comptes.csv');
+            $this->command?->info('Ils restent consultables en back-office : Comptes adhérents (super admin).');
         }
     }
 
@@ -166,12 +168,6 @@ class MembresActuelsSeeder extends Seeder
         }
 
         return null;
-    }
-
-    /** Mot de passe temporaire lisible, à transmettre à l'adhérent hors email. */
-    private function motDePasseTemporaire(): string
-    {
-        return 'MJA-' . Str::upper(Str::random(4)) . '-' . random_int(1000, 9999);
     }
 
     /** @param  array<int, array{0:string,1:string,2:string,3:string}>  $lignes */

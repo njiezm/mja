@@ -58,6 +58,9 @@ class AccountController extends Controller
             'password.confirmed' => 'Les mots de passe ne correspondent pas.',
         ]);
 
+        // Emails stockés en minuscules (comparaison `=` sensible à la casse sous PostgreSQL).
+        $validated['email'] = \Illuminate\Support\Str::lower(trim($validated['email']));
+
         $member = Member::create([
             'adhesion_id'       => $adhesion->id,
             'email'             => $validated['email'],

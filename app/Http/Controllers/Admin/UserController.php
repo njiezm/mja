@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Mail\AdminCreated;
+use App\Mail\AdminPasswordReset;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -117,7 +118,17 @@ class UserController extends Controller
         $user->setPasswordAndCopy($plain);
         $user->save();
 
-        return back()->with('success', "Nouveau mot de passe de {$user->name} : {$plain}");
+        $envoye = true;
+
+        try {
+            Mail::to($user->email)->send(new AdminPasswordReset($user, $plain));
+        } catch (\Throwable $e) {
+            $envoye = false;
+            Log::error('[AdminPasswordReset] envoi échoué pour ' . $user->email . ' : ' . $e->getMessage());
+        }
+
+        return back()->with('success', "Nouveau mot de passe de {$user->name} : {$plain}"
+            . ($envoye ? ' (envoyé par email)' : " — l'email n'a pas pu être envoyé, transmettez-le manuellement."));
     }
 
     public function toggleActive(Request $request, User $user)

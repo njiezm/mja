@@ -139,6 +139,11 @@
             @endif
 
             @if(auth()->user()->isSuperAdmin())
+            <a href="{{ route('admin.members.index') }}"
+               class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-display font-semibold transition-colors
+                      {{ request()->routeIs('admin.members.*') ? 'bg-mja-yellow text-mja-dark' : 'text-gray-400 hover:bg-white/5 hover:text-white' }}">
+                <i class="fas fa-id-badge w-4 text-center text-mja-red"></i> Comptes adhérents
+            </a>
             <a href="{{ route('admin.settings.edit') }}"
                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-display font-semibold transition-colors
                       {{ request()->routeIs('admin.settings.*') ? 'bg-mja-blue text-white' : 'text-gray-400 hover:bg-white/5 hover:text-white' }}">

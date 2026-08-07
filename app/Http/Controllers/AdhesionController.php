@@ -17,7 +17,31 @@ class AdhesionController extends Controller
     {
         return view('adhesion', [
             'stripeEnabled'     => StripeService::enabled(),
+            'stripePublicKey'   => StripeService::publicKey(),
             'cotisationAmount'  => \App\Models\Setting::get('cotisation_amount', 20),
+        ]);
+    }
+
+    /**
+     * Crée un PaymentIntent pour le paiement carte intégré au formulaire.
+     * Appelé en AJAX quand le visiteur choisit « Carte bancaire ».
+     */
+    public function paymentIntent()
+    {
+        if (! StripeService::enabled()) {
+            return response()->json(['error' => 'Le paiement en ligne est indisponible.'], 422);
+        }
+
+        $intent = StripeService::createPaymentIntent(StripeService::amountCents(), ['type' => 'adhesion']);
+
+        if (! $intent) {
+            return response()->json(['error' => "Le paiement est momentanément indisponible."], 502);
+        }
+
+        return response()->json([
+            'client_secret' => $intent['client_secret'],
+            'public_key'    => StripeService::publicKey(),
+            'amount'        => StripeService::amountCents(),
         ]);
     }
 
@@ -40,6 +64,7 @@ class AdhesionController extends Controller
             'urgence_contact'   => 'required|string|max:300',
             'photo'             => 'required_unless:premiere_adhesion,information|nullable|image|max:5120',
             'moyen_paiement'    => 'required_unless:premiere_adhesion,information|nullable|in:cheque,espece,virement,en_ligne',
+            'payment_intent_id' => 'nullable|string|max:255',
             'droit_image'       => 'required|accepted',
             'rgpd_consentement' => 'required|accepted',
         ], [
@@ -85,10 +110,26 @@ class AdhesionController extends Controller
             unset($validated['photo']);
         }
 
+        // Paiement carte : le règlement a lieu dans le formulaire, avant l'envoi.
+        // On revérifie systématiquement le PaymentIntent auprès de Stripe — le
+        // navigateur n'est jamais une source de vérité sur un paiement.
+        $intentId = $validated['payment_intent_id'] ?? null;
+        unset($validated['payment_intent_id']);
+        $cartePayee = false;
+
+        if (($validated['moyen_paiement'] ?? null) === 'en_ligne') {
+            $cartePayee = StripeService::paiementValide($intentId);
+
+            if (! $cartePayee) {
+                return back()->withInput()
+                    ->withErrors(['moyen_paiement' => "Le paiement par carte n'a pas été validé. Réglez la cotisation dans le formulaire avant d'envoyer votre demande."]);
+            }
+        }
+
         $validated['statut'] = match (true) {
-            $validated['premiere_adhesion'] === 'information'    => 'prise_infos',
-            ($validated['moyen_paiement'] ?? null) === 'en_ligne' => 'en_attente_paiement',
-            default                                              => 'nouvelle',
+            $validated['premiere_adhesion'] === 'information' => 'prise_infos',
+            $cartePayee                                       => 'payee',
+            default                                           => 'nouvelle',
         };
 
         $adhesion = Adhesion::create($validated);
@@ -100,22 +141,7 @@ class AdhesionController extends Controller
             Log::error('Mail notification adhésion échoué : ' . $e->getMessage());
         }
 
-        // Paiement en ligne → redirection vers Stripe Checkout.
-        if ($adhesion->moyen_paiement === 'en_ligne' && StripeService::enabled()) {
-            $url = StripeService::createCheckoutSession(
-                $adhesion,
-                route('adhesion.paiement.succes') . '?session_id={CHECKOUT_SESSION_ID}',
-                route('adhesion.paiement.annule', ['adhesion' => $adhesion->id]),
-            );
-
-            if ($url) {
-                return redirect()->away($url);
-            }
-
-            return back()->with('error', "Le paiement en ligne est momentanément indisponible. Votre demande a bien été enregistrée, nous vous recontacterons.");
-        }
-
-        // Email de confirmation (moyens hors ligne + prise d'informations).
+        // Email de confirmation (carte déjà réglée, moyens hors ligne, prise d'informations).
         try {
             Mail::to($adhesion->email)->send(new AdhesionConfirmation($adhesion));
         } catch (\Throwable $e) {

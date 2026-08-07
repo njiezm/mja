@@ -39,6 +39,9 @@ Route::get('/sante-nutrition-sport', [HomeController::class, 'sns'])->name('sns'
 
 Route::get('/adhesion', [AdhesionController::class, 'create'])->name('adhesion');
 Route::post('/adhesion', [AdhesionController::class, 'store'])->name('adhesion.store')->middleware(['honeypot', 'throttle:5,1']);
+// Paiement carte intégré au formulaire : création du PaymentIntent en AJAX.
+Route::post('/adhesion/paiement-intent', [AdhesionController::class, 'paymentIntent'])
+    ->name('adhesion.payment-intent')->middleware('throttle:10,1');
 Route::get('/adhesion/paiement/succes', [AdhesionController::class, 'paiementSucces'])->name('adhesion.paiement.succes');
 Route::get('/adhesion/paiement/annule', [AdhesionController::class, 'paiementAnnule'])->name('adhesion.paiement.annule');
 
@@ -144,6 +147,13 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::middleware('super_admin')->group(function () {
         Route::get('parametres', [Admin\SettingController::class, 'edit'])->name('settings.edit');
         Route::put('parametres', [Admin\SettingController::class, 'update'])->name('settings.update');
+
+        // Comptes « espace adhérent » : mots de passe visibles et regénérables.
+        Route::get('comptes-adherents', [Admin\MemberAccountController::class, 'index'])->name('members.index');
+        Route::get('comptes-adherents/export', [Admin\MemberAccountController::class, 'export'])->name('members.export');
+        Route::post('comptes-adherents', [Admin\MemberAccountController::class, 'store'])->name('members.store');
+        Route::patch('comptes-adherents/{member}/mot-de-passe', [Admin\MemberAccountController::class, 'resetPassword'])->name('members.reset-password');
+        Route::patch('comptes-adherents/{member}/trombinoscope', [Admin\MemberAccountController::class, 'toggleDirectory'])->name('members.toggle-directory');
     });
 });
 

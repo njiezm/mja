@@ -25,7 +25,10 @@ class PasswordResetController extends Controller
     {
         $request->validate(['email' => 'required|email']);
 
-        $status = $this->broker()->sendResetLink($request->only('email'));
+        // Emails stockés en minuscules (comparaison `=` sensible à la casse sous PostgreSQL).
+        $status = $this->broker()->sendResetLink([
+            'email' => Str::lower(trim($request->input('email'))),
+        ]);
 
         // Message neutre (ne révèle pas si l'email existe)
         return back()->with('status', "Si un compte existe pour cette adresse, un lien de réinitialisation vient d'être envoyé.");
@@ -51,7 +54,10 @@ class PasswordResetController extends Controller
         ]);
 
         $status = $this->broker()->reset(
-            $request->only('email', 'password', 'password_confirmation', 'token'),
+            array_merge(
+                $request->only('email', 'password', 'password_confirmation', 'token'),
+                ['email' => Str::lower(trim($request->input('email')))],
+            ),
             function ($member, $password) {
                 $member->forceFill(['password' => Hash::make($password)])->setRememberToken(Str::random(60));
                 $member->save();

@@ -352,6 +352,36 @@
                                 <p class="text-xs text-gray-400 mt-2"><i class="fas fa-circle-info mr-1"></i> Les instructions de règlement te seront envoyées par email.</p>
                                 @endif
                                 @error('moyen_paiement')<p class="text-mja-red text-xs mt-1 font-display font-semibold">{{ $message }}</p>@enderror
+
+                                @if(!empty($stripeEnabled))
+                                {{-- Paiement par carte, intégré au formulaire --}}
+                                <div id="bloc-cb" class="hidden mt-5 border-2 border-mja-blue/20 bg-mja-blue/5 rounded-2xl p-5">
+                                    <div class="flex items-center justify-between gap-3 mb-4">
+                                        <div class="font-display font-bold text-mja-gray text-sm">
+                                            <i class="fas fa-credit-card text-mja-blue mr-1.5"></i> Régler {{ rtrim(rtrim(number_format((float)($cotisationAmount ?? 20), 2, ',', ' '), '0'), ',') }} € par carte
+                                        </div>
+                                        <span id="cb-badge" class="hidden items-center gap-1.5 bg-green-100 text-green-700 font-display font-bold text-xs px-3 py-1 rounded-full">
+                                            <i class="fas fa-check-circle"></i> Paiement validé
+                                        </span>
+                                    </div>
+
+                                    <div id="cb-zone">
+                                        <div id="cb-element" class="bg-white rounded-xl p-3 border border-gray-200 min-h-[44px]"></div>
+
+                                        <button type="button" id="cb-payer"
+                                                class="mt-4 w-full bg-mja-blue hover:bg-mja-bluedark text-white font-display font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                                            <i class="fas fa-lock"></i> <span id="cb-payer-texte">Payer la cotisation</span>
+                                        </button>
+                                    </div>
+
+                                    <p id="cb-erreur" class="hidden text-mja-red text-xs mt-3 font-display font-semibold"></p>
+                                    <p id="cb-aide" class="text-xs text-gray-500 mt-3">
+                                        <i class="fas fa-circle-info mr-1"></i> Réglez d'abord la cotisation ici, puis envoyez votre demande d'adhésion.
+                                    </p>
+
+                                    <input type="hidden" name="payment_intent_id" id="payment-intent-id" value="">
+                                </div>
+                                @endif
                             </div>
                         </div>
 
@@ -372,10 +402,13 @@
                             @error('rgpd_consentement')<p class="text-mja-red text-xs mt-1.5 font-display font-semibold">{{ $message }}</p>@enderror
                         </div>
 
-                        <button type="submit"
-                            class="w-full btn-blue font-display font-bold py-4 rounded-xl transition-colors flex items-center justify-center gap-2 text-base">
+                        <button type="submit" id="btn-envoyer"
+                            class="w-full btn-blue font-display font-bold py-4 rounded-xl transition-colors flex items-center justify-center gap-2 text-base disabled:opacity-50 disabled:cursor-not-allowed">
                             <i class="fas fa-paper-plane"></i> Envoyer ma demande d'adhésion
                         </button>
+                        <p id="btn-envoyer-aide" class="hidden text-center text-xs text-gray-500 -mt-2">
+                            <i class="fas fa-lock mr-1"></i> Réglez la cotisation par carte ci-dessus pour activer l'envoi.
+                        </p>
                     </form>
                     @endif
                 </div>
@@ -417,6 +450,139 @@
     }
 })();
 </script>
+
+@if(!empty($stripeEnabled))
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+(function () {
+    var blocCb   = document.getElementById('bloc-cb');
+    var moyens   = document.querySelectorAll('input[name="moyen_paiement"]');
+    var btnEnvoi = document.getElementById('btn-envoyer');
+    var aideEnvoi= document.getElementById('btn-envoyer-aide');
+    if (!blocCb || !btnEnvoi) return;
+
+    var zone      = document.getElementById('cb-zone');
+    var badge     = document.getElementById('cb-badge');
+    var btnPayer  = document.getElementById('cb-payer');
+    var txtPayer  = document.getElementById('cb-payer-texte');
+    var erreur    = document.getElementById('cb-erreur');
+    var aideCb    = document.getElementById('cb-aide');
+    var champIntent = document.getElementById('payment-intent-id');
+
+    var stripe = null, elements = null, monte = false, paye = false;
+
+    function afficheErreur(msg) {
+        erreur.textContent = msg;
+        erreur.classList.remove('hidden');
+    }
+
+    function cacheErreur() {
+        erreur.classList.add('hidden');
+    }
+
+    /**
+     * Le bouton d'envoi n'est bloqué que si le bloc cotisation est affiché,
+     * que « carte » est choisi, et que le règlement n'a pas encore abouti.
+     * (En « prise d'informations », aucune cotisation n'est due.)
+     */
+    function majBoutonEnvoi() {
+        var blocCotis = document.getElementById('bloc-cotisation');
+        var cotisVisible = blocCotis && blocCotis.style.display !== 'none';
+        var choix = document.querySelector('input[name="moyen_paiement"]:checked');
+        var carte = choix && choix.value === 'en_ligne';
+        var bloque = cotisVisible && carte && !paye;
+
+        btnEnvoi.disabled = bloque;
+        aideEnvoi.classList.toggle('hidden', !bloque);
+    }
+
+    /** Charge Stripe Elements à la première sélection de « carte bancaire ». */
+    function monterElements() {
+        if (monte) return;
+        monte = true;
+        btnPayer.disabled = true;
+        txtPayer.textContent = 'Chargement…';
+
+        fetch(@json(route('adhesion.payment-intent')), {
+            method: 'POST',
+            headers: {
+                // Le layout n'expose pas de meta csrf-token : on reprend celui du formulaire.
+                'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+                'Accept': 'application/json'
+            }
+        })
+        .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); })
+        .then(function (res) {
+            if (!res.ok) { throw new Error(res.data.error || 'Paiement indisponible.'); }
+
+            stripe = Stripe(res.data.public_key);
+            elements = stripe.elements({ clientSecret: res.data.client_secret, locale: 'fr' });
+            elements.create('payment', { layout: 'tabs' }).mount('#cb-element');
+
+            btnPayer.disabled = false;
+            txtPayer.textContent = 'Payer la cotisation';
+        })
+        .catch(function (e) {
+            monte = false;
+            btnPayer.disabled = true;
+            txtPayer.textContent = 'Payer la cotisation';
+            afficheErreur(e.message || 'Le paiement est momentanément indisponible.');
+        });
+    }
+
+    btnPayer.addEventListener('click', function () {
+        if (!stripe || !elements) return;
+
+        cacheErreur();
+        btnPayer.disabled = true;
+        txtPayer.textContent = 'Paiement en cours…';
+
+        // redirect: 'if_required' garde le visiteur sur la page quand la carte
+        // ne demande pas d'authentification 3-D Secure.
+        stripe.confirmPayment({ elements: elements, redirect: 'if_required' })
+            .then(function (res) {
+                if (res.error) {
+                    btnPayer.disabled = false;
+                    txtPayer.textContent = 'Payer la cotisation';
+                    afficheErreur(res.error.message || 'Le paiement a échoué.');
+                    return;
+                }
+
+                if (res.paymentIntent && res.paymentIntent.status === 'succeeded') {
+                    paye = true;
+                    champIntent.value = res.paymentIntent.id;
+                    zone.classList.add('hidden');
+                    aideCb.classList.add('hidden');
+                    badge.classList.remove('hidden');
+                    badge.classList.add('inline-flex');
+                    majBoutonEnvoi();
+                    return;
+                }
+
+                btnPayer.disabled = false;
+                txtPayer.textContent = 'Payer la cotisation';
+                afficheErreur('Paiement non confirmé. Réessayez ou choisissez un autre moyen.');
+            });
+    });
+
+    moyens.forEach(function (m) {
+        m.addEventListener('change', function () {
+            var carte = this.checked && this.value === 'en_ligne';
+            blocCb.classList.toggle('hidden', !carte);
+            if (carte) { monterElements(); }
+            majBoutonEnvoi();
+        });
+    });
+
+    // Le choix du type de demande peut masquer tout le bloc cotisation.
+    document.querySelectorAll('input[name="premiere_adhesion"]').forEach(function (r) {
+        r.addEventListener('change', majBoutonEnvoi);
+    });
+
+    majBoutonEnvoi();
+})();
+</script>
+@endif
 @endpush
 
 @endsection

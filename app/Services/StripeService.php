@@ -30,6 +30,76 @@ class StripeService
         return Setting::get('stripe_secret_key');
     }
 
+    /** Clé publique, à exposer au navigateur pour Stripe.js. */
+    public static function publicKey(): ?string
+    {
+        return Setting::get('stripe_public_key');
+    }
+
+    /**
+     * Crée un PaymentIntent pour le paiement par carte intégré au formulaire.
+     *
+     * @return array{id: string, client_secret: string}|null
+     */
+    public static function createPaymentIntent(int $amountCents, array $metadata = []): ?array
+    {
+        $params = [
+            'amount'                        => $amountCents,
+            'currency'                      => 'eur',
+            'description'                   => "Cotisation adhésion — Madin'Jeunes Ambition",
+            'automatic_payment_methods[enabled]' => 'true',
+        ];
+
+        foreach ($metadata as $cle => $valeur) {
+            $params["metadata[$cle]"] = $valeur;
+        }
+
+        $resp = Http::asForm()->withToken(self::secret())->post(self::API . '/payment_intents', $params);
+
+        if ($resp->failed()) {
+            Log::error('Stripe payment intent failed: ' . $resp->body());
+
+            return null;
+        }
+
+        return [
+            'id'            => $resp->json('id'),
+            'client_secret' => $resp->json('client_secret'),
+        ];
+    }
+
+    /** Récupère un PaymentIntent (tableau) ou null. */
+    public static function retrievePaymentIntent(string $intentId): ?array
+    {
+        $resp = Http::withToken(self::secret())->get(self::API . '/payment_intents/' . $intentId);
+
+        if ($resp->failed()) {
+            Log::error('Stripe retrieve payment intent failed: ' . $resp->body());
+
+            return null;
+        }
+
+        return $resp->json();
+    }
+
+    /**
+     * Vérifie côté serveur qu'un paiement carte a bien abouti pour le bon montant.
+     * Ne jamais se fier au seul retour du navigateur.
+     */
+    public static function paiementValide(?string $intentId): bool
+    {
+        if (! $intentId || ! self::enabled()) {
+            return false;
+        }
+
+        $intent = self::retrievePaymentIntent($intentId);
+
+        return $intent !== null
+            && ($intent['status'] ?? null) === 'succeeded'
+            && ($intent['currency'] ?? null) === 'eur'
+            && (int) ($intent['amount_received'] ?? 0) >= self::amountCents();
+    }
+
     /** Crée une session Stripe Checkout et renvoie l'URL de paiement (ou null). */
     public static function createCheckoutSession(Adhesion $adhesion, string $successUrl, string $cancelUrl): ?string
     {
