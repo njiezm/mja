@@ -3,6 +3,13 @@
 @section('meta_description', "Rejoins Madin'Jeunes Ambition ! Adhère en ligne pour intégrer notre équipe de jeunes bénévoles engagés en Martinique. Gratuit et ouvert à tous.")
 @section('twitter_card', 'summary')
 
+@if(!empty($stripeEnabled))
+{{-- Chargé dans le <head> : Stripe.js doit être prêt avant le script du formulaire. --}}
+@push('head')
+<script src="https://js.stripe.com/v3/"></script>
+@endpush
+@endif
+
 @section('content')
 
 <section class="hero-gradient text-white py-16 relative overflow-hidden">
@@ -452,7 +459,6 @@
 </script>
 
 @if(!empty($stripeEnabled))
-<script src="https://js.stripe.com/v3/"></script>
 <script>
 (function () {
     var blocCb   = document.getElementById('bloc-cb');
@@ -499,6 +505,18 @@
     /** Charge Stripe Elements à la première sélection de « carte bancaire ». */
     function monterElements() {
         if (monte) return;
+
+        // Stripe.js peut être bloqué (extension anti-pub, réseau d'entreprise,
+        // cache de vues obsolète) : on l'annonce clairement au lieu de planter.
+        if (typeof Stripe === 'undefined') {
+            zone.classList.add('hidden');
+            aideCb.classList.add('hidden');
+            afficheErreur("Le module de paiement par carte n'a pas pu se charger. "
+                + "Désactivez votre bloqueur de publicités et rechargez la page, "
+                + "ou choisissez un autre moyen de règlement.");
+            return;
+        }
+
         monte = true;
         btnPayer.disabled = true;
         txtPayer.textContent = 'Chargement…';
