@@ -45,6 +45,10 @@ Route::post('/adhesion/paiement-intent', [AdhesionController::class, 'paymentInt
 Route::get('/adhesion/paiement/succes', [AdhesionController::class, 'paiementSucces'])->name('adhesion.paiement.succes');
 Route::get('/adhesion/paiement/annule', [AdhesionController::class, 'paiementAnnule'])->name('adhesion.paiement.annule');
 
+// Kit de communication MJ'Adhésion : générateur de visuels (posts, stories,
+// affiches, flyers, bannières, vidéos motion). Page outil, non indexée.
+Route::view('/kit-adhesion', 'kit-adhesion')->name('kit.adhesion');
+
 Route::get('/don', [DonationController::class, 'create'])->name('don');
 Route::post('/don', [DonationController::class, 'store'])->name('don.store')->middleware(['honeypot', 'throttle:10,1']);
 Route::get('/don/merci', [DonationController::class, 'merci'])->name('don.merci');

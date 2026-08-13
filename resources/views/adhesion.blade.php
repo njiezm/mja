@@ -502,26 +502,58 @@
         aideEnvoi.classList.toggle('hidden', !bloque);
     }
 
+    /**
+     * Garantit que Stripe.js est disponible. La balise du <head> peut avoir
+     * échoué (réseau lent, cache de vues obsolète) : on retente ici, une fois.
+     */
+    function chargerStripeJs() {
+        if (typeof Stripe !== 'undefined') { return Promise.resolve(); }
+
+        return new Promise(function (resolve, reject) {
+            var existante = document.querySelector('script[src^="https://js.stripe.com/v3"]');
+
+            var fini = function () {
+                typeof Stripe !== 'undefined' ? resolve() : reject(new Error('stripe-indisponible'));
+            };
+
+            if (existante) {
+                existante.addEventListener('load', fini);
+                existante.addEventListener('error', fini);
+            } else {
+                var s = document.createElement('script');
+                s.src = 'https://js.stripe.com/v3/';
+                s.addEventListener('load', fini);
+                s.addEventListener('error', fini);
+                document.head.appendChild(s);
+            }
+
+            // Filet de sécurité : script bloqué sans événement d'erreur.
+            setTimeout(fini, 8000);
+        });
+    }
+
+    function echecStripeJs() {
+        zone.classList.add('hidden');
+        aideCb.classList.add('hidden');
+        afficheErreur("Le module de paiement par carte n'a pas pu se charger. "
+            + "Désactivez votre bloqueur de publicités et rechargez la page, "
+            + "ou choisissez un autre moyen de règlement.");
+    }
+
     /** Charge Stripe Elements à la première sélection de « carte bancaire ». */
     function monterElements() {
         if (monte) return;
-
-        // Stripe.js peut être bloqué (extension anti-pub, réseau d'entreprise,
-        // cache de vues obsolète) : on l'annonce clairement au lieu de planter.
-        if (typeof Stripe === 'undefined') {
-            zone.classList.add('hidden');
-            aideCb.classList.add('hidden');
-            afficheErreur("Le module de paiement par carte n'a pas pu se charger. "
-                + "Désactivez votre bloqueur de publicités et rechargez la page, "
-                + "ou choisissez un autre moyen de règlement.");
-            return;
-        }
-
         monte = true;
         btnPayer.disabled = true;
         txtPayer.textContent = 'Chargement…';
 
-        fetch(@json(route('adhesion.payment-intent')), {
+        chargerStripeJs()
+            .then(creerIntent)
+            .catch(function () { monte = false; echecStripeJs(); });
+    }
+
+    function creerIntent() {
+        return fetch(@json(route('adhesion.payment-intent')), {
             method: 'POST',
             headers: {
                 // Le layout n'expose pas de meta csrf-token : on reprend celui du formulaire.
