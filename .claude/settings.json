@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell($php = Get-ChildItem \"C:\\\\laragon\\\\bin\\\\php\" -Directory -ErrorAction SilentlyContinue | Select-Object -First 1; if\\($php\\){ $exe = Join-Path $php.FullName \"php.exe\"; \"php: $exe\"; & $exe -v | Select-Object -First 1 } else { \"php introuvable dans C:\\\\laragon\\\\bin\\\\php\" })"
+    ]
+  }
+}
