@@ -477,6 +477,25 @@
 
     var stripe = null, elements = null, monte = false, paye = false;
 
+    /**
+     * Un blocage de Stripe.js a deux causes très différentes : une extension du
+     * visiteur, ou la politique de sécurité (CSP) du site — auquel cas c'est à
+     * nous de la corriger, pas au visiteur de désactiver quoi que ce soit.
+     * Le navigateur émet « securitypolicyviolation » dans le second cas : on
+     * l'écoute pour afficher le bon message plutôt que d'accuser à tort.
+     */
+    var bloqueParCsp = false;
+    document.addEventListener('securitypolicyviolation', function (e) {
+        if (String(e.blockedURI || '').indexOf('stripe.com') !== -1) {
+            bloqueParCsp = true;
+            console.error(
+                'CSP : ' + e.blockedURI + ' bloqué par la directive « ' + e.violatedDirective + ' ». '
+                + 'Autorisez js.stripe.com (script-src, frame-src), hooks.stripe.com (frame-src) '
+                + 'et api.stripe.com (connect-src) dans public/.htaccess.'
+            );
+        }
+    });
+
     function afficheErreur(msg) {
         erreur.textContent = msg;
         erreur.classList.remove('hidden');
@@ -535,9 +554,17 @@
     function echecStripeJs() {
         zone.classList.add('hidden');
         aideCb.classList.add('hidden');
-        afficheErreur("Le module de paiement par carte n'a pas pu se charger. "
-            + "Désactivez votre bloqueur de publicités et rechargez la page, "
-            + "ou choisissez un autre moyen de règlement.");
+
+        if (bloqueParCsp) {
+            // Rien à faire côté visiteur : le blocage vient de la configuration du site.
+            afficheErreur("Le paiement par carte est momentanément indisponible sur ce site. "
+                + "Choisissez un autre moyen de règlement (virement, chèque ou espèces) : "
+                + "nous vous enverrons les instructions par email.");
+        } else {
+            afficheErreur("Le module de paiement par carte n'a pas pu se charger. "
+                + "Vérifiez votre connexion, ou désactivez votre bloqueur de publicités puis rechargez la page. "
+                + "Vous pouvez aussi choisir un autre moyen de règlement.");
+        }
     }
 
     /** Charge Stripe Elements à la première sélection de « carte bancaire ». */
