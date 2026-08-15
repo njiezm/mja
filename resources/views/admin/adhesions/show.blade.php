@@ -60,6 +60,10 @@
                         <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Email</div>
                         <a href="mailto:{{ $adhesion->email }}" class="font-semibold text-mja-blue hover:underline">{{ $adhesion->email }}</a>
                     </div>
+                    <div class="col-span-2 sm:col-span-3">
+                        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Adresse postale</div>
+                        <div class="font-semibold text-gray-900 whitespace-pre-line">{{ $adhesion->adresse_postale ?: '—' }}</div>
+                    </div>
                     <div>
                         <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">T-Shirt</div>
                         <div class="font-semibold text-gray-900">{{ $adhesion->taille_tshirt }}</div>

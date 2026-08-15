@@ -28,36 +28,47 @@ class AdhesionRequest extends FormRequest
         return $this->input('premiere_adhesion') === 'information';
     }
 
+    /**
+     * Deux jeux de règles plutôt qu'un `required_unless` sur chaque ligne.
+     *
+     * C'est aussi la seule forme sûre : `accepted` est une règle implicite,
+     * qui échoue sur un champ absent même accompagnée de `nullable`. Le droit
+     * à l'image bloquait ainsi toute demande d'information.
+     */
     public function rules(): array
     {
-        // `nullable` avant les règles suivantes : un champ absent est ignoré
-        // plutôt que rejeté, ce qui permet à `required_unless` de décider seul.
-        $siAdhesion = 'required_unless:premiere_adhesion,information|nullable';
-
-        return [
+        $regles = [
             'premiere_adhesion' => 'required|in:premiere,readhesion,information',
             'civilite'          => 'required|in:Madame,Monsieur',
             'nom'               => 'required|string|max:100',
             'prenom'            => 'required|string|max:100',
-            'date_naissance'    => [$siAdhesion, 'string', 'max:20', 'regex:/^\d{2}\/\d{2}\/\d{4}$/'],
-            'profession'        => $siAdhesion . '|string|max:150',
             'indicatif'         => 'nullable|string|max:6',
             'telephone'         => 'required|string|max:30',
             'email'             => 'required|email|max:150',
             'message'           => 'required_if:premiere_adhesion,information|nullable|string|max:2000',
             'reseaux_sociaux'   => 'nullable|array',
             'reseaux_sociaux.*' => 'nullable|string|max:150',
-            'taille_tshirt'     => $siAdhesion . '|in:S,M,L,XL,2XL,3XL',
-            'permis'            => $siAdhesion . '|in:Oui,Non',
             'problemes_sante'   => 'nullable|string',
-            'urgence_contact'   => $siAdhesion . '|string|max:300',
             // La photo est facultative : elle peut être transmise plus tard
             // depuis l'espace adhérent.
             'photo'             => 'nullable|image|max:5120',
-            'moyen_paiement'    => $siAdhesion . '|in:cheque,espece,virement,en_ligne',
             'payment_intent_id' => 'nullable|string|max:255',
-            'droit_image'       => $siAdhesion . '|accepted',
             'rgpd_consentement' => 'required|accepted',
+        ];
+
+        if ($this->priseDInformations()) {
+            return $regles;
+        }
+
+        return $regles + [
+            'date_naissance'  => ['required', 'string', 'max:20', 'regex:/^\d{2}\/\d{2}\/\d{4}$/'],
+            'profession'      => 'required|string|max:150',
+            'adresse_postale' => 'required|string|max:500',
+            'taille_tshirt'   => 'required|in:S,M,L,XL,2XL,3XL',
+            'permis'          => 'required|in:Oui,Non',
+            'urgence_contact' => 'required|string|max:300',
+            'moyen_paiement'  => 'required|in:cheque,espece,virement,en_ligne',
+            'droit_image'     => 'required|accepted',
         ];
     }
 
@@ -76,6 +87,8 @@ class AdhesionRequest extends FormRequest
             'email.required'                 => "L'adresse email est obligatoire.",
             'email.email'                    => "L'adresse email n'est pas valide.",
             'message.required_if'            => 'Dites-nous ce que vous souhaitez savoir.',
+            'adresse_postale.required_unless' => "L'adresse postale est obligatoire.",
+            'adresse_postale.required'       => "L'adresse postale est obligatoire.",
             'date_naissance.required_unless' => 'La date de naissance est obligatoire.',
             'profession.required_unless'     => 'La profession est obligatoire.',
             'taille_tshirt.required_unless'  => 'La taille de T-shirt est obligatoire.',

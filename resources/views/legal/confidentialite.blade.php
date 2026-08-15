@@ -1,5 +1,6 @@
 @extends('layouts.app')
 @section('title', "Politique de confidentialité — Madin'Jeunes Ambition")
+@section('og_image', asset('images/partage/defaut.jpg'))
 @section('meta_description', "Politique de confidentialité et protection des données personnelles (RGPD) de l'association Madin'Jeunes Ambition.")
 @section('og_type', 'website')
 

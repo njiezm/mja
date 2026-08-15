@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', "Rejoindre MJA — Adhésion Madin'Jeunes Ambition")
+@section('og_image', asset('images/partage/adhesion.jpg'))
 @section('meta_description', "Rejoins Madin'Jeunes Ambition ! Adhère en ligne pour intégrer notre équipe de jeunes bénévoles engagés en Martinique. Gratuit et ouvert à tous.")
-@section('twitter_card', 'summary')
 
 @if(!empty($stripeEnabled))
 {{-- Chargé dans le <head> : Stripe.js doit être prêt avant le script du formulaire. --}}
@@ -277,6 +277,18 @@
                                         @error('email')<p class="text-mja-red text-xs mt-1 font-display font-semibold">{{ $message }}</p>@enderror
                                     </div>
                                 </div>
+                                {{-- Adresse postale : demandée pour une adhésion, pas pour
+                                     une simple prise d'informations. --}}
+                                <div data-mode="adhesion">
+                                    <label for="a-adresse" class="block text-sm font-display font-bold text-mja-gray mb-1.5">
+                                        Adresse postale <span class="text-mja-red" aria-hidden="true">*</span>
+                                    </label>
+                                    <textarea id="a-adresse" name="adresse_postale" rows="2" required
+                                        class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl px-4 py-3 text-sm outline-none transition-colors resize-none @error('adresse_postale') border-mja-red @enderror"
+                                        placeholder="12 rue des Flamboyants, 97200 Fort-de-France">{{ $pre('adresse_postale') }}</textarea>
+                                    @error('adresse_postale')<p class="text-mja-red text-xs mt-1 font-display font-semibold">{{ $message }}</p>@enderror
+                                </div>
+
                                 {{-- Réseaux sociaux, facultatifs --}}
                                 <div data-mode="adhesion">
                                     <div class="flex items-center justify-between gap-3 mb-2">

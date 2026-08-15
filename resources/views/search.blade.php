@@ -1,5 +1,6 @@
 @extends('layouts.app')
 @section('title', ($q ? "Recherche : {$q}" : 'Recherche') . " — Madin'Jeunes Ambition")
+@section('og_image', asset('images/partage/defaut.jpg'))
 @section('meta_description', "Recherchez parmi les actualités, projets, événements et ressources de Madin'Jeunes Ambition.")
 
 @section('content')

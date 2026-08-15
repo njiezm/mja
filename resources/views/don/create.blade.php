@@ -1,5 +1,6 @@
 @extends('layouts.app')
 @section('title', "Faire un don — Madin'Jeunes Ambition")
+@section('og_image', asset('images/partage/don.jpg'))
 @section('meta_description', "Soutenez les actions de Madin'Jeunes Ambition en Martinique par un don.")
 
 @section('content')

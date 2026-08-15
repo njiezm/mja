@@ -123,6 +123,7 @@ class Adhesion extends Model
             'profession'      => $this->profession,
             'telephone'       => $this->telephone,
             'email'           => $this->email,
+            'adresse_postale' => $this->adresse_postale,
             'reseaux_sociaux' => $this->reseaux_sociaux,
             'taille_tshirt'   => $this->taille_tshirt,
             'permis'          => $this->permis,

@@ -1,5 +1,6 @@
 @extends('layouts.app')
 @section('title', "À propos — Madin'Jeunes Ambition")
+@section('og_image', asset('images/partage/a-propos.jpg'))
 @section('meta_description', "Découvrez l'histoire, les valeurs et l'équipe de Madin'Jeunes Ambition — association de jeunes bénévoles fondée en 2011, active en Martinique et au-delà.")
 
 @section('content')

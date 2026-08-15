@@ -1,5 +1,6 @@
 @extends('layouts.app')
 @section('title', "Nos projets — Madin'Jeunes Ambition")
+@section('og_image', asset('images/partage/projets.jpg'))
 @section('meta_description', "Découvrez les projets de Madin'Jeunes Ambition : Fwi Ti Dèj, Sport Day MJA, Madin'Santé Challenge et autres initiatives pour la jeunesse martiniquaise.")
 
 @section('content')

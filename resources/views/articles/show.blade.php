@@ -1,10 +1,9 @@
 @extends('layouts.app')
 @section('title', "{$article->titre} — Madin'Jeunes Ambition")
+@section('og_title', $article->titre)
 @section('meta_description', $article->extrait ?? \Illuminate\Support\Str::limit(strip_tags($article->contenu ?? ''), 155))
 @section('og_type', 'article')
-@if($article->image)
-@section('og_image', $article->imageUrl())
-@endif
+@section('og_image', $article->imageUrl() ?? asset('images/partage/actualites.jpg'))
 
 @push('head')
 <script type="application/ld+json">

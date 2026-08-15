@@ -132,9 +132,9 @@
             ['database/seeders', '11', 'Jeux de données : contenu, équipe, adhérents, saison'],
             ['resources/views', '89', 'Gabarits Blade'],
         ]]],
-        ['sous', 'Les 138 routes'],
+        ['sous', 'Les 139 routes'],
         ['liste', [
-            "38 publiques — accueil, projets, événements, actualités, ressources, adhésion, dons, contact, recherche, mentions légales, sitemap.",
+            "39 publiques — accueil, projets, événements, actualités, ressources, adhésion, dons, contact, recherche, mentions légales, sitemap, notifications Stripe.",
             "17 dans l'espace adhérent, sous le préfixe /espace.",
             "5 d'authentification du back-office — connexion, déconnexion, mot de passe oublié.",
             "77 dans le back-office, sous le préfixe /admin.",
@@ -183,7 +183,7 @@
             ['profession', 'texte', 'Situation professionnelle ou études'],
             ['telephone', 'texte', 'Formaté avec espaces à l\'enregistrement'],
             ['email', 'texte', "Sert de clé de rapprochement avec le compte"],
-            ['adresse_postale', 'texte', "Colonne héritée — plus demandée ni affichée"],
+            ['adresse_postale', 'texte', 'Obligatoire pour une adhésion, non demandée pour une prise d\'informations'],
             ['taille_tshirt', 'texte', 'XS à XXL'],
             ['permis', 'texte', 'Oui, Non, En cours — utile pour organiser les déplacements'],
             ['problemes_sante', 'texte', 'Allergies et contre-indications, facultatif'],
@@ -294,6 +294,7 @@
             ['GET /mentions-legales', 'mentions-legales', 'Mentions légales'],
             ['GET /politique-de-confidentialite', 'confidentialite', 'Politique de confidentialité et RGPD'],
             ['GET /sitemap.xml', 'sitemap', 'Plan du site pour les moteurs de recherche'],
+            ['POST /stripe/webhook', 'stripe.webhook', "Notifications de paiement envoyées par Stripe. Ni session ni jeton CSRF : l'appel est authentifié par sa signature"],
             ['GET /{source}', 'source.track', "Lien tracé : note la visite puis redirige. Doit rester la dernière route déclarée"],
         ]]],
 
@@ -542,7 +543,7 @@
             ['1. Le formulaire', "Identité, coordonnées, réseaux sociaux facultatifs, taille de T-shirt, permis, santé, contact d'urgence, droit à l'image, consentement RGPD. La photo est facultative."],
             ['2. Le paiement', "Carte bancaire dans la page, ou chèque, espèces, virement. En carte, le bouton d'envoi reste désactivé tant que le règlement n'a pas abouti."],
             ['3. L\'enregistrement', "Le serveur revérifie le paiement auprès de Stripe avant d'enregistrer. Une notification part vers l'association, une confirmation vers la personne."],
-            ['4. Le compte', "Une fois la cotisation encaissée, un lien de création de compte est envoyé, valable 30 jours."],
+            ['4. Le compte', "Une fois la cotisation encaissée, un lien de création de compte est envoyé, valable 30 jours. Si un compte existe déjà à cette adresse, il est rattaché à la nouvelle adhésion et la personne reçoit un lien d'accès — jamais un second compte, jamais un mot de passe en clair."],
             ['5. L\'espace', "Tableau de bord, trombinoscope, carte de membre téléchargeable en PDF, modification du profil."],
         ]],
 
@@ -583,6 +584,19 @@
         ['sous', 'Les exports PDF'],
         ['p', "L'attestation d'adhésion et la carte de membre sont produites en PDF vectoriel : pages A4, polices standard, texte sélectionnable, encodage WinAnsi pour les accents, dégradés et images. Le document est écrit directement dans le format, sans librairie — l'adhérent télécharge un vrai PDF, pas une impression de page web."],
 
+        ['sous', 'Le rapprochement des comptes'],
+        ['p', "Une personne dont le compte a été créé par l'association peut très bien remplir le formulaire public sans être connectée — elle n'a parfois jamais reçu ses accès. À l'enregistrement, l'adhésion cherche donc un compte à la même adresse email, en ignorant la casse et les espaces, et s'y rattache. Un compte supprimé est restauré : la personne revient d'elle-même, et l'unicité de l'email interdirait de toute façon d'en créer un second. Le mot de passe existant n'est jamais touché ; l'accès se transmet par un lien de réinitialisation."],
+
+        ['sous', 'Les notifications de paiement'],
+        ['p', "Le retour du navigateur après paiement n'est pas fiable : un onglet fermé pendant l'authentification bancaire, une connexion perdue, et l'encaissement ne serait jamais enregistré. Stripe prévient donc le serveur directement. Chaque appel est vérifié par sa signature — horodatage toléré à cinq minutes, comparaison à temps constant — et le traitement est idempotent, car un même événement peut arriver plusieurs fois. Quand un paiement aboutit sans demande enregistrée, l'association reçoit une alerte avec la référence Stripe et l'email du payeur : personne ne paie dans le vide."],
+        ['note', "À déclarer une fois dans le tableau de bord Stripe : l'adresse https://mja-martinique.com/stripe/webhook, les événements payment_intent.succeeded et checkout.session.completed, puis coller le secret whsec_… dans Paramètres → Stripe."],
+
+        ['sous', "Les aperçus de partage"],
+        ['p', "Un lien collé sur WhatsApp, Facebook ou LinkedIn affiche une vignette, un titre et un résumé. Chaque page publique fournit les siens ; les vignettes de rubrique, au format 1200 x 630, sont composées une fois pour toutes par la commande mja:images-partage et livrées avec le site. Deux pièges évités : l'adresse de l'image doit être absolue, sans quoi aucun aperçu n'apparaît, et les dimensions annoncées doivent être les vraies. Une image déclarée mais absente du disque retombe sur la vignette de l'association plutôt que de renvoyer une erreur au robot."],
+
+        ['sous', "Les pages d'erreur"],
+        ['p', "Treize pages, de 400 à 504, aux couleurs de l'association : chacune explique ce qui s'est passé, ce que la personne peut faire, et propose une sortie. Elles sont volontairement autonomes — aucun gabarit partagé, aucune requête en base, aucune feuille de style externe. Une page d'erreur doit s'afficher quand le reste ne fonctionne plus : celle qui interroge la base rejouerait l'incident qu'elle annonce."],
+
         ['sous', 'Le suivi des sources'],
         ['p', "Chaque source d'acquisition dispose d'un lien court. La visite est enregistrée avec une empreinte anonyme, et l'identifiant est conservé en session : si la personne adhère, l'adhésion porte la source. C'est ce qui permet de savoir quel support a réellement fonctionné."],
     ]],
@@ -613,10 +627,9 @@
             "Feuille Tailwind précompilée — toute classe utilitaire absente de la feuille livrée reste sans effet. Écrire le CSS spécifique dans la vue.",
             "Fusion des comptes — pour les personnes qui avaient deux mots de passe, celui du back-office subsiste. Les prévenir avant la bascule.",
             "Événements de démonstration — le jeu d'exemples publie des événements fictifs, dont une assemblée générale. À dépublier ou à remplacer par les vraies dates.",
-            "Adresses postales — la colonne existe encore et contient les anciennes saisies, bien qu'elle ne soit plus ni demandée ni affichée. Purge à décider.",
-            "Webhook Stripe — le réglage existe mais aucun endpoint ne le consomme. Un paiement 3-D Secure abouti après fermeture du navigateur n'est pas rattrapé.",
-            "Adhérents existants non connectés — une réadhésion faite sans être connecté crée une adhésion non rattachée au compte existant.",
-            "Table members — conservée après la fusion, à supprimer une fois la bascule validée en production.",
+            "Webhook Stripe — la route existe et vérifie les signatures, mais elle reste sans effet tant que l'adresse et le secret ne sont pas déclarés dans le tableau de bord Stripe.",
+            "Table members — conservée après la fusion, à supprimer une fois la bascule validée en production. Le seeder qui l'alimentait est neutralisé : son contenu reste en commentaire, à ne réactiver que sur une base vierge.",
+            "Dépendances de développement — PHPUnit n'est pas installé sur l'hébergement (installation sans --dev). Les tests ne s'exécutent que sur un poste de développement.",
         ]],
     ]],
 
@@ -735,7 +748,7 @@ footer{padding:24px 0 44px;color:var(--gris);font-size:13px;display:flex;flex-wr
     <div class="st">Documentation technique et fonctionnelle du site</div>
     <div class="compteurs">
       <div class="compteur"><b>{{ $nbSections }}</b> sections</div>
-      <div class="compteur"><b>138</b> routes</div>
+      <div class="compteur"><b>139</b> routes</div>
       <div class="compteur"><b>16</b> tables métier</div>
       <div class="compteur"><b>89</b> gabarits</div>
       <div class="compteur"><b>32</b> migrations</div>

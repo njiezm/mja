@@ -1,5 +1,6 @@
 @extends('layouts.app')
 @section('title', "Contact — Madin'Jeunes Ambition")
+@section('og_image', asset('images/partage/contact.jpg'))
 @section('meta_description', "Contactez Madin'Jeunes Ambition — association de jeunes bénévoles en Martinique et au-delà. Pour toute question, partenariat ou information sur nos programmes.")
 
 @section('content')

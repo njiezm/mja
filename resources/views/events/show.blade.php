@@ -1,10 +1,9 @@
 @extends('layouts.app')
 @section('title', "{$event->titre} — Madin'Jeunes Ambition")
+@section('og_title', $event->titre)
 @section('meta_description', $event->description ? \Illuminate\Support\Str::limit(strip_tags($event->description), 155) : "Événement organisé par Madin'Jeunes Ambition en Martinique.")
 @section('og_type', 'event')
-@if($event->image ?? null)
-@section('og_image', $event->imageUrl())
-@endif
+@section('og_image', $event->imageUrl() ?? asset('images/partage/evenements.jpg'))
 
 @push('head')
 <script type="application/ld+json">

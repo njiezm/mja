@@ -1,5 +1,6 @@
 @extends('layouts.app')
 @section('title', "Mentions légales — Madin'Jeunes Ambition")
+@section('og_image', asset('images/partage/defaut.jpg'))
 @section('meta_description', "Mentions légales du site de l'association Madin'Jeunes Ambition.")
 @section('og_type', 'website')
 

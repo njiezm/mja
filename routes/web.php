@@ -10,6 +10,7 @@ use App\Http\Controllers\DonationController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SourceTrackController;
+use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\Member\AccountController as MemberAccountController;
 use App\Http\Controllers\Member\AuthController as MemberAuthController;
 use App\Http\Controllers\Member\PasswordResetController as MemberPasswordResetController;
@@ -48,6 +49,9 @@ Route::get('/espace/renouveler', [AdhesionController::class, 'renouvelerDepuisEs
 Route::post('/adhesion/paiement-intent', [AdhesionController::class, 'paymentIntent'])
     ->name('adhesion.payment-intent')->middleware('throttle:10,1');
 Route::get('/adhesion/paiement/succes', [AdhesionController::class, 'paiementSucces'])->name('adhesion.paiement.succes');
+// Notifications Stripe (serveur à serveur). Ni session ni CSRF : l'appel ne
+// vient pas d'un navigateur, il est authentifié par sa signature.
+Route::post('/stripe/webhook', StripeWebhookController::class)->name('stripe.webhook');
 Route::get('/adhesion/paiement/annule', [AdhesionController::class, 'paiementAnnule'])->name('adhesion.paiement.annule');
 
 // Kit de communication MJ'Adhésion : générateur de visuels (posts, stories,

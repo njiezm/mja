@@ -20,6 +20,10 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\DeclencheurRelances::class,
         ]);
 
+        // Stripe signe ses appels : le jeton CSRF, lié à une session de
+        // navigateur, n'a aucun sens ici.
+        $middleware->validateCsrfTokens(except: ['stripe/webhook']);
+
         $middleware->alias([
             'honeypot'    => \App\Http\Middleware\Honeypot::class,
             'content'     => \App\Http\Middleware\EnsureContentManager::class,

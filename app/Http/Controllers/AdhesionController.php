@@ -16,6 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Password;
 
 class AdhesionController extends Controller
 {
@@ -124,7 +125,11 @@ class AdhesionController extends Controller
 
         $donnees['source_id'] = $request->session()->get('mja_source_id');
         $donnees['period_id'] = AdhesionPeriod::current()?->id;
-        $donnees['user_id']   = Auth::id() ?: $precedente?->user_id;
+        // Ordre de priorité : la personne connectée, puis le compte de
+        // l'adhésion renouvelée, puis un compte déjà en base à cette adresse.
+        $donnees['user_id']   = Auth::id()
+            ?: $precedente?->user_id
+            ?: $this->compteExistant($donnees['email'])?->id;
 
         if ($precedente) {
             $donnees['renouvelle_adhesion_id'] = $precedente->id;
@@ -158,10 +163,17 @@ class AdhesionController extends Controller
 
         $adhesion = Adhesion::create($donnees);
 
+        // Le paiement carte a été créé avant l'adhésion : on l'y rattache pour
+        // qu'un évènement Stripe ultérieur sache de quelle demande il parle.
+        if ($cartePayee) {
+            StripeService::attacherAdhesion($request->input('payment_intent_id'), $adhesion->id);
+        }
+
         // Le renouvellement devient l'adhésion courante du compte.
         if ($adhesion->user_id) {
             \App\Models\User::whereKey($adhesion->user_id)->update(['adhesion_id' => $adhesion->id]);
         }
+
 
         // Le lien de renouvellement précédent ne doit plus rouvrir un formulaire.
         $precedente?->forceFill([
@@ -183,7 +195,78 @@ class AdhesionController extends Controller
             Log::error('Mail confirmation adhésion échoué : ' . $e->getMessage());
         }
 
+        // Cotisation déjà encaissée : ouvrir l'accès sans attendre qu'un
+        // administrateur repasse sur la fiche. En dernier, pour que le message
+        // portant le lien soit celui qui arrive en dernier.
+        $this->preparerAcces($adhesion);
+
         return back()->with('success', true)->with('renouvellement', $precedente !== null);
+    }
+
+    /**
+     * Compte déjà en base pour cette adresse email.
+     *
+     * Une personne dont le compte a été créé par l'association — sans qu'on
+     * lui ait forcément communiqué ses accès — peut très bien remplir le
+     * formulaire public sans être connectée. Sans ce rapprochement, son
+     * adhésion partirait orpheline et le site tenterait de créer un second
+     * compte sur une adresse déjà prise.
+     *
+     * Un compte supprimé est restauré : la personne revient d'elle-même, et
+     * l'unicité de l'email interdit de toute façon d'en créer un autre.
+     */
+    private function compteExistant(?string $email): ?\App\Models\User
+    {
+        if (! $email) {
+            return null;
+        }
+
+        $compte = \App\Models\User::withTrashed()
+            ->whereRaw('LOWER(email) = ?', [mb_strtolower(trim($email))])
+            ->first();
+
+        if ($compte && $compte->trashed()) {
+            $compte->restore();
+            Log::info("Compte adhérent restauré lors d'une nouvelle adhésion : {$compte->email}");
+        }
+
+        return $compte;
+    }
+
+    /**
+     * Ouvre l'accès à l'espace adhérent une fois la cotisation encaissée.
+     *
+     * Deux cas, jamais un mot de passe en clair dans un email :
+     *  — compte déjà existant : un lien de réinitialisation, qui sert aussi
+     *    de premier accès à qui n'a jamais reçu ses identifiants ;
+     *  — personne inconnue : le jeton de création de compte habituel.
+     */
+    private function preparerAcces(Adhesion $adhesion): void
+    {
+        if (! $adhesion->isAdherent()) {
+            return;
+        }
+
+        if (! $adhesion->user_id) {
+            $adhesion->ensureAccountToken();
+
+            try {
+                Mail::to($adhesion->email)->send(new AdhesionStatusUpdate($adhesion));
+            } catch (\Throwable $e) {
+                Log::error('Mail de bienvenue adhérent échoué : ' . $e->getMessage());
+            }
+
+            return;
+        }
+
+        try {
+            Password::broker('members')->sendResetLink(
+                ['email' => \Illuminate\Support\Str::lower(trim($adhesion->email))],
+                fn ($user, $token) => $user->notify(new \App\Notifications\MemberResetPassword($token)),
+            );
+        } catch (\Throwable $e) {
+            Log::error("Lien d'accès espace adhérent échoué : " . $e->getMessage());
+        }
     }
 
     /**
@@ -227,12 +310,7 @@ class AdhesionController extends Controller
 
             if ($adhesion && ! $adhesion->isAdherent()) {
                 $adhesion->update(['statut' => 'payee']);
-                $adhesion->ensureAccountToken();
-                try {
-                    Mail::to($adhesion->email)->send(new AdhesionStatusUpdate($adhesion));
-                } catch (\Throwable $e) {
-                    Log::error('Mail paiement adhésion échoué : ' . $e->getMessage());
-                }
+                $this->preparerAcces($adhesion);
             }
 
             return redirect()->route('adhesion')->with('success', true)->with('paye', true);

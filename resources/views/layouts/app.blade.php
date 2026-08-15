@@ -18,22 +18,43 @@
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="{{ url()->current() }}">
 
-    {{-- ── OpenGraph ────────────────────────────────────────────── --}}
+    {{-- ── Aperçu de partage ────────────────────────────────────────
+         Ce qui s'affiche quand le lien est collé sur WhatsApp, Facebook,
+         LinkedIn ou dans un SMS. La vignette est résolue en adresse absolue
+         et mesurée : un chemin relatif ne donne aucun aperçu, et des
+         dimensions fausses font rogner l'image de travers.
+         Une page peut fournir @section('og_image') et @section('og_title') ;
+         sinon on retombe sur la vignette de l'association et le titre. --}}
+    @php
+        $partage = \App\Support\Partage::class;
+        $partageTitre = $partage::texte($__env->yieldContent('og_title'))
+            ?: $partage::texte($__env->yieldContent('title', "Madin'Jeunes Ambition"));
+        $partageTexte = $partage::resume($partage::texte(
+            $__env->yieldContent('meta_description', "Association de jeunes engagés en Martinique et au-delà. Actions éducatives, culturelles, sociales, sportives et de santé.")
+        ));
+        $partageImage = $partage::image($partage::texte($__env->yieldContent('og_image')));
+        $partageTaille = $partage::taille($partageImage);
+        $partageAlt = $partage::texte($__env->yieldContent('og_image_alt')) ?: $partageTitre;
+    @endphp
     <meta property="og:type"        content="@yield('og_type', 'website')">
     <meta property="og:site_name"   content="Madin'Jeunes Ambition">
-    <meta property="og:title"       content="@yield('title', "Madin'Jeunes Ambition")">
-    <meta property="og:description" content="@yield('meta_description', "Madin'Jeunes Ambition — Association de jeunes bénévoles en Martinique et au-delà.")">
-    <meta property="og:image"       content="@yield('og_image', asset('images/logomjat.png'))">
-    <meta property="og:image:width"  content="1200">
-    <meta property="og:image:height" content="630">
+    <meta property="og:title"       content="{{ $partageTitre }}">
+    <meta property="og:description" content="{{ $partageTexte }}">
+    <meta property="og:image"       content="{{ $partageImage }}">
+    <meta property="og:image:alt"   content="{{ $partageAlt }}">
+    @if($partageTaille)
+    <meta property="og:image:width"  content="{{ $partageTaille[0] }}">
+    <meta property="og:image:height" content="{{ $partageTaille[1] }}">
+    @endif
     <meta property="og:url"         content="{{ url()->current() }}">
     <meta property="og:locale"      content="fr_FR">
 
     {{-- ── Twitter Card ─────────────────────────────────────────── --}}
     <meta name="twitter:card"        content="@yield('twitter_card', 'summary_large_image')">
-    <meta name="twitter:title"       content="@yield('title', "Madin'Jeunes Ambition")">
-    <meta name="twitter:description" content="@yield('meta_description', "Association de jeunes bénévoles en Martinique et au-delà.")">
-    <meta name="twitter:image"       content="@yield('og_image', asset('images/logomjat.png'))">
+    <meta name="twitter:title"       content="{{ $partageTitre }}">
+    <meta name="twitter:description" content="{{ $partageTexte }}">
+    <meta name="twitter:image"       content="{{ $partageImage }}">
+    <meta name="twitter:image:alt"   content="{{ $partageAlt }}">
 
     {{-- ── Préchargement des polices critiques (au-dessus de la ligne de flottaison) ──
          Gill Sans (corps + gras) et AllRound Gothic Bold (gros titres du hero,

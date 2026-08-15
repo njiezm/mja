@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', "Madin'Jeunes Ambition – Les jeunes de la Martinique se mobilisent !")
 @section('meta_description', "Association de jeunes bénévoles en Martinique et au-delà. Sport, santé, culture et engagement — MJA mobilise la jeunesse depuis 2011.")
-@section('og_image', asset('images/logomjat.png'))
+@section('og_image', asset('images/partage/accueil.jpg'))
 
 @section('content')
 

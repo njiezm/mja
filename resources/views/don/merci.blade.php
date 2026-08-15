@@ -1,5 +1,6 @@
 @extends('layouts.app')
 @section('title', "Merci pour votre don — Madin'Jeunes Ambition")
+@section('og_image', asset('images/partage/don.jpg'))
 
 @section('content')
 <section class="hero-gradient text-white py-20 relative overflow-hidden ring-watermark">

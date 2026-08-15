@@ -46,116 +46,140 @@ class MembresActuelsSeeder extends Seeder
 
     public function run(): void
     {
-        $periode = AdhesionPeriod::firstOrCreate(
-            ['label' => self::PERIODE['label']],
-            [
-                'date_debut' => self::PERIODE['date_debut'],
-                'date_fin'   => self::PERIODE['date_fin'],
-                'actif'      => true,
-            ],
+        // ─────────────────────────────────────────────────────────────────
+        // IMPORT DÉSACTIVÉ — ne rien exécuter.
+        //
+        // Les adhérents de la saison 2025-2026 sont déjà en base, avec leurs
+        // comptes et leurs mots de passe. Relancer cet import réécrirait des
+        // fiches à jour et, pour toute personne dont le compte aurait disparu,
+        // régénérerait un mot de passe — celui que l'adhérent utilise
+        // aujourd'hui cesserait de fonctionner.
+        //
+        // Le contenu est conservé en commentaire : il documente exactement ce
+        // qui a été importé, et sert de modèle si un jour il faut reprendre
+        // une saison entière sur une base vierge. Pour le réactiver, retirer
+        // les « // » ci-dessous — et seulement sur une installation neuve.
+        // ─────────────────────────────────────────────────────────────────
+
+        $this->command?->warn(
+            'MembresActuelsSeeder est désactivé : les adhérents et leurs comptes sont déjà en base.'
+        );
+        $this->command?->line(
+            'Pour remplir un site vierge, décommenter le corps de run() dans ' . __FILE__ . '.'
         );
 
-        $credentials = [];
-        $sansPhoto   = [];
+        return;
 
-        foreach ($this->membres() as $ligne) {
-            $email = Str::lower(trim($ligne['email']));
-            $date  = Carbon::createFromFormat('d/m/Y', $ligne['date_adhesion'])->startOfDay();
-
-            $adhesion = Adhesion::firstOrNew([
-                'email'     => $email,
-                'period_id' => $periode->id,
-            ]);
-
-            $adhesion->fill([
-                'premiere_adhesion' => $ligne['premiere_adhesion'],
-                'civilite'          => $ligne['civilite'],
-                'nom'               => $ligne['nom'],
-                'prenom'            => $ligne['prenom'],
-                'date_naissance'    => $ligne['date_naissance'],
-                'profession'        => $ligne['profession'],
-                'telephone'         => $ligne['telephone'],
-                'email'             => $email,
-                'adresse_postale'   => $ligne['adresse_postale'],
-                'taille_tshirt'     => $ligne['taille_tshirt'],
-                'permis'            => $ligne['permis'],
-                'problemes_sante'   => $ligne['problemes_sante'],
-                'urgence_contact'   => $ligne['urgence_contact'],
-                'moyen_paiement'    => $ligne['moyen_paiement'],
-                'droit_image'       => true,
-                'rgpd_consentement' => true,
-                'statut'            => 'payee',   // cotisation encaissée
-                'lu'                => true,
-                'period_id'         => $periode->id,
-            ]);
-
-            // Photo : copiée depuis public/images/membres_actus vers le disque public.
-            if ($chemin = $this->copierPhoto($ligne['slug'])) {
-                $adhesion->photo = $chemin;
-            } else {
-                $sansPhoto[] = $ligne['slug'];
-            }
-
-            $adhesion->created_at = $date;
-            $adhesion->updated_at = $date;
-            $adhesion->save();
-
-            // Compte adhérent — aucun email n'est envoyé. Depuis la fusion des
-            // comptes, c'est la même table que le back-office : si la personne
-            // est déjà administratrice, on rattache l'adhésion sans rien créer.
-            $member = User::withTrashed()->where('adhesion_id', $adhesion->id)->first()
-                ?? User::withTrashed()->where('email', $email)->first();
-
-            if ($member) {
-                if ($member->trashed()) {
-                    $member->restore();
-                }
-                if (! $member->adhesion_id) {
-                    $member->adhesion_id = $adhesion->id;
-                    $member->save();
-                }
-                $adhesion->update(['user_id' => $member->id]);
-                continue; // compte déjà existant : on ne touche pas au mot de passe
-            }
-
-            $motDePasse = User::motDePasseTemporaire();
-
-            $member = new User();
-            $member->name = trim($ligne['prenom'] . ' ' . $ligne['nom']);
-            $member->adhesion_id = $adhesion->id;
-            $member->email = $email;
-            $member->role = User::ROLE_MEMBER;
-            $member->is_active = true;
-            $member->show_in_directory = true;
-            // Hash + copie chiffrée : le mot de passe reste consultable en back-office.
-            $member->setPasswordAndCopy($motDePasse);
-            $member->save();
-
-            $adhesion->update(['user_id' => $member->id]);
-
-            $credentials[] = [
-                $ligne['nom'],
-                $ligne['prenom'],
-                $email,
-                $motDePasse,
-            ];
-        }
-
-        $this->ecrireRecapitulatif($credentials);
-
-        $this->command?->info(count($credentials) . ' compte(s) adhérent(s) créé(s).');
-
-        if ($sansPhoto) {
-            $this->command?->warn(
-                'Photo manquante pour : ' . implode(', ', $sansPhoto)
-                . ' (attendue dans public/' . self::PHOTOS_SOURCE . '/<slug>.jpg)'
-            );
-        }
-
-        if ($credentials) {
-            $this->command?->info('Identifiants : storage/app/private/membres-actus-comptes.csv');
-            $this->command?->info('Ils restent consultables en back-office : Comptes adhérents (super admin).');
-        }
+        // $periode = AdhesionPeriod::firstOrCreate(
+        // ['label' => self::PERIODE['label']],
+        // [
+        // 'date_debut' => self::PERIODE['date_debut'],
+        // 'date_fin'   => self::PERIODE['date_fin'],
+        // 'actif'      => true,
+        // ],
+        // );
+        //
+        // $credentials = [];
+        // $sansPhoto   = [];
+        //
+        // foreach ($this->membres() as $ligne) {
+        // $email = Str::lower(trim($ligne['email']));
+        // $date  = Carbon::createFromFormat('d/m/Y', $ligne['date_adhesion'])->startOfDay();
+        //
+        // $adhesion = Adhesion::firstOrNew([
+        // 'email'     => $email,
+        // 'period_id' => $periode->id,
+        // ]);
+        //
+        // $adhesion->fill([
+        // 'premiere_adhesion' => $ligne['premiere_adhesion'],
+        // 'civilite'          => $ligne['civilite'],
+        // 'nom'               => $ligne['nom'],
+        // 'prenom'            => $ligne['prenom'],
+        // 'date_naissance'    => $ligne['date_naissance'],
+        // 'profession'        => $ligne['profession'],
+        // 'telephone'         => $ligne['telephone'],
+        // 'email'             => $email,
+        // 'adresse_postale'   => $ligne['adresse_postale'],
+        // 'taille_tshirt'     => $ligne['taille_tshirt'],
+        // 'permis'            => $ligne['permis'],
+        // 'problemes_sante'   => $ligne['problemes_sante'],
+        // 'urgence_contact'   => $ligne['urgence_contact'],
+        // 'moyen_paiement'    => $ligne['moyen_paiement'],
+        // 'droit_image'       => true,
+        // 'rgpd_consentement' => true,
+        // 'statut'            => 'payee',   // cotisation encaissée
+        // 'lu'                => true,
+        // 'period_id'         => $periode->id,
+        // ]);
+        //
+        // // Photo : copiée depuis public/images/membres_actus vers le disque public.
+        // if ($chemin = $this->copierPhoto($ligne['slug'])) {
+        // $adhesion->photo = $chemin;
+        // } else {
+        // $sansPhoto[] = $ligne['slug'];
+        // }
+        //
+        // $adhesion->created_at = $date;
+        // $adhesion->updated_at = $date;
+        // $adhesion->save();
+        //
+        // // Compte adhérent — aucun email n'est envoyé. Depuis la fusion des
+        // // comptes, c'est la même table que le back-office : si la personne
+        // // est déjà administratrice, on rattache l'adhésion sans rien créer.
+        // $member = User::withTrashed()->where('adhesion_id', $adhesion->id)->first()
+        // ?? User::withTrashed()->where('email', $email)->first();
+        //
+        // if ($member) {
+        // if ($member->trashed()) {
+        // $member->restore();
+        // }
+        // if (! $member->adhesion_id) {
+        // $member->adhesion_id = $adhesion->id;
+        // $member->save();
+        // }
+        // $adhesion->update(['user_id' => $member->id]);
+        // continue; // compte déjà existant : on ne touche pas au mot de passe
+        // }
+        //
+        // $motDePasse = User::motDePasseTemporaire();
+        //
+        // $member = new User();
+        // $member->name = trim($ligne['prenom'] . ' ' . $ligne['nom']);
+        // $member->adhesion_id = $adhesion->id;
+        // $member->email = $email;
+        // $member->role = User::ROLE_MEMBER;
+        // $member->is_active = true;
+        // $member->show_in_directory = true;
+        // // Hash + copie chiffrée : le mot de passe reste consultable en back-office.
+        // $member->setPasswordAndCopy($motDePasse);
+        // $member->save();
+        //
+        // $adhesion->update(['user_id' => $member->id]);
+        //
+        // $credentials[] = [
+        // $ligne['nom'],
+        // $ligne['prenom'],
+        // $email,
+        // $motDePasse,
+        // ];
+        // }
+        //
+        // $this->ecrireRecapitulatif($credentials);
+        //
+        // $this->command?->info(count($credentials) . ' compte(s) adhérent(s) créé(s).');
+        //
+        // if ($sansPhoto) {
+        // $this->command?->warn(
+        // 'Photo manquante pour : ' . implode(', ', $sansPhoto)
+        // . ' (attendue dans public/' . self::PHOTOS_SOURCE . '/<slug>.jpg)'
+        // );
+        // }
+        //
+        // if ($credentials) {
+        // $this->command?->info('Identifiants : storage/app/private/membres-actus-comptes.csv');
+        // $this->command?->info('Ils restent consultables en back-office : Comptes adhérents (super admin).');
+        // }
     }
 
     /**

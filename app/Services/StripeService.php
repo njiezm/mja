@@ -71,6 +71,28 @@ class StripeService
         ];
     }
 
+    /**
+     * Inscrit l'identifiant de l'adhésion dans le PaymentIntent.
+     *
+     * Le paiement est créé avant l'adhésion — le formulaire n'est envoyé
+     * qu'ensuite. Sans ce rattrapage, un évènement Stripe arrivant plus tard
+     * (validation différée, litige) ne saurait pas à quelle demande le
+     * rattacher.
+     */
+    public static function attacherAdhesion(?string $intentId, int $adhesionId): void
+    {
+        if (! $intentId || ! self::enabled()) {
+            return;
+        }
+
+        $resp = Http::asForm()->withToken(self::secret())
+            ->post(self::API . '/payment_intents/' . $intentId, ['metadata[adhesion_id]' => $adhesionId]);
+
+        if ($resp->failed()) {
+            Log::warning('Stripe : rattachement adhésion au paiement échoué : ' . $resp->body());
+        }
+    }
+
     /** Récupère un PaymentIntent (tableau) ou null. */
     public static function retrievePaymentIntent(string $intentId): ?array
     {
