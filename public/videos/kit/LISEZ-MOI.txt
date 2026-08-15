@@ -1,0 +1,29 @@
+Rushes vidéo et photo du monteur MJA (/kit-video)
+=================================================
+
+Dépose ici les vidéos et les photos à monter. Elles apparaissent
+automatiquement dans la bibliothèque du monteur.
+
+Formats acceptés
+  - Vidéo : .mp4 (recommandé), .webm, .mov
+  - Photo : .jpg, .png, .webp
+
+Conseils
+  - Filme et exporte en vertical 1080 x 1920 pour les reels.
+  - Garde des plans courts : 2 à 4 secondes suffisent au montage.
+  - Moins de 30 Mo par fichier : tout est traité dans le navigateur,
+    au-delà l'aperçu devient poussif.
+  - Nomme les fichiers dans l'ordre souhaité (01-, 02-, 03-...) :
+    la bibliothèque les classe par nom.
+
+Récupérer vos propres vidéos Instagram
+  Instagram ne permet pas à un tiers de télécharger vos publications,
+  mais vous pouvez exporter les vôtres depuis votre compte :
+    Paramètres > Votre activité > Télécharger vos informations
+  Choisissez « Contenu multimédia », format HTML ou JSON, qualité haute.
+  Instagram envoie une archive par email sous quelques heures.
+  Dézippez-la et copiez les fichiers voulus dans ce dossier.
+
+  Depuis un téléphone, les vidéos d'origine (avant compression Instagram)
+  sont dans la galerie : elles sont toujours de meilleure qualité que
+  celles réexportées. Privilégiez-les.

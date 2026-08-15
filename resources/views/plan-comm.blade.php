@@ -22,7 +22,7 @@
     /**
      * Contenus du plan.
      * type   : short | infographie | photo
-     * statut : publie | production | proposition
+     * statut : publie | validation | production | proposition
      * lie    : rattachement à un élément déjà établi sur le site
      */
     $contenus = [
@@ -36,35 +36,38 @@
          "Recensement des vidéos, sélection des séquences, montage, validation interne, vérification des droits à l'image.",
          "Kit d'adhésion — gabarit « Bande-annonce » (2,5 s)"],
 
-        ['17/08/2026', "Flyer principal MJ'Adhésion", 'infographie', 'production',
+        ['17/08/2026', "Flyer principal MJ'Adhésion", 'infographie', 'validation',
          "Présentation de la campagne d'adhésion et de réadhésion, avec appel à l'action.",
          "Valider le texte, le lien du formulaire et les informations de contact.",
          "Kit d'adhésion — gabarits « Moderne » et « Trio »"],
 
-        ['17/08/2026', "Rappel lancement adhésion / réadhésion", 'infographie', 'proposition',
+        ['17/08/2026', "Rappel lancement adhésion / réadhésion", 'infographie', 'validation',
          "Message de lancement.",
          "À publier avec le flyer principal et le lien d'adhésion validé.", null],
 
         ['18/08/2026', "Story Foyal Color Red", 'short', 'proposition',
-         "Story liée à la participation ou à l'actualité Foyal Color Red.",
-         "Confirmer la présence, les images disponibles et l'autorisation de diffusion.",
-         "Événement « Foyal Color Red » (brouillon, date réelle à renseigner)"],
+         "Annonce de la participation de MJA à la Foyal Color Red.",
+         "Annonce de la participation de MJA à la Foyal Color Red du 22 août, Parc La Savane.",
+         "Événement « Foyal Color Red » — 22/08/2026, Parc La Savane",
+         ["Confirmation de la participation de MJA", "Point de rendez-vous de l'équipe"]],
 
-        ['18/08/2026', "Publication Foyal Color Red", 'photo', 'proposition',
+        ['24/08/2026', "Publication Foyal Color Red", 'photo', 'proposition',
          "Retour visuel sur Foyal Color Red et mise en avant de l'engagement MJA.",
-         "Contenu à produire à partir des images disponibles.",
-         "Événement « Foyal Color Red » (brouillon)"],
+         "Retour visuel après l'événement du 22 août au Parc La Savane.",
+         "Événement « Foyal Color Red » — 22/08/2026, Parc La Savane",
+         ["Photos de l'équipe MJA sur place", "Nombre de participants MJA", "Autorisations de droit à l'image"]],
 
         ['19/08/2026', "Publication sortie LaserWest / bowling", 'short', 'proposition',
          "Retour d'activité mettant en avant la cohésion et la vie communautaire.",
-         "Valider les images, les personnes visibles et le texte avant diffusion.", null],
+         "Valider les images, les personnes visibles et le texte avant diffusion.", null,
+         ["Date réelle de la sortie", "Lieu (LaserWest ou bowling ?)", "Photos validées"]],
 
-        ['20/08/2026', "Flyer déclinaison réadhésion", 'infographie', 'proposition',
+        ['20/08/2026', "Flyer déclinaison réadhésion", 'infographie', 'validation',
          "Version ciblée pour les membres à renouveler.",
          "Dépend du flyer principal ; faire valider le message, les modalités et le formulaire.",
          "Kit — variante « Appel à la réadhésion »"],
 
-        ['21/08/2026', "Flyer imprimable MJ'Adhésion", 'infographie', 'proposition',
+        ['21/08/2026', "Flyer imprimable MJ'Adhésion", 'infographie', 'validation',
          "Version adaptée à l'impression et à l'affichage.",
          "Dépend du flyer principal ; vérifier lisibilité, QR/lien et validation avant impression.",
          "Kit — export PDF A5 / A4 / A3"],
@@ -83,18 +86,21 @@
 
         ['30/08/2026', "Story MJA Boat Party", 'short', 'proposition',
          "Annonce ou rappel de l'événement Boat Party.",
-         "Confirmer l'événement, les horaires, le lieu et les présences avant diffusion.",
-         "Événement « MJA Boat Party » (brouillon)"],
+         "Confirmer l'événement avant diffusion.",
+         "Événement « MJA Boat Party » (brouillon)",
+         ["Date et heure", "Lieu d'embarquement", "Tarif", "Modalités d'inscription", "Nombre de places"]],
 
         ['01/09/2026', "Publication MJA Boat Party", 'photo', 'proposition',
          "Publication de présentation de la Boat Party.",
          "Dépend de la validation des informations pratiques.",
-         "Événement « MJA Boat Party » (brouillon)"],
+         "Événement « MJA Boat Party » (brouillon)",
+         ["Mêmes informations que la story du 30/08"]],
 
         ['02/09/2026', "Flyer Journées Portes Ouvertes", 'infographie', 'proposition',
          "Flyer d'information pour les journées portes ouvertes.",
-         "Valider lieu, horaires, formulaire de contact et équipe présente avant publication.",
-         "Événement « Journée Portes Ouvertes des Associations » (publié)"],
+         "Valider les informations pratiques avant publication.",
+         "Événement « Journée Portes Ouvertes des Associations » (publié)",
+         ["Horaires du stand", "Emplacement sur la Savane", "Équipe présente", "Supports à imprimer"]],
 
         ['04/09/2026', "MJA et le sport", 'infographie', 'proposition',
          "Présentation des activités ou projets sportifs de MJA.",
@@ -102,13 +108,15 @@
 
         ['05/09/2026', "Journée Portes Ouvertes des Associations", 'infographie', 'proposition',
          "Invitation et informations pratiques pour le 5 septembre à la Savane.",
-         "À publier le jour J ou en rappel ; dépend de la validation de la logistique et des présences.",
-         "Événement publié sur le site"],
+         "À publier le jour J ou en rappel.",
+         "Événement publié sur le site",
+         ["Horaires du stand", "Équipe présente"]],
 
         ['07/09/2026', "MJA en action — Caravane de l'unité", 'short', 'proposition',
          "Présentation de la caravane de l'unité, avec témoignage.",
-         "Série d'un post tous les dix jours ; valider le témoignage, les images et la disponibilité de la personne citée.",
-         "Projet « La Caravane de l'unité »"],
+         "Série d'un post tous les dix jours.",
+         "Projet « La Caravane de l'unité »",
+         ["Accord écrit de la personne interviewée", "Images de la caravane", "Date de tournage"]],
 
         ['11/09/2026', "MJA et la nutrition", 'infographie', 'proposition',
          "Présentation d'une action ou d'un projet lié à la nutrition.",
@@ -117,12 +125,14 @@
 
         ['12/09/2026', "MJA Fitness", 'short', 'proposition',
          "Contenu autour de MJA Fitness.",
-         "La note indique la deuxième semaine de septembre ; confirmer la date, les présences et les images.",
-         "Événement « MJA Fitness » (brouillon)"],
+         "La note indique seulement « deuxième semaine de septembre ».",
+         "Événement « MJA Fitness » (brouillon)",
+         ["Date exacte", "Heure", "Lieu", "Encadrement", "Matériel à prévoir"]],
 
         ['17/09/2026', "MJA en action — retour d'un nouveau membre", 'short', 'proposition',
          "Témoignage d'un nouvel adhérent sur son arrivée et son expérience.",
-         "Valider le contenu avec la personne concernée et obtenir son accord écrit avant publication.", null],
+         "À valider avec la personne concernée.", null,
+         ["Accord écrit de la personne", "Date de tournage"]],
 
         ['18/09/2026', "MJA et le lien intergénérationnel", 'infographie', 'proposition',
          "Présentation d'un projet ou d'une valeur liée au lien intergénérationnel.",
@@ -134,7 +144,8 @@
 
         ['27/09/2026', "MJA en action — en direct d'une action", 'short', 'proposition',
          "Retour d'action sur le terrain.",
-         "Valider l'action filmée, les présences et les droits à l'image.", null],
+         "À caler selon l'action retenue.", null,
+         ["Action à filmer", "Date", "Présences", "Autorisations de droit à l'image"]],
 
         ['02/10/2026', "MJA et le développement personnel", 'infographie', 'proposition',
          "Présentation d'un projet ou d'un bénéfice concret de l'engagement.",
@@ -142,13 +153,15 @@
 
         ['03/10/2026', "Journée Portes Ouvertes MJA au local", 'infographie', 'proposition',
          "Annonce de la journée portes ouvertes organisée par MJA.",
-         "Date indicative : première semaine d'octobre ; date, format, matériel et équipe à confirmer.",
-         "Événement « Journée Portes Ouvertes MJA » (brouillon)"],
+         "Date indicative : première semaine d'octobre.",
+         "Événement « Journée Portes Ouvertes MJA » (brouillon)",
+         ["Date exacte", "Horaires", "Format de la journée", "Équipe présente", "Matériel"]],
 
         ['07/10/2026', "MJA en action — vie communautaire", 'short', 'proposition',
          "Contenu « Passer du bon temps avec MJA ».",
-         "Valider le format, la disponibilité des personnes filmées et les images avant montage.",
-         "Action « MJA Afterwork »"],
+         "À caler selon la sortie retenue.",
+         "Action « Vie communautaire »",
+         ["Sortie à filmer", "Date", "Accord des personnes filmées"]],
 
         ['15/10/2026', "Rappel adhésion / réadhésion", 'short', 'proposition',
          "Relance publique avant la dernière phase de campagne.",
@@ -157,11 +170,13 @@
 
         ['26/10/2026', "Bilan et dernière relance", 'infographie', 'proposition',
          "Rappel final avant la clôture du 31 octobre.",
-         "Prévoir les chiffres disponibles, le formulaire et les modalités de relance.", null],
+         "Repose sur les chiffres de la campagne.", null,
+         ["Nombre d'adhésions à date", "Nombre de réadhésions", "Objectif à afficher ou non"]],
 
         ['31/10/2026', "Clôture adhésion / réadhésion", 'photo', 'proposition',
          "Message de clôture et remerciement des membres et nouveaux adhérents.",
-         "Date structurante ; publier uniquement après vérification de la clôture et des chiffres à communiquer.", null],
+         "Date structurante : publier après vérification de la clôture.", null,
+         ["Chiffres définitifs", "Photo de groupe de la saison"]],
     ];
 
     // Regroupement par mois, dans l'ordre chronologique.
@@ -171,15 +186,26 @@
         $cle = $a . '-' . $m;
         $mois[$cle][] = $i;
     }
+    // Tri par date à l'intérieur de chaque mois : l'ordre du tableau ne fait
+    // plus foi dès qu'une date est corrigée.
+    foreach ($mois as $cle => $liste) {
+        usort($liste, function ($a, $b) use ($contenus) {
+            [$ja, $ma, $aa] = explode('/', $contenus[$a][0]);
+            [$jb, $mb, $ab] = explode('/', $contenus[$b][0]);
+            return [$aa, $ma, $ja] <=> [$ab, $mb, $jb];
+        });
+        $mois[$cle] = $liste;
+    }
     ksort($mois);
 
     $nomsMois = ['08' => 'Août', '09' => 'Septembre', '10' => 'Octobre', '11' => 'Novembre'];
 
-    $compte = ['publie' => 0, 'production' => 0, 'proposition' => 0];
+    $compte = ['publie' => 0, 'validation' => 0, 'production' => 0, 'proposition' => 0];
     foreach ($contenus as $c) { $compte[$c[3]]++; }
 
     $typesLabel  = ['short' => 'Vidéo courte', 'infographie' => 'Infographie', 'photo' => 'Photo'];
-    $statutLabel = ['publie' => 'Publié', 'production' => 'En production', 'proposition' => 'En proposition'];
+    $statutLabel = ['publie' => 'Publié', 'validation' => 'En validation',
+                    'production' => 'En production', 'proposition' => 'En proposition'];
 @endphp
 <!DOCTYPE html>
 <html lang="fr">
@@ -260,6 +286,7 @@ h1{margin:0 0 6px;font-size:31px;font-weight:800;letter-spacing:-.3px}
 .t-infographie{background:#FFF3DC;color:#92400E}
 .t-photo{background:#FDE7EA;color:#9B1C1E}
 .s-publie{background:#E7F7EC;color:#166534}
+.s-validation{background:#E7F0FF;color:#1E3A8A}
 .s-production{background:#FFF3DC;color:#92400E}
 .s-proposition{background:#EEF2F8;color:var(--gris)}
 .carte h3{margin:0 0 4px;font-size:17px;font-weight:800;color:var(--ink)}
@@ -268,6 +295,10 @@ h1{margin:0 0 6px;font-size:31px;font-weight:800;letter-spacing:-.3px}
 .carte .note i{color:var(--yellow);margin-top:3px}
 .carte .lie{margin-top:8px;display:inline-flex;align-items:center;gap:7px;background:#F2F7FF;border:1px solid #DCE8FA;
             border-radius:9px;padding:5px 11px;font-size:12.5px;color:var(--dark);font-weight:600}
+.carte .manque{margin-top:9px;background:#FFF6E5;border:1px solid #FBE3B4;border-radius:10px;padding:8px 11px;
+                font-size:12.5px;color:#78591C;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.carte .manque b{font-weight:800;color:#92400E;margin-right:2px}
+.carte .manque span{background:#fff;border:1px solid #F3DDAF;border-radius:7px;padding:2px 8px}
 .carte .sup{border:0;background:transparent;color:#C2CEDE;cursor:pointer;font-size:14px;padding:6px;align-self:flex-start}
 .carte .sup:hover{color:var(--red)}
 
@@ -310,6 +341,7 @@ footer{border-top:1px solid var(--bord);padding:22px 0 40px;color:var(--gris);fo
     <div class="compteurs">
       <div class="compteur"><b>{{ count($contenus) }}</b> contenus planifiés</div>
       <div class="compteur"><b>{{ $compte['publie'] }}</b> publiés</div>
+      <div class="compteur"><b>{{ $compte['validation'] }}</b> en validation</div>
       <div class="compteur"><b>{{ $compte['production'] }}</b> en production</div>
       <div class="compteur"><b>{{ $compte['proposition'] }}</b> en proposition</div>
       <div class="compteur"><b>11</b> semaines de campagne</div>
@@ -334,7 +366,8 @@ footer{border-top:1px solid var(--bord);padding:22px 0 40px;color:var(--gris);fo
     <button class="chip" data-filtre="short"><i class="fas fa-video"></i> Vidéos</button>
     <button class="chip" data-filtre="infographie"><i class="fas fa-image"></i> Infographies</button>
     <button class="chip" data-filtre="photo"><i class="fas fa-camera"></i> Photos</button>
-    <button class="chip" data-filtre="proposition">À valider</button>
+    <button class="chip" data-filtre="validation">En validation</button>
+    <button class="chip" data-filtre="proposition">À caler</button>
     <span class="sep"></span>
     <span class="etat" id="etat">Modifiable — les changements restent sur cet ordinateur</span>
     <button class="btn g" id="btn-reset"><i class="fas fa-rotate-left"></i> Réinitialiser</button>
@@ -353,7 +386,11 @@ footer{border-top:1px solid var(--bord);padding:22px 0 40px;color:var(--gris);fo
     </h2>
 
     @foreach($indices as $i)
-    @php [$date, $titre, $type, $statut, $desc, $note, $lie] = $contenus[$i]; [$jj, $mm] = explode('/', $date); @endphp
+    @php
+        [$date, $titre, $type, $statut, $desc, $note, $lie] = array_slice($contenus[$i], 0, 7);
+        $manque = $contenus[$i][7] ?? null;
+        [$jj, $mm] = explode('/', $date);
+    @endphp
     <article class="carte" data-type="{{ $type }}" data-statut="{{ $statut }}" data-id="c{{ $i }}">
       <div class="date">
         <b>{{ $jj }}</b>
@@ -373,6 +410,14 @@ footer{border-top:1px solid var(--bord);padding:22px 0 40px;color:var(--gris);fo
         @if($lie)
         <div class="lie"><i class="fas fa-link"></i> {{ $lie }}</div>
         @endif
+        @if($manque)
+        {{-- Ce qu'il reste à obtenir : la question la plus utile quand on
+             ouvre le document pour préparer une réunion. --}}
+        <div class="manque">
+            <b><i class="fas fa-circle-question"></i> Il manque</b>
+            @foreach($manque as $m)<span>{{ $m }}</span>@endforeach
+        </div>
+        @endif
       </div>
       <button class="sup" title="Retirer cette ligne"><i class="fas fa-xmark"></i></button>
     </article>
@@ -385,7 +430,7 @@ footer{border-top:1px solid var(--bord);padding:22px 0 40px;color:var(--gris);fo
     <ul>
       <li><b>Droit à l'image</b> — les retours d'activité (Foyal Color Red, LaserWest, actions filmées) montrent des personnes identifiables : vérifier que chacune a signé l'autorisation, y compris les personnes extérieures à l'association.</li>
       <li><b>Accord des personnes citées</b> — les contenus « MJA en action » reposent sur des témoignages nominatifs. Obtenir un accord écrit avant publication, et ne pas diffuser le nom sans validation.</li>
-      <li><b>Dates de retour d'activité</b> — Foyal Color Red et la sortie LaserWest sont datés dans le plan à leur date de <em>publication</em>, pas à celle de l'événement. Renseigner les dates réelles avant de les afficher sur le site.</li>
+      <li><b>Dates de retour d'activité</b> — la sortie LaserWest / bowling est datée dans le plan à sa date de <em>publication</em>, pas à celle de la sortie. Renseigner la date réelle avant de l'afficher sur le site. La Foyal Color Red, elle, est calée au 22 août au Parc La Savane.</li>
       <li><b>Dates indicatives</b> — Boat Party, MJA Fitness et la journée portes ouvertes au local n'ont qu'une semaine approximative. Les événements correspondants restent en brouillon sur le site tant que la date n'est pas confirmée.</li>
       <li><b>Cotisation</b> — les visuels grand public n'affichent pas le montant : il se découvre sur le formulaire. Ne l'ajouter que sur les supports internes.</li>
     </ul>

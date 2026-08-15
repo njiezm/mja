@@ -59,6 +59,10 @@ Route::view('/kit-adhesion', 'kit-adhesion')->name('kit.adhesion');
 // des notes de réunion qui n'ont pas à être publiques.
 Route::view('/plan-comm', 'plan-comm')->name('plan.comm')->middleware(['auth', 'content']);
 
+// Monteur vidéo : assemblage de rushes en réel (intro, plans, outro).
+// Tout le traitement a lieu dans le navigateur, aucun fichier n'est téléversé.
+Route::view('/kit-video', 'kit-video')->name('kit.video');
+
 Route::get('/don', [DonationController::class, 'create'])->name('don');
 Route::post('/don', [DonationController::class, 'store'])->name('don.store')->middleware(['honeypot', 'throttle:10,1']);
 Route::get('/don/merci', [DonationController::class, 'merci'])->name('don.merci');
