@@ -48,11 +48,20 @@ var HORS_LATIN1 = { '€': 128, '‚': 130, 'ƒ': 131, '„': 132, '…': 133,
   '•': 149, '–': 150, '—': 151, '˜': 152, '™': 153, 'š': 154,
   '›': 155, 'œ': 156, 'ž': 158, 'Ÿ': 159 };
 
+/* Signes absents de WinAnsi, remplacés par un équivalent lisible plutôt que
+   par un point d'interrogation : une flèche perdue rend une phrase muette. */
+var REPLIS = {
+  '→': '>', '←': '<', '↔': '<>', '⟶': '>', '⇒': '=>', '⇐': '<=',
+  '≥': '>=', '≤': '<=', '≠': '!=', '≈': '~',
+  '✓': 'v', '✔': 'v', '✗': 'x', '✂': '', '★': '*', '●': '-', '▪': '-'
+};
+
 function versWinAnsi(str) {
   var out = '';
   for (var i = 0; i < str.length; i++) {
     var c = str[i], code = str.charCodeAt(i);
     if (HORS_LATIN1[c] !== undefined) { out += String.fromCharCode(HORS_LATIN1[c]); continue; }
+    if (REPLIS[c] !== undefined) { out += REPLIS[c]; continue; }
     out += code <= 255 ? c : '?';
   }
   return out;

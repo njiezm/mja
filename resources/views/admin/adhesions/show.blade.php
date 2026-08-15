@@ -70,7 +70,11 @@
                     </div>
                     <div>
                         <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Période</div>
-                        <div class="font-semibold text-gray-900">{{ $adhesion->period?->label ?? '—' }}</div>
+                        @if($adhesion->period)
+                            <div class="font-semibold text-gray-900">{{ $adhesion->period->label }}</div>
+                        @else
+                            <div class="font-semibold text-amber-600">Non rattachée</div>
+                        @endif
                     </div>
                     @if($adhesion->reseaux_sociaux)
                     <div class="col-span-2 sm:col-span-3">
@@ -146,6 +150,35 @@
                 <p class="text-xs text-gray-400">Passer au statut « Payée » enverra automatiquement l'email de bienvenue adhérent.</p>
                 <button type="submit" class="w-full bg-mja-blue hover:bg-mja-bluedark text-white font-semibold py-2.5 rounded-xl transition-colors text-sm">
                     Mettre à jour
+                </button>
+            </form>
+        </div>
+
+        {{-- Saison de rattachement --}}
+        {{-- Une adhésion sans saison n'apparaît dans aucun filtre, aucun export
+             par période et ne déclenche jamais de relance de renouvellement :
+             on peut donc la rattacher à la main, y compris a posteriori. --}}
+        <div class="bg-white rounded-2xl shadow-sm border {{ $adhesion->period ? 'border-gray-100' : 'border-amber-200' }} p-6">
+            <h3 class="font-display font-bold text-mja-gray mb-4">Saison d'adhésion</h3>
+            @unless($adhesion->period)
+                <div class="mb-4 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2.5 text-xs text-amber-800">
+                    <i class="fas fa-triangle-exclamation mr-1"></i>
+                    Cette adhésion n'est rattachée à aucune saison : elle est invisible dans les filtres et les exports par période.
+                </div>
+            @endunless
+            <form method="POST" action="{{ route('admin.adhesions.periode', $adhesion) }}" class="space-y-3">
+                @csrf @method('PATCH')
+                <select name="period_id" class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl px-3 py-2.5 text-sm outline-none">
+                    <option value="">— Aucune saison —</option>
+                    @foreach($periods as $periode)
+                        <option value="{{ $periode->id }}" {{ $adhesion->period_id === $periode->id ? 'selected' : '' }}>
+                            {{ $periode->label }}
+                            ({{ \Carbon\Carbon::parse($periode->date_debut)->format('d/m/Y') }} → {{ \Carbon\Carbon::parse($periode->date_fin)->format('d/m/Y') }})
+                        </option>
+                    @endforeach
+                </select>
+                <button type="submit" class="w-full bg-white hover:bg-gray-50 border-2 border-mja-blue text-mja-blue font-semibold py-2.5 rounded-xl transition-colors text-sm">
+                    Rattacher à cette saison
                 </button>
             </form>
         </div>

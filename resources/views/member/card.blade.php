@@ -145,11 +145,11 @@ body{margin:0;padding:26px 20px;background:#EEF2F8;color:#333;
         'photoUrl'  => $adhesion->photo ? \Illuminate\Support\Facades\Storage::url($adhesion->photo) : null,
         'fichier'   => \Illuminate\Support\Str::slug($adhesion->prenom . '-' . $adhesion->nom),
     ], JSON_UNESCAPED_UNICODE) }}'><i class="fas fa-file-pdf"></i> Télécharger le PDF</button>
-        <button id="btn-imprimer" style="background:#E4EAF4;color:var(--dark)"><i class="fas fa-print"></i> Imprimer</button>
+        {{-- <button id="btn-imprimer" style="background:#E4EAF4;color:var(--dark)"><i class="fas fa-print"></i> Imprimer</button>
         <span class="astuce">
             Le PDF est généré directement, avec les couleurs — pas besoin de passer par
             l'impression du navigateur.
-        </span>
+        </span> --}}
     </div>
 
     {{-- ── Attestation ──────────────────────────────────────────── --}}

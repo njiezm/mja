@@ -63,6 +63,9 @@ Route::view('/plan-comm', 'plan-comm')->name('plan.comm')->middleware(['auth', '
 // Tout le traitement a lieu dans le navigateur, aucun fichier n'est téléversé.
 Route::view('/kit-video', 'kit-video')->name('kit.video');
 
+// Cahier du projet : documentation technique et fonctionnelle du site.
+Route::view('/cahier-projet', 'cahier-projet')->name('cahier.projet')->middleware(['auth', 'content']);
+
 Route::get('/don', [DonationController::class, 'create'])->name('don');
 Route::post('/don', [DonationController::class, 'store'])->name('don.store')->middleware(['honeypot', 'throttle:10,1']);
 Route::get('/don/merci', [DonationController::class, 'merci'])->name('don.merci');
@@ -134,6 +137,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
         Route::get('adhesions/export', [Admin\AdhesionController::class, 'export'])->name('adhesions.export');
         Route::get('adhesions/{adhesion}', [Admin\AdhesionController::class, 'show'])->name('adhesions.show');
         Route::patch('adhesions/{adhesion}/statut', [Admin\AdhesionController::class, 'updateStatut'])->name('adhesions.statut');
+        Route::patch('adhesions/{adhesion}/periode', [Admin\AdhesionController::class, 'updatePeriode'])->name('adhesions.periode');
+        Route::post('adhesions/rattacher-periode', [Admin\AdhesionController::class, 'rattacherPeriode'])->name('adhesions.rattacher-periode');
         Route::delete('adhesions/{adhesion}', [Admin\AdhesionController::class, 'destroy'])->name('adhesions.destroy');
 
         // Relances automatiques (paiement en attente, renouvellement de saison)

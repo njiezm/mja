@@ -17,7 +17,9 @@ class AdhesionController extends Controller
     public function index(Request $request)
     {
         $query = Adhesion::with('period')->orderByDesc('created_at');
-        if ($request->filled('period')) {
+        if ($request->input('period') === 'aucune') {
+            $query->whereNull('period_id');
+        } elseif ($request->filled('period')) {
             $query->where('period_id', $request->integer('period'));
         }
         $adhesions = $query->paginate(20)->withQueryString();
@@ -29,13 +31,19 @@ class AdhesionController extends Controller
         ];
         $periods = \App\Models\AdhesionPeriod::orderByDesc('date_debut')->get();
 
-        return view('admin.adhesions.index', compact('adhesions', 'stats', 'periods'));
+        // Adhésions rattachées à aucune saison : elles échappent aux filtres,
+        // aux exports par période et aux relances de renouvellement.
+        $sansPeriode = Adhesion::whereNull('period_id')->count();
+
+        return view('admin.adhesions.index', compact('adhesions', 'stats', 'periods', 'sansPeriode'));
     }
 
     public function export(Request $request): StreamedResponse
     {
         $query = Adhesion::with('period')->orderByDesc('created_at');
-        if ($request->filled('period')) {
+        if ($request->input('period') === 'aucune') {
+            $query->whereNull('period_id');
+        } elseif ($request->filled('period')) {
             $query->where('period_id', $request->integer('period'));
         }
         $adhesions = $query->get();
@@ -76,7 +84,9 @@ class AdhesionController extends Controller
     public function show(Adhesion $adhesion)
     {
         $adhesion->update(['lu' => true]);
-        return view('admin.adhesions.show', compact('adhesion'));
+        $periods = \App\Models\AdhesionPeriod::orderByDesc('date_debut')->get();
+
+        return view('admin.adhesions.show', compact('adhesion', 'periods'));
     }
 
     public function updateStatut(Request $request, Adhesion $adhesion)
@@ -104,6 +114,50 @@ class AdhesionController extends Controller
         }
 
         return back()->with('success', 'Statut mis à jour.');
+    }
+
+    /** Rattache une adhésion à une saison, ou l'en détache. */
+    public function updatePeriode(Request $request, Adhesion $adhesion)
+    {
+        $validated = $request->validate(
+            ['period_id' => 'nullable|integer|exists:adhesion_periods,id'],
+            ['period_id.exists' => "Cette saison n'existe pas."]
+        );
+
+        $adhesion->update(['period_id' => $validated['period_id'] ?? null]);
+        // La relation chargée par le route-model binding est périmée après
+        // l'update : sans ça, un détachement afficherait l'ancienne saison.
+        $adhesion->unsetRelation('period');
+
+        return back()->with('success', $adhesion->period
+            ? "Adhésion rattachée à la « {$adhesion->period->label} »."
+            : 'Adhésion détachée de toute saison.');
+    }
+
+    /**
+     * Rattache d'un coup toutes les adhésions sans saison.
+     *
+     * Utile après une reprise de données : sans période, une adhésion
+     * n'apparaît dans aucun filtre et ne déclenche jamais de relance de
+     * renouvellement. On ne touche qu'aux adhésions orphelines — celles déjà
+     * rattachées gardent leur saison.
+     */
+    public function rattacherPeriode(Request $request)
+    {
+        $validated = $request->validate(
+            ['period_id' => 'required|integer|exists:adhesion_periods,id'],
+            [
+                'period_id.required' => 'Choisissez la saison de rattachement.',
+                'period_id.exists'   => "Cette saison n'existe pas.",
+            ]
+        );
+
+        $periode = \App\Models\AdhesionPeriod::findOrFail($validated['period_id']);
+        $nombre = Adhesion::whereNull('period_id')->update(['period_id' => $periode->id]);
+
+        return back()->with('success', $nombre === 0
+            ? 'Aucune adhésion orpheline à rattacher.'
+            : "{$nombre} adhésion(s) rattachée(s) à la « {$periode->label} ».");
     }
 
     public function destroy(Adhesion $adhesion)

@@ -33,6 +33,41 @@
     </div>
 </div>
 
+{{-- Adhésions orphelines : sans saison, elles n'apparaissent dans aucun filtre
+     ni export par période et ne reçoivent pas de relance de renouvellement.
+     Le rattachement en masse évite de les reprendre une par une. --}}
+@if($sansPeriode > 0 && $periods->count())
+<div class="mb-4 bg-amber-50 border border-amber-200 rounded-2xl p-4 sm:p-5">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-start gap-3">
+            <i class="fas fa-triangle-exclamation text-amber-500 mt-0.5"></i>
+            <div>
+                <div class="font-display font-bold text-amber-900 text-sm">
+                    {{ $sansPeriode }} adhésion{{ $sansPeriode > 1 ? 's' : '' }} sans saison
+                </div>
+                <p class="text-xs text-amber-800 mt-0.5">
+                    Invisibles dans les filtres et les exports par période, et jamais relancées pour le renouvellement.
+                    <a href="{{ route('admin.adhesions.index', ['period' => 'aucune']) }}" class="font-semibold underline">Les afficher</a>
+                </p>
+            </div>
+        </div>
+        <form method="POST" action="{{ route('admin.adhesions.rattacher-periode') }}"
+              class="flex flex-wrap items-center gap-2"
+              data-confirm="Rattacher les {{ $sansPeriode }} adhésions sans saison à la saison choisie ?">
+            @csrf
+            <select name="period_id" required class="border border-amber-200 bg-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-mja-blue">
+                @foreach($periods as $p)
+                <option value="{{ $p->id }}" @selected($p->actif ?? false)>{{ $p->label }}</option>
+                @endforeach
+            </select>
+            <button type="submit" class="bg-amber-500 hover:bg-amber-600 text-white font-display font-bold text-sm px-4 py-2 rounded-xl transition-colors">
+                Tout rattacher
+            </button>
+        </form>
+    </div>
+</div>
+@endif
+
 <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
     @if($periods->count())
     <form method="GET" class="flex items-center gap-2">
@@ -40,8 +75,11 @@
         <select name="period" onchange="this.form.submit()" class="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-mja-blue">
             <option value="">Toutes</option>
             @foreach($periods as $p)
-            <option value="{{ $p->id }}" @selected(request('period') == $p->id)>{{ $p->label }}</option>
+            <option value="{{ $p->id }}" @selected(request('period') !== 'aucune' && request('period') == $p->id)>{{ $p->label }}</option>
             @endforeach
+            @if($sansPeriode > 0)
+            <option value="aucune" @selected(request('period') === 'aucune')>Sans saison ({{ $sansPeriode }})</option>
+            @endif
         </select>
         @if(request('period'))<a href="{{ route('admin.adhesions.index') }}" class="text-xs text-mja-blue hover:underline">Réinitialiser</a>@endif
     </form>
@@ -95,7 +133,8 @@
                     @if($adhesion->period)
                     <span class="text-xs font-semibold text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full">{{ $adhesion->period->label }}</span>
                     @else
-                    <span class="text-xs text-gray-300">—</span>
+                    <a href="{{ route('admin.adhesions.show', $adhesion) }}"
+                       class="text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full hover:bg-amber-100">Sans saison</a>
                     @endif
                 </td>
                 <td class="px-4 py-4 text-gray-400 text-xs">{{ $adhesion->created_at->locale('fr')->isoFormat('D MMM Y, H[h]mm') }}</td>
