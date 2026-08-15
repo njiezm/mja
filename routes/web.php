@@ -141,6 +141,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
         Route::get('adhesions/export', [Admin\AdhesionController::class, 'export'])->name('adhesions.export');
         Route::get('adhesions/{adhesion}', [Admin\AdhesionController::class, 'show'])->name('adhesions.show');
         Route::patch('adhesions/{adhesion}/statut', [Admin\AdhesionController::class, 'updateStatut'])->name('adhesions.statut');
+        Route::get('adhesions/{adhesion}/carte', [Admin\AdhesionController::class, 'carte'])->name('adhesions.carte');
         Route::patch('adhesions/{adhesion}/periode', [Admin\AdhesionController::class, 'updatePeriode'])->name('adhesions.periode');
         Route::post('adhesions/rattacher-periode', [Admin\AdhesionController::class, 'rattacherPeriode'])->name('adhesions.rattacher-periode');
         Route::delete('adhesions/{adhesion}', [Admin\AdhesionController::class, 'destroy'])->name('adhesions.destroy');

@@ -20,6 +20,22 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\DeclencheurRelances::class,
         ]);
 
+        /**
+         * L'hébergement place le site derrière un proxy qui termine le HTTPS
+         * et transmet la requête en clair, avec l'en-tête X-Forwarded-Proto.
+         * Sans lui faire confiance, Laravel croit la requête non sécurisée et
+         * fabrique des adresses en http:// : le navigateur voyait alors un
+         * formulaire pointant vers une autre origine que la page, et la règle
+         * form-action 'self' de la CSP bloquait l'envoi.
+         */
+        $middleware->trustProxies(
+            at: '*',
+            headers: Request::HEADER_X_FORWARDED_FOR
+                | Request::HEADER_X_FORWARDED_HOST
+                | Request::HEADER_X_FORWARDED_PORT
+                | Request::HEADER_X_FORWARDED_PROTO,
+        );
+
         // Stripe signe ses appels : le jeton CSRF, lié à une session de
         // navigateur, n'a aucun sens ici.
         $middleware->validateCsrfTokens(except: ['stripe/webhook']);

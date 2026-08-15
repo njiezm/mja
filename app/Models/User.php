@@ -177,8 +177,11 @@ class User extends Authenticatable
             return [self::ROLE_CONTENT, self::ROLE_ADMIN, self::ROLE_SUPER_ADMIN];
         }
         if ($this->isAdmin()) {
-            return [self::ROLE_CONTENT];
+            // Un admin nomme des gestionnaires et des admins, jamais un super
+            // admin : le rang qui peut tout reprendre reste hors de portée.
+            return [self::ROLE_CONTENT, self::ROLE_ADMIN];
         }
+
         return [];
     }
 
@@ -199,8 +202,14 @@ class User extends Authenticatable
         if ($this->isSuperAdmin()) {
             return true;
         }
-        // Un admin ne gère que les gestionnaires de contenu et les adhérents.
-        return $this->isAdmin() && ($target->isContentManager() || $target->isMemberOnly());
+        if (! $this->isAdmin()) {
+            return false;
+        }
+
+        // Un admin gère ses pairs et les rangs en dessous, jamais un super
+        // admin. Pouvoir nommer un administrateur sans pouvoir le rétrograder
+        // ensuite créerait une porte à sens unique.
+        return ! $target->isSuperAdmin();
     }
 
     // ─── Mot de passe (chiffrement réversible pour affichage super admin) ──────

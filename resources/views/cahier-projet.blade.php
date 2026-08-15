@@ -128,11 +128,11 @@
             ['app/Support', '5', 'Cotisation, Telephone, HtmlRiche, ReseauSocial, Token'],
             ['app/Mail', '11', 'Confirmations, notifications, relances, identifiants'],
             ['app/Console/Commands', '6', 'Purge, sauvegarde, relances, diagnostics'],
-            ['database/migrations', '32', 'Schéma, dans l\'ordre chronologique'],
+            ['database/migrations', '33', 'Schéma, dans l\'ordre chronologique'],
             ['database/seeders', '11', 'Jeux de données : contenu, équipe, adhérents, saison'],
             ['resources/views', '89', 'Gabarits Blade'],
         ]]],
-        ['sous', 'Les 139 routes'],
+        ['sous', 'Les 140 routes'],
         ['liste', [
             "39 publiques — accueil, projets, événements, actualités, ressources, adhésion, dons, contact, recherche, mentions légales, sitemap, notifications Stripe.",
             "17 dans l'espace adhérent, sous le préfixe /espace.",
@@ -179,7 +179,7 @@
             ['source_id', 'clé', "Source d'acquisition ayant amené la personne"],
             ['premiere_adhesion', 'texte', 'premiere, readhesion ou information'],
             ['civilite, nom, prenom', 'texte', 'Identité'],
-            ['date_naissance', 'texte', 'Saisie au format jj/mm/aaaa'],
+            ['date_naissance', 'texte', 'Format jj/mm/aaaa — vide pour une prise d\'informations'],
             ['profession', 'texte', 'Situation professionnelle ou études'],
             ['telephone', 'texte', 'Formaté avec espaces à l\'enregistrement'],
             ['email', 'texte', "Sert de clé de rapprochement avec le compte"],
@@ -353,6 +353,7 @@
             ['PATCH /admin/adhesions/{id}/statut', 'admin.adhesions.statut', "Change le statut et envoie l'email correspondant"],
             ['PATCH /admin/adhesions/{id}/periode', 'admin.adhesions.periode', 'Rattache la demande à une saison, ou l\'en détache'],
             ['POST /admin/adhesions/rattacher-periode', 'admin.adhesions.rattacher-periode', 'Rattache d\'un coup toutes les adhésions sans saison'],
+            ['GET /admin/adhesions/{id}/carte', 'admin.adhesions.carte', "Attestation d'adhésion et carte de membre, à rééditer pour un adhérent qui n'a pas de compte"],
             ['DELETE /admin/adhesions/{id}', 'admin.adhesions.destroy', 'Supprime la demande et sa photo'],
             ['GET /admin/relances', 'admin.relances.index', 'Réglages, relances dues, historique des envois'],
             ['PUT /admin/relances', 'admin.relances.update', 'Enregistre les réglages de relance'],
@@ -487,6 +488,9 @@
             ['member/login, member/forgot-password, member/reset-password', 'Connexion et mot de passe oublié.'],
         ]]],
 
+        ['sous', 'Le don'],
+        ['p', "Deux voies possibles, et une règle de priorité réglable en back-office. Le formulaire par carte est la voie normale : le don s'achève sans quitter le site et l'association garde la main sur le reçu. Un lien vers une plateforme externe, renseigné dans les paramètres, prend le relais — automatiquement si le paiement en ligne est indisponible, ou volontairement si l'association le met en avant, par exemple pour confier les reçus fiscaux à un tiers. Quand les deux existent, le second est proposé sous le premier : personne ne reste bloqué."],
+
         ['sous', 'Back-office'],
         ['table', ['entetes' => ['Vue', 'Rôle'], 'lignes' => [
             ['admin/dashboard', 'Vue d\'ensemble : chiffres, dernières demandes, alertes.'],
@@ -584,6 +588,10 @@
         ['sous', 'Les exports PDF'],
         ['p', "L'attestation d'adhésion et la carte de membre sont produites en PDF vectoriel : pages A4, polices standard, texte sélectionnable, encodage WinAnsi pour les accents, dégradés et images. Le document est écrit directement dans le format, sans librairie — l'adhérent télécharge un vrai PDF, pas une impression de page web."],
 
+        ['sous', "Le site derrière un proxy"],
+        ['p', "L'hébergement termine le HTTPS sur un proxy, puis transmet la requête en clair au site avec l'en-tête X-Forwarded-Proto. Sans faire confiance à cet en-tête, le framework croit la requête non sécurisée et fabrique des adresses en http:// : le navigateur voit alors des formulaires pointant vers une autre origine que la page, et la règle « form-action 'self' » de la politique de sécurité du contenu bloque l'envoi. Les en-têtes du proxy sont donc déclarés de confiance dans bootstrap/app.php. C'est aussi ce qui rend correctes les adresses des emails, des aperçus de partage et des redirections de paiement."],
+        ['note', "La politique de sécurité du contenu est écrite dans public/.htaccess. Toute nouvelle ressource externe — police, script, image d'un autre domaine — doit y être déclarée, sinon le navigateur la bloque en silence."],
+
         ['sous', 'Le rapprochement des comptes'],
         ['p', "Une personne dont le compte a été créé par l'association peut très bien remplir le formulaire public sans être connectée — elle n'a parfois jamais reçu ses accès. À l'enregistrement, l'adhésion cherche donc un compte à la même adresse email, en ignorant la casse et les espaces, et s'y rattache. Un compte supprimé est restauré : la personne revient d'elle-même, et l'unicité de l'email interdirait de toute façon d'en créer un second. Le mot de passe existant n'est jamais touché ; l'accès se transmet par un lien de réinitialisation."],
 
@@ -630,6 +638,8 @@
             "Webhook Stripe — la route existe et vérifie les signatures, mais elle reste sans effet tant que l'adresse et le secret ne sont pas déclarés dans le tableau de bord Stripe.",
             "Table members — conservée après la fusion, à supprimer une fois la bascule validée en production. Le seeder qui l'alimentait est neutralisé : son contenu reste en commentaire, à ne réactiver que sur une base vierge.",
             "Dépendances de développement — PHPUnit n'est pas installé sur l'hébergement (installation sans --dev). Les tests ne s'exécutent que sur un poste de développement.",
+            "Politique de sécurité du contenu — définie dans public/.htaccess. Elle bloque tout domaine non déclaré, sans message visible pour le visiteur : à relire avant d'ajouter un service tiers.",
+            "Cache de routes — une modification de routes/web.php reste invisible en production tant que php artisan route:cache n'a pas été relancé. Les vues, elles, se recompilent seules.",
         ]],
     ]],
 
@@ -748,10 +758,10 @@ footer{padding:24px 0 44px;color:var(--gris);font-size:13px;display:flex;flex-wr
     <div class="st">Documentation technique et fonctionnelle du site</div>
     <div class="compteurs">
       <div class="compteur"><b>{{ $nbSections }}</b> sections</div>
-      <div class="compteur"><b>139</b> routes</div>
+      <div class="compteur"><b>140</b> routes</div>
       <div class="compteur"><b>16</b> tables métier</div>
       <div class="compteur"><b>89</b> gabarits</div>
-      <div class="compteur"><b>32</b> migrations</div>
+      <div class="compteur"><b>33</b> migrations</div>
     </div>
   </div>
 </header>

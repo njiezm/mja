@@ -145,6 +145,13 @@
                            class="w-8 h-8 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg flex items-center justify-center transition-colors" title="Voir la fiche d'adhésion">
                             <i class="fas fa-eye text-xs"></i>
                         </a>
+                        @if($a->isAdherent())
+                        <a href="{{ route('admin.adhesions.carte', $a) }}" target="_blank" rel="noopener"
+                           class="w-8 h-8 bg-mja-blue/10 hover:bg-mja-blue/20 text-mja-blue rounded-lg flex items-center justify-center transition-colors"
+                           title="Attestation et carte de membre">
+                            <i class="fas fa-id-card text-xs"></i>
+                        </a>
+                        @endif
                         @endif
                         <form method="POST" action="{{ route('admin.members.reset-password', $m) }}"
                               data-confirm="Générer un nouveau mot de passe pour {{ $nom }} ? L'ancien cessera de fonctionner.">

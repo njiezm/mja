@@ -190,6 +190,12 @@
         {{-- Actions --}}
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-3">
             <h3 class="font-display font-bold text-mja-gray mb-1">Actions</h3>
+            @if($adhesion->isAdherent())
+            <a href="{{ route('admin.adhesions.carte', $adhesion) }}" target="_blank" rel="noopener"
+                class="w-full bg-mja-dark hover:bg-mja-navy text-white font-semibold px-4 py-2.5 rounded-xl transition-colors text-sm flex items-center justify-center gap-2">
+                <i class="fas fa-id-card"></i> Attestation et carte
+            </a>
+            @endif
             <a href="mailto:{{ $adhesion->email }}?subject=Adhésion MJA — {{ $adhesion->prenom }} {{ $adhesion->nom }}"
                 class="w-full bg-mja-blue hover:bg-mja-bluedark text-white font-semibold px-4 py-2.5 rounded-xl transition-colors text-sm flex items-center justify-center gap-2">
                 <i class="fas fa-envelope"></i> Répondre par email

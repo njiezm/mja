@@ -116,6 +116,28 @@ class AdhesionController extends Controller
         return back()->with('success', 'Statut mis à jour.');
     }
 
+    /**
+     * Attestation d'adhésion et carte de membre, vues du back-office.
+     *
+     * C'est exactement l'écran que voit l'adhérent dans son espace, avec le
+     * même téléchargement en PDF : l'équipe peut ainsi rééditer le document
+     * pour quelqu'un qui n'a pas de compte, ou qui n'y arrive pas seul.
+     */
+    public function carte(Adhesion $adhesion)
+    {
+        // Une attestation certifie une adhésion à jour : l'éditer pour une
+        // demande non réglée reviendrait à attester quelque chose de faux.
+        abort_unless(
+            $adhesion->isAdherent(),
+            403,
+            "L'attestation n'est éditable que pour une adhésion à jour de cotisation.",
+        );
+
+        $adhesion->loadMissing('period');
+
+        return view('member.card', ['adhesion' => $adhesion, 'member' => $adhesion->user]);
+    }
+
     /** Rattache une adhésion à une saison, ou l'en détache. */
     public function updatePeriode(Request $request, Adhesion $adhesion)
     {
