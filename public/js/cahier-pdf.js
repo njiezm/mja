@@ -168,6 +168,86 @@ function code(doc, texte, entete) {
   }
 }
 
+/**
+ * Schéma de la base — le même dessin que le SVG de la page.
+ *
+ * La géométrie est décrite dans un repère de 1000 unités de large ; on la
+ * ramène à la largeur utile de la page. Une seule mise à l'échelle, donc
+ * aucun décalage possible entre les deux rendus.
+ */
+function schema(doc, def, entete) {
+  var k = L / def.w;
+  var hauteur = def.h * k;
+
+  /* Le diagramme ne se coupe pas : s'il ne tient pas, il part en page suivante. */
+  if (doc.y + hauteur > BAS) entete();
+  var base = doc.y;
+
+  function X(v) { return MARGE + v * k; }
+  function Y(v) { return base + v * k; }
+  function T(v) { return v * k; }
+
+  var TRAIT = P.hex('#8FA3C0');
+
+  def.zones.forEach(function (z) {
+    doc.rectArrondi(X(z.x), Y(z.y), T(z.w), T(z.h), T(18), P.hex(z.fond));
+    doc.rectPointille(X(z.x), Y(z.y), T(z.w), T(z.h), T(18), P.hex(z.bord), 1, '5 4');
+    doc.texte(X(z.x + 22), Y(z.y + 26), z.titre,
+              { size: T(15), gras: true, c: P.hex(z.encre), ls: T(1.4) });
+  });
+
+  def.liens.forEach(function (l) {
+    doc.ligne(l.points.map(function (p) { return [X(p[0]), Y(p[1])]; }), TRAIT, T(2.6));
+    [l.points[0], l.points[l.points.length - 1]].forEach(function (p) {
+      doc.cercle(X(p[0]), Y(p[1]), T(4.5), { remplissage: TRAIT });
+    });
+    ['de', 'vers'].forEach(function (bout) {
+      if (!l[bout]) return;
+      doc.texte(X(l[bout][1]), Y(l[bout][2]), l[bout][0],
+                { size: T(16), gras: true, c: C.navy });
+    });
+    if (l.note) {
+      doc.texte(X(l.note[1]), Y(l.note[2]), l.note[0],
+                { size: T(14), ital: true, c: C.gris,
+                  align: l.points.length > 2 ? 'center' : undefined });
+    }
+  });
+
+  def.tables.forEach(function (t) {
+    var h = 58 + t.champs.length * 26 + 14;
+    var accent = P.hex(t.fond);
+
+    /* Corps blanc puis bandeau de titre, tous deux découpés par le contour
+       arrondi : le bandeau épouse ainsi les deux coins du haut. */
+    doc.commencerDecoupe(X(t.x), Y(t.y), T(t.w), T(h), T(12));
+    doc.rect(X(t.x), Y(t.y), T(t.w), T(h), C.blanc);
+    doc.rect(X(t.x), Y(t.y), T(t.w), T(38), accent);
+    doc.finirDecoupe();
+    doc.contourArrondi(X(t.x), Y(t.y), T(t.w), T(h), T(12), accent, T(2.4));
+
+    doc.texte(X(t.x + 14), Y(t.y + 26), t.nom, { size: T(19), gras: true, c: P.hex(t.encre) });
+    /* Le sous-titre passe sous le bandeau : accolé au nom, il le chevauchait
+       dès que celui-ci était long. */
+    doc.texte(X(t.x + 14), Y(t.y + 53), t.sous,
+              { size: T(12.5), ital: true, c: P.hex('#8494AB') });
+
+    t.champs.forEach(function (champ, i) {
+      var cle = /_id$/.test(champ);
+      doc.texte(X(t.x + 14), Y(t.y + 80 + i * 26), champ,
+                { size: T(14.5), gras: cle, c: cle ? accent : [0.353, 0.416, 0.502] });
+    });
+  });
+
+  def.pastilles.forEach(function (p) {
+    doc.rectArrondi(X(p.x), Y(p.y), T(150), T(30), T(9), C.blanc);
+    doc.contourArrondi(X(p.x), Y(p.y), T(150), T(30), T(9), P.hex('#D8E3F3'), T(2));
+    doc.texte(X(p.x + 75), Y(p.y + 20), p.nom,
+              { size: T(14), gras: true, c: P.hex('#3A5480'), align: 'center' });
+  });
+
+  doc.y = base + hauteur + 16;
+}
+
 /* ── Composition ─────────────────────────────────────────────────── */
 function composer(logo) {
   var doc = new P.Doc({ marge: MARGE, titre: "Cahier du projet — Site Madin'Jeunes Ambition" });
@@ -250,6 +330,7 @@ function composer(logo) {
       else if (type === 'table')   tableau(doc, contenu, entete);
       else if (type === 'note')    note(doc, contenu, entete);
       else if (type === 'code')    code(doc, contenu, entete);
+      else if (type === 'schema')  schema(doc, contenu, entete);
     });
 
     doc.y += 10;

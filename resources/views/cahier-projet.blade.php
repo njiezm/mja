@@ -9,6 +9,85 @@
      *
      * Types de blocs : p, sous, liste, etapes, table, note, code.
      */
+    /**
+     * Schéma de la base, dessiné plutôt qu'écrit.
+     *
+     * La géométrie est décrite une fois dans un repère de 1000 x 900, puis
+     * mise à l'échelle par chaque rendu : SVG pour l'écran, tracés vectoriels
+     * pour le PDF. Les deux dessins sont donc rigoureusement identiques.
+     */
+    $schema = [
+        'w' => 1000, 'h' => 1005,
+
+        'zones' => [
+            ['x' => 8, 'y' => 8, 'w' => 984, 'h' => 500,
+             'titre' => 'LE COEUR — COMPTE, ADHÉSION, SAISON',
+             'fond' => '#F2F6FD', 'bord' => '#B9CCE9', 'encre' => '#1A3D8A'],
+            ['x' => 8, 'y' => 530, 'w' => 984, 'h' => 230,
+             'titre' => "D'OÙ VIENNENT LES ADHÉRENTS",
+             'fond' => '#EFF8FE', 'bord' => '#AEDBF3', 'encre' => '#1477B0'],
+            ['x' => 8, 'y' => 792, 'w' => 984, 'h' => 200,
+             'titre' => 'LE CONTENU DU SITE',
+             'fond' => '#FFF9EF', 'bord' => '#F3DDB4', 'encre' => '#B57708'],
+        ],
+
+        'liens' => [
+            ['points' => [[500, 224], [500, 270]], 'de' => ['1', 512, 244], 'vers' => ['N', 512, 266]],
+            ['points' => [[290, 350], [380, 350]], 'de' => ['1', 298, 342], 'vers' => ['N', 366, 342]],
+            ['points' => [[620, 350], [710, 350]], 'de' => ['1', 628, 342], 'vers' => ['N', 696, 342]],
+            ['points' => [[440, 446], [440, 470], [560, 470], [560, 446]],
+             'note' => ['renouvelle la saison précédente', 500, 486]],
+            ['points' => [[600, 446], [600, 572]], 'note' => ['source_id', 614, 550]],
+            ['points' => [[620, 647], [710, 647]], 'de' => ['1', 628, 639], 'vers' => ['N', 696, 639]],
+            ['points' => [[270, 907], [340, 907]], 'de' => ['1', 278, 899], 'vers' => ['N', 326, 899]],
+        ],
+
+        'tables' => [
+            ['x' => 380, 'y' => 48, 'w' => 240, 'nom' => 'adhesion_periods', 'sous' => 'les saisons',
+             'fond' => '#F5A623', 'encre' => '#0B1E45',
+             'champs' => ['label', 'date_debut', 'date_fin', 'actif']],
+
+            ['x' => 40, 'y' => 270, 'w' => 250, 'nom' => 'users', 'sous' => 'un compte par personne',
+             'fond' => '#2048A4', 'encre' => '#FFFFFF',
+             'champs' => ['email', 'role', 'adhesion_id', 'is_active']],
+
+            ['x' => 380, 'y' => 270, 'w' => 240, 'nom' => 'adhesions', 'sous' => 'une par saison',
+             'fond' => '#1A3D8A', 'encre' => '#FFFFFF',
+             'champs' => ['statut', 'moyen_paiement', 'period_id', 'user_id']],
+
+            ['x' => 710, 'y' => 270, 'w' => 250, 'nom' => 'adhesion_relances', 'sous' => 'journal des envois',
+             'fond' => '#6C7A91', 'encre' => '#FFFFFF',
+             'champs' => ['type', 'numero', 'envoyee_le']],
+
+            ['x' => 380, 'y' => 572, 'w' => 240, 'nom' => 'sources', 'sous' => 'liens tracés',
+             'fond' => '#1E93D6', 'encre' => '#FFFFFF',
+             'champs' => ['slug', 'target', 'is_active']],
+
+            ['x' => 710, 'y' => 572, 'w' => 250, 'nom' => 'source_visits', 'sous' => 'une ligne par visite',
+             'fond' => '#3DAEF5', 'encre' => '#0B1E45',
+             'champs' => ['visitor_hash', 'referer', 'device']],
+
+            ['x' => 40, 'y' => 832, 'w' => 230, 'nom' => 'projects', 'sous' => 'actions récurrentes',
+             'fond' => '#2048A4', 'encre' => '#FFFFFF',
+             'champs' => ['titre', 'statut', 'ordre']],
+
+            ['x' => 340, 'y' => 832, 'w' => 240, 'nom' => 'events', 'sous' => 'éditions datées',
+             'fond' => '#3DAEF5', 'encre' => '#0B1E45',
+             'champs' => ['titre', 'date_debut', 'project_id']],
+        ],
+
+        'pastilles' => [
+            ['x' => 640, 'y' => 832, 'nom' => 'articles'],
+            ['x' => 810, 'y' => 832, 'nom' => 'resources'],
+            ['x' => 640, 'y' => 870, 'nom' => 'team_members'],
+            ['x' => 810, 'y' => 870, 'nom' => 'partenaires'],
+            ['x' => 640, 'y' => 908, 'nom' => 'contacts'],
+            ['x' => 810, 'y' => 908, 'nom' => 'donations'],
+            ['x' => 640, 'y' => 946, 'nom' => 'settings'],
+            ['x' => 810, 'y' => 946, 'nom' => 'members (hérité)'],
+        ],
+    ];
+
     $doc = [
 
     ['titre' => 'Présentation du projet', 'blocs' => [
@@ -68,38 +147,7 @@
         ['p', "Seize tables métier et neuf tables techniques. Le pivot du modèle est le couple compte / adhésion : une personne possède un compte unique, et autant d'adhésions que de saisons auxquelles elle a participé. Tout le reste — contenu éditorial, suivi des sources, réglages — gravite autour sans y toucher."],
 
         ['sous', "Schéma d'ensemble"],
-        ['code', <<<SCHEMA
-                          +----------------------+
-                          |   adhesion_periods   |   les saisons
-                          +----------+-----------+
-                                     | 1
-                                     | N
-  +--------------+  1        N  +----+---------+  1        N  +--------------------+
-  |    users     |--------------|   adhesions  |--------------| adhesion_relances  |
-  |  (comptes)   |              |              |              +--------------------+
-  +------+-------+              +---+------+---+
-         |                          |      |
-         | adhesion_id (courante)   |      | renouvelle_adhesion_id
-         +--------------------------+      +--> adhesions (saison precedente)
-                                    |
-                                    | source_id
-                                    v
-                             +-------------+  1     N  +-----------------+
-                             |   sources   |-----------|  source_visits  |
-                             +-------------+           +-----------------+
-
-  +------------+  1     N  +-----------+
-  |  projects  |-----------|  events   |
-  +------------+           +-----------+
-
-  +-----------+  +-------------+  +--------------+  +-------------+  +------------+
-  | articles  |  |  resources  |  | team_members |  | partenaires |  |  contacts  |
-  +-----------+  +-------------+  +--------------+  +-------------+  +------------+
-
-  +-------------+  +------------+
-  |  donations  |  |  settings  |
-  +-------------+  +------------+
-SCHEMA],
+        ['schema', $schema],
         ['p', "Il se lit ainsi : un trait « 1 — N » signifie qu'une ligne de la table de gauche peut avoir plusieurs lignes en face. Une saison a plusieurs adhésions ; un compte a plusieurs adhésions ; une adhésion a plusieurs relances ; un projet a de zéro à N événements."],
 
         ['sous', 'users — le compte unique'],
@@ -656,6 +704,16 @@ td:first-child{font-weight:700;color:var(--ink);white-space:nowrap}
 pre{background:var(--ink);color:#D8E4F8;border-radius:11px;padding:15px 17px;margin:0 0 16px;
     font-family:'Courier New',monospace;font-size:12.5px;line-height:1.7;overflow-x:auto}
 
+/* Schéma de la base : le SVG occupe la largeur disponible, sur un fond
+   quadrillé qui rappelle un tableau blanc. */
+.schema{margin:0 0 18px;border:1px solid var(--bord);border-radius:14px;padding:14px;
+        background-color:#FBFCFE;
+        background-image:linear-gradient(#EAF0F9 1px,transparent 1px),
+                         linear-gradient(90deg,#EAF0F9 1px,transparent 1px);
+        background-size:26px 26px}
+.schema svg{width:100%;height:auto;display:block;
+            font-family:'Gill Sans','Open Sans',sans-serif}
+
 footer{padding:24px 0 44px;color:var(--gris);font-size:13px;display:flex;flex-wrap:wrap;
        gap:10px;justify-content:space-between}
 @media(max-width:720px){.sommaire ol{columns:1}.etape{flex-direction:column;gap:2px}.etape .cle{width:auto}}
@@ -744,6 +802,66 @@ footer{padding:24px 0 44px;color:var(--gris);font-size:13px;display:flex;flex-wr
 
       @elseif($type === 'code')
         <pre>{{ $contenu }}</pre>
+
+      @elseif($type === 'schema')
+        {{-- Diagramme dessiné : mêmes coordonnées que la version PDF. --}}
+        <div class="schema">
+        <svg viewBox="0 0 {{ $contenu['w'] }} {{ $contenu['h'] }}" role="img"
+             aria-label="Schéma des tables de la base de données">
+          @foreach($contenu['zones'] as $z)
+          <rect x="{{ $z['x'] }}" y="{{ $z['y'] }}" width="{{ $z['w'] }}" height="{{ $z['h'] }}"
+                rx="18" fill="{{ $z['fond'] }}" stroke="{{ $z['bord'] }}" stroke-width="2"
+                stroke-dasharray="9 7"/>
+          <text x="{{ $z['x'] + 22 }}" y="{{ $z['y'] + 26 }}" fill="{{ $z['encre'] }}"
+                font-size="15" font-weight="700" letter-spacing="1.4">{{ $z['titre'] }}</text>
+          @endforeach
+
+          @foreach($contenu['liens'] as $l)
+          <polyline points="@foreach($l['points'] as $p){{ $p[0] }},{{ $p[1] }} @endforeach"
+                    fill="none" stroke="#8FA3C0" stroke-width="2.6"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="{{ $l['points'][0][0] }}" cy="{{ $l['points'][0][1] }}" r="4.5" fill="#8FA3C0"/>
+          <circle cx="{{ end($l['points'])[0] }}" cy="{{ end($l['points'])[1] }}" r="4.5" fill="#8FA3C0"/>
+          @foreach(['de', 'vers'] as $bout)
+            @if(isset($l[$bout]))
+            <text x="{{ $l[$bout][1] }}" y="{{ $l[$bout][2] }}" fill="#1A3D8A"
+                  font-size="16" font-weight="800">{{ $l[$bout][0] }}</text>
+            @endif
+          @endforeach
+          @if(isset($l['note']))
+          <text x="{{ $l['note'][1] }}" y="{{ $l['note'][2] }}" fill="#6C7A91" font-size="14"
+                text-anchor="{{ count($l['points']) > 2 ? 'middle' : 'start' }}"
+                font-style="italic">{{ $l['note'][0] }}</text>
+          @endif
+          @endforeach
+
+          @foreach($contenu['tables'] as $t)
+          @php $h = 58 + count($t['champs']) * 26 + 14; @endphp
+          <rect x="{{ $t['x'] }}" y="{{ $t['y'] }}" width="{{ $t['w'] }}" height="{{ $h }}"
+                rx="12" fill="#FFFFFF" stroke="{{ $t['fond'] }}" stroke-width="2.4"/>
+          <path d="M{{ $t['x'] }},{{ $t['y'] + 38 }} L{{ $t['x'] }},{{ $t['y'] + 12 }}
+                   a12,12 0 0 1 12,-12 L{{ $t['x'] + $t['w'] - 12 }},{{ $t['y'] }}
+                   a12,12 0 0 1 12,12 L{{ $t['x'] + $t['w'] }},{{ $t['y'] + 38 }} Z"
+                fill="{{ $t['fond'] }}"/>
+          <text x="{{ $t['x'] + 14 }}" y="{{ $t['y'] + 26 }}" fill="{{ $t['encre'] }}"
+                font-size="19" font-weight="800">{{ $t['nom'] }}</text>
+          <text x="{{ $t['x'] + 14 }}" y="{{ $t['y'] + 53 }}" fill="#8494AB"
+                font-size="12.5" font-style="italic">{{ $t['sous'] }}</text>
+          @foreach($t['champs'] as $i => $champ)
+          <text x="{{ $t['x'] + 14 }}" y="{{ $t['y'] + 80 + $i * 26 }}"
+                fill="{{ str_ends_with($champ, '_id') ? $t['fond'] : '#5A6A80' }}"
+                font-size="14.5" font-weight="{{ str_ends_with($champ, '_id') ? 700 : 400 }}">{{ $champ }}</text>
+          @endforeach
+          @endforeach
+
+          @foreach($contenu['pastilles'] as $p)
+          <rect x="{{ $p['x'] }}" y="{{ $p['y'] }}" width="150" height="30" rx="9"
+                fill="#FFFFFF" stroke="#D8E3F3" stroke-width="2"/>
+          <text x="{{ $p['x'] + 75 }}" y="{{ $p['y'] + 20 }}" fill="#3A5480" font-size="14"
+                font-weight="600" text-anchor="middle">{{ $p['nom'] }}</text>
+          @endforeach
+        </svg>
+        </div>
       @endif
     @endforeach
   </section>
@@ -756,7 +874,7 @@ footer{padding:24px 0 44px;color:var(--gris);font-size:13px;display:flex;flex-wr
 </div>
 
 <script>var CAHIER = @json($doc);</script>
-<script src="{{ asset('js/mja-pdf.js') }}"></script>
-<script src="{{ asset('js/cahier-pdf.js') }}"></script>
+<script src="{{ asset('js/mja-pdf.js') }}?v={{ filemtime(public_path('js/mja-pdf.js')) }}"></script>
+<script src="{{ asset('js/cahier-pdf.js') }}?v={{ filemtime(public_path('js/cahier-pdf.js')) }}"></script>
 </body>
 </html>

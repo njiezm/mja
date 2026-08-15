@@ -263,7 +263,7 @@ body{margin:0;padding:26px 20px;background:#EEF2F8;color:#333;
         </div>
     </div>
 </div>
-<script src="{{ asset('js/mja-pdf.js') }}"></script>
+<script src="{{ asset('js/mja-pdf.js') }}?v={{ filemtime(public_path('js/mja-pdf.js')) }}"></script>
 <script>
 /* =====================================================================
    Carte de membre en PDF vectoriel.
