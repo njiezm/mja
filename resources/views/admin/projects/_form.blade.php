@@ -54,4 +54,54 @@
             <label for="actif" class="text-sm font-semibold text-gray-700 cursor-pointer">Afficher ce projet</label>
         </div>
     </div>
+
+    {{-- Rattachement des événements. Un projet en accepte de zéro à N ;
+         un événement, lui, n'appartient qu'à un seul projet. --}}
+    @isset($evenements)
+    <div class="border-t border-gray-100 pt-5">
+        <label class="block text-sm font-semibold text-gray-700 mb-1.5">Événements liés à ce projet</label>
+        <p class="text-[11px] text-gray-400 mb-3">
+            Ils s'afficheront sur la page publique du projet, les prochains d'abord.
+            Un événement déjà rattaché à un autre projet est signalé : le cocher ici le déplacera.
+        </p>
+
+        @php
+            $dejaLies = old('evenements', isset($project) ? $project->events->pluck('id')->all() : []);
+            $aVenir   = $evenements->filter(fn ($e) => $e->date_debut && $e->date_debut->isFuture());
+            $passes   = $evenements->reject(fn ($e) => $e->date_debut && $e->date_debut->isFuture());
+        @endphp
+
+        @if($evenements->isEmpty())
+        <p class="text-sm text-gray-400 italic">Aucun événement enregistré pour l'instant.</p>
+        @else
+        <div class="max-h-72 overflow-y-auto border border-gray-100 rounded-xl divide-y divide-gray-50">
+            @foreach([['À venir', $aVenir], ['Passés', $passes]] as [$titreGroupe, $groupe])
+                @if($groupe->count())
+                <div class="px-4 py-2 bg-gray-50 text-[11px] font-bold uppercase tracking-wider text-gray-500">
+                    {{ $titreGroupe }} <span class="font-normal">({{ $groupe->count() }})</span>
+                </div>
+                    @foreach($groupe as $ev)
+                    @php $prisAilleurs = $ev->project_id && ! in_array($ev->id, (array) $dejaLies, true); @endphp
+                    <label class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 cursor-pointer">
+                        <input type="checkbox" name="evenements[]" value="{{ $ev->id }}"
+                               {{ in_array($ev->id, (array) $dejaLies) ? 'checked' : '' }}
+                               class="w-4 h-4 rounded text-mja-blue cursor-pointer shrink-0">
+                        <span class="text-xs font-mono text-gray-400 w-20 shrink-0">
+                            {{ $ev->date_debut?->format('d/m/Y') ?? '—' }}
+                        </span>
+                        <span class="text-sm text-gray-800 flex-1 truncate">{{ $ev->titre }}</span>
+                        @unless($ev->publie)
+                        <span class="text-[10px] font-bold uppercase bg-amber-50 text-amber-700 rounded-full px-2 py-0.5 shrink-0">Brouillon</span>
+                        @endunless
+                        @if($prisAilleurs)
+                        <span class="text-[10px] font-bold uppercase bg-gray-100 text-gray-500 rounded-full px-2 py-0.5 shrink-0">Autre projet</span>
+                        @endif
+                    </label>
+                    @endforeach
+                @endif
+            @endforeach
+        </div>
+        @endif
+    </div>
+    @endisset
 </div>

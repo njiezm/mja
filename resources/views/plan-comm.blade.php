@@ -3,10 +3,10 @@
      * Plan de communication de la campagne d'adhésion 2026-2027.
      *
      * Le tableau d'origine mélangeait dates de publication, statuts et notes
-     * de réunion sur trente lignes. On le restructure ici en trois choses
-     * distinctes : les jalons de la campagne (ce qui est daté et engageant),
-     * les contenus à produire (ordonnés dans le temps), et les points à
-     * valider avant diffusion.
+     * de réunion sur trente lignes. On le restructure ici en deux choses
+     * distinctes : les jalons de la campagne (ce qui est daté et engageant)
+     * et les contenus à produire, ordonnés dans le temps. Chaque contenu
+     * porte sa remarque et, le cas échéant, la liste de ce qui manque encore.
      *
      * Chaque champ est modifiable dans la page ; les changements sont
      * conservés dans le navigateur et exportables.
@@ -281,7 +281,8 @@ h1{margin:0 0 6px;font-size:31px;font-weight:800;letter-spacing:-.3px}
 .carte .date i{font-style:normal;font-size:12px;color:#BDD4F5;text-transform:uppercase;letter-spacing:1px;margin-top:3px}
 .carte .corps{flex:1;padding:15px 18px;min-width:0}
 .carte .haut{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:7px}
-.tag{font-size:11px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;border-radius:999px;padding:3px 10px}
+.tag{font-size:11px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;border-radius:999px;
+     padding:4px 12px;white-space:nowrap;line-height:1.4;display:inline-block}
 .t-short{background:#E7F3FF;color:var(--dark)}
 .t-infographie{background:#FFF3DC;color:#92400E}
 .t-photo{background:#FDE7EA;color:#9B1C1E}
@@ -305,12 +306,6 @@ h1{margin:0 0 6px;font-size:31px;font-weight:800;letter-spacing:-.3px}
 [contenteditable]{outline:0;border-radius:6px;padding:1px 4px;margin:0 -4px;transition:background .12s}
 [contenteditable]:hover{background:#F5F8FD}
 [contenteditable]:focus{background:#FFF8E8;box-shadow:0 0 0 2px var(--yellow)}
-
-/* ── Vigilance ───────────────────────────────────────────────── */
-.vigilance{background:#FFFBEB;border:1px solid #FDE9B8;border-radius:16px;padding:20px 22px;margin:8px 0 40px}
-.vigilance h2{margin:0 0 10px;font-size:17px;font-weight:800;color:#92400E;display:flex;align-items:center;gap:9px}
-.vigilance ul{margin:0;padding-left:20px;color:#78591C;font-size:14px}
-.vigilance li{margin-bottom:5px}
 
 footer{border-top:1px solid var(--bord);padding:22px 0 40px;color:var(--gris);font-size:13px;
        display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between}
@@ -425,16 +420,6 @@ footer{border-top:1px solid var(--bord);padding:22px 0 40px;color:var(--gris);fo
   </section>
   @endforeach
 
-  <div class="vigilance">
-    <h2><i class="fas fa-triangle-exclamation"></i> À valider avant diffusion</h2>
-    <ul>
-      <li><b>Droit à l'image</b> — les retours d'activité (Foyal Color Red, LaserWest, actions filmées) montrent des personnes identifiables : vérifier que chacune a signé l'autorisation, y compris les personnes extérieures à l'association.</li>
-      <li><b>Accord des personnes citées</b> — les contenus « MJA en action » reposent sur des témoignages nominatifs. Obtenir un accord écrit avant publication, et ne pas diffuser le nom sans validation.</li>
-      <li><b>Dates de retour d'activité</b> — la sortie LaserWest / bowling est datée dans le plan à sa date de <em>publication</em>, pas à celle de la sortie. Renseigner la date réelle avant de l'afficher sur le site. La Foyal Color Red, elle, est calée au 22 août au Parc La Savane.</li>
-      <li><b>Dates indicatives</b> — Boat Party, MJA Fitness et la journée portes ouvertes au local n'ont qu'une semaine approximative. Les événements correspondants restent en brouillon sur le site tant que la date n'est pas confirmée.</li>
-      <li><b>Cotisation</b> — les visuels grand public n'affichent pas le montant : il se découvre sur le formulaire. Ne l'ajouter que sur les supports internes.</li>
-    </ul>
-  </div>
 
   <footer>
     <span>Madin' Jeunes Ambition — Relève tous les défis !</span>
@@ -542,7 +527,7 @@ footer{border-top:1px solid var(--bord);padding:22px 0 40px;color:var(--gris);fo
 
   /* ── Export CSV (ouvrable dans Excel ou Google Sheets) ───────── */
   document.getElementById('btn-csv').addEventListener('click', function () {
-    var lignes = [['Date', 'Titre', 'Type', 'Statut', 'Description', 'Point de vigilance', 'Rattachement']];
+    var lignes = [['Date', 'Titre', 'Type', 'Statut', 'Description', 'Remarque', 'Rattachement']];
 
     document.querySelectorAll('.carte').forEach(function (c) {
       if (c.dataset.masquee === '1') return;
@@ -835,12 +820,7 @@ footer{border-top:1px solid var(--bord);padding:22px 0 40px;color:var(--gris);fo
       });
     });
 
-    var vigilance = [];
-    document.querySelectorAll('.vigilance li').forEach(function (li) {
-      vigilance.push(li.textContent.replace(/\s+/g, ' ').trim());
-    });
-
-    return { mois: mois, jalons: jalons, vigilance: vigilance };
+    return { mois: mois, jalons: jalons };
   }
 
   /* ── Composition du document ───────────────────────────────────────── */
@@ -945,14 +925,16 @@ footer{border-top:1px solid var(--bord);padding:22px 0 40px;color:var(--gris);fo
 
         /* Étiquettes type et statut */
         var teinteType = { short: COUL.blue, infographie: COUL.jaune, photo: COUL.rouge }[it.cleType] || COUL.blue;
-        var lt = larg(it.type, 7.5, true) + 12;
-        d.rectArrondi(x, yy - 9, lt, 13, 6.5, teinteType);
-        d.texte(x + 6, yy, it.type.toUpperCase(), { size: 7.5, gras: true, c: [1, 1, 1] });
+        var libelleType = it.type.toUpperCase();
+        var lt = larg(libelleType, 7.5, true) + 16;
+        d.rectArrondi(x, yy - 9.5, lt, 14, 7, teinteType);
+        d.texte(x + lt / 2, yy, libelleType, { size: 7.5, gras: true, c: [1, 1, 1], align: 'center' });
 
         var teinteStatut = { publie: [0.086, 0.396, 0.204], production: [0.573, 0.251, 0.055], proposition: COUL.gris }[it.cleStatut] || COUL.gris;
-        var ls = larg(it.statut, 7.5, true) + 12;
-        d.rectArrondi(x + lt + 6, yy - 9, ls, 13, 6.5, COUL.trait);
-        d.texte(x + lt + 12, yy, it.statut.toUpperCase(), { size: 7.5, gras: true, c: teinteStatut });
+        var libelleStatut = it.statut.toUpperCase();
+        var ls = larg(libelleStatut, 7.5, true) + 16;
+        d.rectArrondi(x + lt + 6, yy - 9.5, ls, 14, 7, COUL.trait);
+        d.texte(x + lt + 6 + ls / 2, yy, libelleStatut, { size: 7.5, gras: true, c: teinteStatut, align: 'center' });
 
         yy += 18;
         d.texte(x, yy, it.titre, { size: 11.5, gras: true, c: COUL.encre });
@@ -974,25 +956,6 @@ footer{border-top:1px solid var(--bord);padding:22px 0 40px;color:var(--gris);fo
 
       d.y += 8;
     });
-
-    /* ---- Points de vigilance ---- */
-    if (plan.vigilance.length) {
-      place(140);
-      d.texte(MARGE, d.y, 'À VALIDER AVANT DIFFUSION', { size: 13, gras: true, c: [0.573, 0.251, 0.055] });
-      d.y += 7;
-      d.rect(MARGE, d.y, L, 2, COUL.jaune);
-      d.y += 18;
-
-      plan.vigilance.forEach(function (v) {
-        var n = d.decouper(v, 9.5, L - 34).length;
-        var h = n * 13 + 16;
-        place(h + 8);
-        d.rectArrondi(MARGE, d.y, L, h, 7, COUL.creme);
-        d.rectArrondi(MARGE + 12, d.y + h / 2 - 3, 6, 6, 3, COUL.jaune);
-        d.paragraphe(MARGE + 26, d.y + 16, v, 9.5, L - 40, { c: [0.471, 0.349, 0.110], lh: 13 });
-        d.y += h + 7;
-      });
-    }
 
     /* ---- Pied de page sur toutes les pages sauf la garde ---- */
     for (var p = 1; p < d.pages.length; p++) {

@@ -51,27 +51,51 @@
             {!! \App\Support\HtmlRiche::rendre($project->description) !!}
         </div>
 
-        @php $projectEvents = $project->events()->where('publie', true)->orderByDesc('date_debut')->get(); @endphp
-        @if($projectEvents->count())
+        @php
+            /* Les prochains rendez-vous d'abord, dans l'ordre où ils arrivent ;
+               les éditions passées ensuite, de la plus récente à la plus ancienne. */
+            $evenements = $project->events()->where('publie', true)->get();
+            $aVenir = $evenements->filter(fn ($e) => $e->date_debut && $e->date_debut->isFuture())
+                                 ->sortBy('date_debut')->values();
+            $passes = $evenements->reject(fn ($e) => $e->date_debut && $e->date_debut->isFuture())
+                                 ->sortByDesc('date_debut')->values();
+        @endphp
+
+        @if($aVenir->count() || $passes->count())
         <div class="mt-12">
-            <h2 class="font-display font-black text-xl text-mja-gray mb-5 flex items-center gap-2">
-                <i class="fas fa-calendar-alt text-mja-red"></i> Événements liés à ce projet
-            </h2>
-            <div class="space-y-3">
-                @foreach($projectEvents as $ev)
-                <a href="{{ route('events.show', $ev->slug) }}" class="flex items-center gap-4 bg-gray-50 hover:bg-white border border-gray-100 rounded-2xl px-5 py-3.5 transition-colors group">
-                    <div class="bg-mja-dark text-white rounded-xl p-2.5 text-center min-w-[52px] shrink-0">
-                        <div class="font-display font-black text-lg leading-none">{{ $ev->date_debut->format('d') }}</div>
-                        <div class="text-[10px] uppercase text-mja-yellow font-display font-semibold">{{ $ev->date_debut->locale('fr')->isoFormat('MMM') }}</div>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <div class="font-display font-bold text-mja-gray group-hover:text-mja-blue transition-colors">{{ $ev->titre }}</div>
-                        @if($ev->lieu)<div class="text-xs text-gray-400 mt-0.5"><i class="fas fa-map-marker-alt mr-1"></i>{{ $ev->lieu }}</div>@endif
-                    </div>
-                    <i class="fas fa-chevron-right text-gray-300 text-xs shrink-0"></i>
-                </a>
-                @endforeach
-            </div>
+            @foreach([
+                ['À venir', $aVenir, 'fa-calendar-day', 'text-mja-red', true],
+                ['Éditions passées', $passes, 'fa-clock-rotate-left', 'text-gray-400', false],
+            ] as [$titreGroupe, $groupe, $icone, $couleur, $enAvant])
+                @if($groupe->count())
+                <h2 class="font-display font-black text-xl text-mja-gray mb-5 mt-10 first:mt-0 flex items-center gap-2">
+                    <i class="fas {{ $icone }} {{ $couleur }}"></i> {{ $titreGroupe }}
+                    <span class="text-sm font-display font-semibold text-gray-400">({{ $groupe->count() }})</span>
+                </h2>
+                <div class="space-y-3">
+                    @foreach($groupe as $ev)
+                    <a href="{{ route('events.show', $ev->slug) }}"
+                       class="flex items-center gap-4 border rounded-2xl px-5 py-3.5 transition-colors group
+                              {{ $enAvant ? 'bg-mja-blue/5 border-mja-blue/20 hover:bg-mja-blue/10' : 'bg-gray-50 border-gray-100 hover:bg-white' }}">
+                        <div class="rounded-xl p-2.5 text-center min-w-[52px] shrink-0 text-white
+                                    {{ $enAvant ? 'bg-mja-blue' : 'bg-mja-dark' }}">
+                            <div class="font-display font-black text-lg leading-none">{{ $ev->date_debut->format('d') }}</div>
+                            <div class="text-[10px] uppercase text-mja-yellow font-display font-semibold">{{ $ev->date_debut->locale('fr')->isoFormat('MMM') }}</div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="font-display font-bold text-mja-gray group-hover:text-mja-blue transition-colors">{{ $ev->titre }}</div>
+                            <div class="text-xs text-gray-400 mt-0.5 flex flex-wrap gap-3">
+                                <span><i class="fas fa-calendar mr-1"></i>{{ $ev->date_debut->locale('fr')->isoFormat('D MMMM Y') }}</span>
+                                @if($ev->lieu)<span><i class="fas fa-map-marker-alt mr-1"></i>{{ $ev->lieu }}</span>@endif
+                                @if($enAvant && $ev->gratuit)<span class="text-green-600 font-semibold"><i class="fas fa-tag mr-1"></i>Gratuit</span>@endif
+                            </div>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-300 text-xs shrink-0"></i>
+                    </a>
+                    @endforeach
+                </div>
+                @endif
+            @endforeach
         </div>
         @endif
 

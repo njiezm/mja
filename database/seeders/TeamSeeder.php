@@ -5,11 +5,21 @@ namespace Database\Seeders;
 use App\Models\TeamMember;
 use Illuminate\Database\Seeder;
 
+/**
+ * Équipe affichée sur la page « À propos ».
+ *
+ * Ce seeder est volontairement non destructif : il ne crée que les membres
+ * absents et ne modifie jamais ceux qui existent déjà. L'équipe se gère au
+ * quotidien depuis le back-office, et un seeder n'a pas à écraser ce travail.
+ */
 class TeamSeeder extends Seeder
 {
     public function run(): void
     {
-        TeamMember::truncate();
+        /* NE PAS RÉACTIVER : truncate() vidait toute la table à chaque
+           exécution, y compris les membres ajoutés ou corrigés en
+           back-office. C'est ce qui rendait ce seeder dangereux.
+           TeamMember::truncate(); */
 
         $members = [
             // ── Bureau réel ─────────────────────────────────────────────────────
@@ -65,8 +75,23 @@ class TeamSeeder extends Seeder
             ],
         ];
 
+        $crees = 0;
+
         foreach ($members as $member) {
-            TeamMember::create($member);
+            /* firstOrCreate et non create() : relancer le seeder ne duplique
+               plus l'équipe, et une fiche déjà modifiée en back-office reste
+               telle quelle. */
+            $existant = TeamMember::firstOrCreate(
+                ['prenom' => $member['prenom'], 'nom' => $member['nom']],
+                $member,
+            );
+
+            if ($existant->wasRecentlyCreated) {
+                $crees++;
+            }
         }
+
+        $this->command?->info($crees . " membre(s) d'équipe créé(s), "
+            . (count($members) - $crees) . ' déjà présent(s) et laissé(s) intacts.');
     }
 }
