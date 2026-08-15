@@ -88,6 +88,67 @@
         ],
     ];
 
+
+    /**
+     * Cycle de vie d'une adhésion : les statuts et ce qui fait passer de
+     * l'un à l'autre. Même repère de 1000 unités que le schéma de la base,
+     * donc même rendu à l'écran et dans le PDF.
+     */
+    $cycle = [
+        'w' => 1000, 'h' => 620,
+
+        'zones' => [
+            ['x' => 8, 'y' => 8, 'w' => 984, 'h' => 604,
+             'titre' => 'DU FORMULAIRE À LA CARTE DE MEMBRE',
+             'fond' => '#F2F6FD', 'bord' => '#B9CCE9', 'encre' => '#1A3D8A'],
+        ],
+
+        'liens' => [
+            ['points' => [[250, 150], [370, 150]], 'note' => ['paiement hors ligne', 258, 138]],
+            ['points' => [[250, 300], [370, 300]], 'note' => ['carte réglée', 258, 288]],
+            ['points' => [[620, 300], [700, 300]], 'de' => ['1', 628, 292], 'vers' => ['1', 688, 292]],
+            ['points' => [[490, 210], [490, 262]], 'note' => ['encaissement constaté', 502, 240]],
+            ['points' => [[490, 358], [490, 430], [200, 430], [200, 396]],
+             'note' => ['fin de saison', 340, 452]],
+            ['points' => [[250, 470], [370, 470]], 'note' => ['sans suite', 258, 458]],
+        ],
+
+        'tables' => [
+            ['x' => 40, 'y' => 100, 'w' => 210, 'nom' => 'nouvelle', 'sous' => 'demande reçue',
+             'fond' => '#F5A623', 'encre' => '#0B1E45',
+             'champs' => ['notification équipe', 'accusé de réception']],
+
+            ['x' => 370, 'y' => 100, 'w' => 250, 'nom' => 'en_attente_paiement', 'sous' => 'chèque, espèces, virement',
+             'fond' => '#6C7A91', 'encre' => '#FFFFFF',
+             'champs' => ['relances automatiques', 'jusqu\'à 3 envois']],
+
+            ['x' => 370, 'y' => 262, 'w' => 250, 'nom' => 'payee', 'sous' => 'adhérent à jour',
+             'fond' => '#1A3D8A', 'encre' => '#FFFFFF',
+             'champs' => ['jeton de compte', 'email de bienvenue', 'entrée au trombinoscope']],
+
+            ['x' => 700, 'y' => 262, 'w' => 250, 'nom' => 'carte de membre', 'sous' => 'attestation PDF',
+             'fond' => '#2048A4', 'encre' => '#FFFFFF',
+             'champs' => ['espace adhérent', 'back-office']],
+
+            ['x' => 40, 'y' => 262, 'w' => 210, 'nom' => 'formulaire', 'sous' => 'trois cas',
+             'fond' => '#3DAEF5', 'encre' => '#0B1E45',
+             'champs' => ['première adhésion', 'réadhésion', 'prise d\'informations']],
+
+            ['x' => 40, 'y' => 420, 'w' => 210, 'nom' => 'à renouveler', 'sous' => 'saison suivante',
+             'fond' => '#1E93D6', 'encre' => '#FFFFFF',
+             'champs' => ['relance + lien magique']],
+
+            ['x' => 370, 'y' => 420, 'w' => 250, 'nom' => 'refusee / desistement', 'sous' => 'fin de parcours',
+             'fond' => '#D0021B', 'encre' => '#FFFFFF',
+             'champs' => ['email d\'information']],
+        ],
+
+        'pastilles' => [
+            ['x' => 700, 'y' => 430, 'nom' => 'prise_infos'],
+            ['x' => 700, 'y' => 468, 'nom' => 'traitee'],
+        ],
+    ];
+
     $doc = [
 
     ['titre' => 'Présentation du projet', 'blocs' => [
@@ -533,12 +594,12 @@
         ['table', ['entetes' => ['Rôle', 'Espace adhérent', 'Contenu', 'Gestion', 'Comptes', 'Paramètres'], 'lignes' => [
             ['Adhérent', 'Oui', '—', '—', '—', '—'],
             ['Gestionnaire de contenu', 'Si adhérent', 'Oui', '—', '—', '—'],
-            ['Administrateur', 'Si adhérent', 'Oui', 'Oui', 'Gestionnaires et adhérents', 'Sauf secrets Stripe'],
+            ['Administrateur', 'Si adhérent', 'Oui', 'Oui', 'Tous sauf super admins', 'Sauf secrets Stripe'],
             ['Super administrateur', 'Si adhérent', 'Oui', 'Oui', 'Tous', 'Tout'],
         ]]],
         ['p', "Trois middlewares gardent ces frontières : content, admin et super_admin. Chacun vérifie aussi que le compte est actif, et déconnecte immédiatement un accès révoqué."],
         ['sous', 'Nommer un adhérent'],
-        ['p', "Un adhérent devient gestionnaire ou administrateur depuis la page Comptes adhérents : son compte existe déjà, on ne fait qu'élargir ses droits. Un administrateur ne peut conférer que le rôle de gestionnaire ; seul le super admin nomme des administrateurs. Personne ne peut modifier son propre rôle — c'est le meilleur moyen de se verrouiller dehors."],
+        ['p', "Un adhérent devient gestionnaire ou administrateur depuis la page Comptes adhérents : son compte existe déjà, on ne fait qu'élargir ses droits. Un administrateur confère les rôles jusqu'à administrateur inclus, et gère ses pairs ; le rang de super administrateur, lui, reste hors de portée — c'est celui qui peut tout reprendre si un compte d'administration part à la dérive. Personne ne peut modifier son propre rôle : c'est le meilleur moyen de se verrouiller dehors."],
     ]],
 
     ['titre' => 'Parcours utilisateurs', 'blocs' => [
@@ -628,6 +689,189 @@
 
         ['sous', 'Après une mise à jour du code'],
         ['p', "Vider puis reconstruire les caches de vues et de configuration. Les vues Blade sont compilées : une modification de gabarit n'est visible qu'après vidage du cache si celui-ci a été construit."],
+    ]],
+
+    ['titre' => 'Que faire quand…', 'blocs' => [
+        ['p', "Les pannes qui reviennent, et ce qui les provoque. Dans la quasi-totalité des cas la cause est un cache non régénéré ou un réglage absent, pas un défaut du code."],
+
+        ['sous', 'Page blanche ou erreur 500 après un déploiement'],
+        ['etapes', [
+            ['Regarder le journal', "storage/logs/laravel.log, dernières lignes : le message y est en clair."],
+            ['Cache de configuration', "Un .env modifié n'est pris en compte qu'après php artisan config:cache."],
+            ['Migrations', "Une colonne ajoutée par le code mais absente en base donne « column does not exist » : php artisan migrate --force."],
+            ['Droits des dossiers', "storage/ et bootstrap/cache/ doivent être inscriptibles par le serveur web."],
+        ]],
+
+        ['sous', 'Route [nom] not defined'],
+        ['p', "Le cache de routes date d'avant l'ajout. Les vues se recompilent seules quand le fichier change, les routes non : php artisan route:clear puis route:cache. C'est le seul fichier dont une modification reste invisible tant que le cache n'est pas régénéré."],
+
+        ['sous', "Un formulaire est bloqué par le navigateur"],
+        ['p', "Message « violates Content Security Policy ». Deux causes : une ressource externe non déclarée dans public/.htaccess, ou des adresses fabriquées en http:// alors que la page est en https:// — le formulaire vise alors une autre origine. Le second cas se règle par la confiance accordée aux en-têtes du proxy, déjà en place."],
+
+        ['sous', "Un email n'est pas parti"],
+        ['etapes', [
+            ['Le site ne bloque pas', "Tous les envois sont enveloppés : un échec est journalisé, jamais affiché au visiteur. L'action se poursuit."],
+            ['Vérifier le journal', "Chercher « Mail » dans storage/logs/laravel.log : le motif du refus du serveur y figure."],
+            ['Réglages', "Les identifiants du serveur d'envoi sont dans .env, pas en base. Un config:cache est nécessaire après changement."],
+            ['Destinataires', "La liste des adresses notifiées est en back-office, dans les paramètres."],
+        ]],
+
+        ['sous', "Un paiement n'apparaît pas"],
+        ['etapes', [
+            ['Le paiement a-t-il abouti', "Le tableau de bord Stripe fait foi, pas le site."],
+            ['La demande existe-t-elle', "Si la personne a réglé puis fermé son navigateur avant d'envoyer le formulaire, aucune adhésion n'a été créée. Le webhook envoie alors une alerte à l'association avec la référence et l'email du payeur."],
+            ['Le webhook est-il déclaré', "Sans l'adresse et le secret renseignés côté Stripe, aucun rattrapage n'a lieu."],
+            ['Rattraper à la main', "Créer l'adhésion en back-office et la passer en « Payée » : les emails et l'accès suivent."],
+        ]],
+
+        ['sous', "Une image ne s'affiche pas"],
+        ['p', "Les fichiers déposés vivent sur le disque « public », exposé par un lien symbolique. Si toutes les images téléversées manquent d'un coup, le lien a disparu : php artisan storage:link. Si une seule manque, le fichier a été supprimé du disque alors que la fiche le référence encore."],
+
+        ['sous', "Un adhérent ne peut pas se connecter"],
+        ['p', "Depuis la fusion des comptes, l'espace adhérent et le back-office partagent la même identité. Une personne qui avait deux mots de passe n'en a plus qu'un : celui du back-office. Le lien « mot de passe oublié » règle tous les cas ; un administrateur peut aussi régénérer le mot de passe depuis Comptes adhérents."],
+
+        ['sous', 'Les relances ne partent pas'],
+        ['p', "Faute de tâche planifiée sur l'hébergement, elles sont évaluées à l'occasion des visites, une fois par jour, après une heure configurable. Sans visite après cette heure, rien ne part. La page Relances du back-office affiche les envois dus et permet de déclencher la campagne à la main."],
+    ]],
+
+    ['titre' => "Le cycle de vie d'une adhésion", 'blocs' => [
+        ['p', "Une adhésion traverse quelques états, et chaque passage déclenche quelque chose : un email, un jeton, une entrée au trombinoscope. Le statut n'est donc pas une simple étiquette — c'est lui qui commande le reste."],
+        ['schema', $cycle],
+
+        ['sous', 'Ce que déclenche chaque statut'],
+        ['table', ['entetes' => ['Statut', 'Quand', 'Ce qui se déclenche'], 'lignes' => [
+            ['nouvelle', "Formulaire envoyé, règlement hors ligne", "Notification à l'équipe, accusé de réception à la personne"],
+            ['en_attente_paiement', "L'équipe attend le chèque, l'espèce ou le virement", 'Relances automatiques, jusqu\'à trois, espacées de quinze jours'],
+            ['payee', "Cotisation encaissée, par carte ou constatée par l'équipe", "Jeton de création de compte, email de bienvenue, accès à la carte, entrée au trombinoscope"],
+            ['prise_infos', "Simple demande de renseignements", 'Aucun paiement, aucune relance, données réduites au minimum'],
+            ['refusee', 'Demande écartée', "Email d'information"],
+            ['desistement', 'La personne renonce', 'Aucun envoi'],
+            ['traitee', 'État libre, à disposition de l\'équipe', 'Aucun automatisme'],
+        ]]],
+        ['note', "Le passage à « payee » est le seul qui ouvre des droits. Il est donc réversible avec précaution : repasser une adhésion à un autre statut retire l'accès à la carte, mais ne supprime ni le compte ni le mot de passe."],
+
+        ['sous', 'La réadhésion'],
+        ['p', "Une réadhésion ne modifie jamais l'adhésion précédente : elle crée une ligne nouvelle qui pointe vers elle. L'historique reste intact, saison après saison, et le compte suit — sa clé d'adhésion courante bascule sur la dernière."],
+    ]],
+
+    ['titre' => 'Les emails, un par un', 'blocs' => [
+        ['p', "Douze messages, tous en HTML de tableau pour rester lisibles dans les clients de messagerie anciens. Aucun envoi ne bloque le site : un échec est journalisé et l'action se poursuit — une confirmation perdue vaut mieux qu'une adhésion perdue."],
+
+        ['sous', "Autour de l'adhésion"],
+        ['table', ['entetes' => ['Message', 'Déclencheur', 'Destinataire'], 'lignes' => [
+            ['Notification adhésion', "Le formulaire vient d'être envoyé", "L'association — liste réglable en back-office"],
+            ['Confirmation adhésion', 'Le formulaire vient d\'être envoyé', 'La personne, en accusé de réception'],
+            ['Changement de statut', "Passage à payée, en attente de paiement ou refusée", "La personne — porte le lien de création de compte quand elle devient adhérente"],
+            ['Relance de paiement', "Règlement hors ligne non parvenu, après le délai réglé", 'La personne, trois fois au maximum'],
+            ['Relance de renouvellement', "La saison s'achève et l'adhésion n'a pas été renouvelée", 'La personne — contient un lien magique valable 90 jours'],
+        ]]],
+
+        ['sous', 'Autour du compte'],
+        ['table', ['entetes' => ['Message', 'Déclencheur', 'Destinataire'], 'lignes' => [
+            ['Identifiants espace adhérent', "Un administrateur crée le compte ou régénère le mot de passe", 'L\'adhérent'],
+            ['Réinitialisation adhérent', "Demande depuis « mot de passe oublié », ou adhésion réglée par quelqu'un qui a déjà un compte", "L'adhérent — un lien, jamais un mot de passe en clair"],
+            ['Compte supprimé', "L'adhérent supprime son compte", 'L\'adhérent — contient le lien de restauration, valable 30 jours'],
+            ['Compte back-office créé', 'Le super admin crée un accès', 'Le nouvel arrivant'],
+            ['Réinitialisation back-office', 'Mot de passe régénéré ou oublié', 'Le titulaire du compte'],
+        ]]],
+
+        ['sous', 'Autour du contact'],
+        ['table', ['entetes' => ['Message', 'Déclencheur', 'Destinataire'], 'lignes' => [
+            ['Notification contact', 'Un message arrive par le formulaire', "L'association"],
+            ['Confirmation contact', 'Un message arrive par le formulaire', "L'expéditeur, en accusé de réception"],
+        ]]],
+
+        ['sous', 'Les réglages qui commandent les envois'],
+        ['table', ['entetes' => ['Réglage', 'Défaut', 'Effet'], 'lignes' => [
+            ['Emails de notification', "Adresse de contact de l'association", 'Qui reçoit les alertes de demande et de message'],
+            ['Relance de paiement', 'Active, 7 jours, puis tous les 14, 3 au plus', "Quand part la première relance et à quel rythme"],
+            ['Relance de renouvellement', 'Active, 30 jours avant la fin de saison, puis tous les 21, 3 au plus', 'Idem pour les renouvellements'],
+            ['Heure de déclenchement', 'Réglable', "Avant cette heure, aucune campagne n'est évaluée"],
+        ]]],
+    ]],
+
+    ['titre' => 'La sécurité en pratique', 'blocs' => [
+        ['p', "Rien d'exotique, mais quelques choix qu'il vaut mieux connaître avant d'y toucher."],
+
+        ['sous', 'Les mots de passe'],
+        ['p', "Hachés en bcrypt, comme partout. Une copie chiffrée réversible est conservée en plus, lisible du seul super administrateur : c'est ce qui permet de redonner ses accès à un adhérent sans réinitialiser. Ce choix est un compromis assumé — il facilite la vie d'une petite association, au prix d'un secret de plus à protéger. La clé de chiffrement est celle de l'application : la perdre rend ces copies illisibles, sans empêcher personne de se connecter."],
+        ['note', "Aucun email ne contient jamais de mot de passe en clair : ce qui circule, ce sont des liens à usage unique."],
+
+        ['sous', 'Les jetons'],
+        ['table', ['entetes' => ['Jeton', 'Durée', 'Ce qu\'il ouvre'], 'lignes' => [
+            ['Création de compte', '30 jours', "L'écran de création, pour une adhésion réglée"],
+            ['Renouvellement', '90 jours', 'Le formulaire pré-rempli, sans connexion'],
+            ['Restauration de compte', '30 jours', 'La reprise d\'un compte supprimé'],
+            ['Réinitialisation', 'Selon la configuration', 'Le choix d\'un nouveau mot de passe'],
+        ]]],
+        ['p', "Tous sont tirés au hasard et vérifiés uniques. Un jeton de renouvellement est effacé dès qu'il a servi : le lien d'un email ancien ne rouvre pas un formulaire."],
+
+        ['sous', 'La suppression douce'],
+        ['p', "Un compte supprimé n'est pas effacé : il est marqué, disparaît de tous les écrans, et un lien de restauration part par email. Une commande purge définitivement au-delà de trente jours. C'est ce qui permet de revenir sur une suppression faite trop vite — et ce qui explique qu'une adresse reste indisponible pendant ce délai."],
+
+        ['sous', 'Les limites de débit'],
+        ['table', ['entetes' => ['Formulaire', 'Limite'], 'lignes' => [
+            ['Adhésion', '5 envois par minute'],
+            ['Contact', '5 envois par minute'],
+            ['Don', '10 par minute'],
+            ['Connexion', '6 tentatives par minute'],
+            ['Mot de passe oublié', '4 demandes par minute'],
+        ]]],
+        ['p', "Ces limites portent sur l'adresse du visiteur. Une connexion partagée — un lycée, un local associatif — peut donc voir un blocage sans que personne n'ait mal agi. C'est la page 429 qui l'explique."],
+
+        ['sous', 'Le pot de miel'],
+        ['p', "Les formulaires publics portent un champ invisible et un horodatage. Un robot remplit le premier ou répond trop vite ; la demande est alors écartée sans message d'erreur, pour ne rien apprendre à l'automate. Un visiteur normal ne voit jamais rien."],
+
+        ['sous', "L'assainissement du texte enrichi"],
+        ['p', "Le contenu rédigé en back-office s'affiche tel quel sur le site public : il est donc filtré à l'écriture par une liste blanche stricte — balises autorisées, attributs autorisés, quatre valeurs d'alignement, et seuls les liens http, mailto, tel ou internes conservés. Le filtre est posé dans un mutateur du modèle, donc appliqué quel que soit le chemin d'écriture."],
+
+        ['sous', 'Les paiements'],
+        ['p', "Le navigateur n'est jamais cru sur parole : un règlement annoncé par la page est revérifié auprès de Stripe avant enregistrement, montant et devise compris. Les appels entrants de Stripe sont authentifiés par signature, avec une tolérance de cinq minutes sur l'horodatage et une comparaison à temps constant. Les clés secrètes sont chiffrées en base."],
+    ]],
+
+    ['titre' => 'Les données personnelles', 'blocs' => [
+        ['p', "Ce que le site conserve, pourquoi, combien de temps, et comment répondre si quelqu'un demande des comptes. Le responsable de traitement est l'association."],
+
+        ['sous', 'Ce qui est collecté'],
+        ['table', ['entetes' => ['Donnée', 'Pourquoi', 'Où'], 'lignes' => [
+            ['Identité, date de naissance', "Tenir le registre des membres, vérifier l'âge", 'adhesions'],
+            ['Coordonnées, adresse postale', 'Contacter, convoquer, envoyer les documents', 'adhesions'],
+            ['Profession', 'Connaître le profil des membres', 'adhesions'],
+            ['Taille de T-shirt, permis', "Organiser les actions et les déplacements", 'adhesions'],
+            ['Problèmes de santé', "Sécurité pendant les activités — donnée sensible", 'adhesions'],
+            ['Contact d\'urgence', 'Prévenir un proche en cas de besoin', 'adhesions'],
+            ['Photo', 'Trombinoscope et carte de membre', 'disque public'],
+            ['Réseaux sociaux', 'Facultatif, affiché au trombinoscope', 'adhesions'],
+            ['Email et mot de passe', 'Accès à l\'espace adhérent', 'users'],
+            ['Empreinte de visite', "Mesurer l'efficacité des supports — sans identifier personne", 'source_visits'],
+        ]]],
+        ['note', "Les problèmes de santé relèvent des données sensibles : accès réservé au back-office, jamais affichés publiquement, et à ne pas exporter sans raison."],
+
+        ['sous', 'Les consentements'],
+        ['p', "Deux cases distinctes, et elles ne se valent pas. Le consentement au traitement des données est obligatoire — sans lui, pas d'adhésion. Le droit à l'image est également demandé pour une adhésion, et n'est jamais coché lors d'une simple prise d'informations : quelqu'un qui pose une question n'a pas donné d'accord de diffusion."],
+
+        ['sous', 'Combien de temps'],
+        ['table', ['entetes' => ['Donnée', 'Conservation'], 'lignes' => [
+            ['Adhésions', "Conservées comme registre de l'association, saison après saison"],
+            ['Compte supprimé', 'Effacé définitivement 30 jours après la demande'],
+            ['Jetons', 'De 30 à 90 jours, puis sans effet'],
+            ['Messages de contact', "Jusqu'à suppression manuelle en back-office"],
+            ['Visites tracées', 'Empreinte anonyme, sans lien avec une identité'],
+        ]]],
+        ['p', "La durée de conservation des adhésions n'est pas fixée par le code : c'est une décision de l'association, à écrire dans sa politique de confidentialité."],
+
+        ['sous', 'Répondre à une demande'],
+        ['etapes', [
+            ['Accès', "Retrouver la personne dans Adhésions, exporter sa fiche, y joindre son compte et ses éventuelles photos."],
+            ['Rectification', "Modifier la fiche en back-office, ou laisser la personne le faire depuis son espace."],
+            ['Effacement', "Supprimer le compte depuis Comptes adhérents et la fiche depuis Adhésions. Le compte part définitivement au bout de 30 jours ; la fiche, elle, est retirée immédiatement, photo comprise."],
+            ['Opposition à l\'image', "Décocher le droit à l'image sur la fiche, retirer la personne du trombinoscope, supprimer sa photo."],
+            ['Portabilité', "L'export CSV des adhésions fournit un format lisible et réutilisable."],
+        ]],
+        ['note', "Une demande d'effacement ne dispense pas l'association de tenir son registre des membres : les obligations légales priment, il faut alors expliquer ce qui est conservé et pourquoi."],
+
+        ['sous', 'Les tiers'],
+        ['p', "Stripe reçoit l'email et le montant pour encaisser, et conserve ses propres traces. Le serveur d'envoi des emails voit passer les messages. Aucune autre donnée ne quitte le site : ni régie publicitaire, ni mesure d'audience externe, ni bouton de réseau social traçant. Une plateforme de dons, si elle est branchée, applique sa propre politique."],
     ]],
 
     ['titre' => 'Points de vigilance', 'blocs' => [

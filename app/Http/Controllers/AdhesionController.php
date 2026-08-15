@@ -71,6 +71,41 @@ class AdhesionController extends Controller
         return view('adhesion', $this->donneesVue($precedente));
     }
 
+    /**
+     * Adhésion déjà enregistrée pour la saison en cours, s'il y en a une.
+     *
+     * Sans ce contrôle, quelqu'un qui vient de renouveler retrouvait
+     * l'écran de renouvellement et son message « vérifie tes informations
+     * puis règle ta cotisation » — au risque de payer deux fois.
+     */
+    private function adhesionDeLaSaison(?Adhesion $precedente): ?Adhesion
+    {
+        $periode = AdhesionPeriod::current();
+
+        if (! $periode || ! $precedente) {
+            return null;
+        }
+
+        // Déjà la bonne saison : la personne arrive par un lien de l'an
+        // dernier qui a servi, ou revient sur la page par habitude.
+        if ($precedente->period_id === $periode->id) {
+            return $precedente;
+        }
+
+        return Adhesion::where('period_id', $periode->id)
+            ->where(function ($q) use ($precedente) {
+                $q->where('renouvelle_adhesion_id', $precedente->id);
+
+                if ($precedente->user_id) {
+                    $q->orWhere('user_id', $precedente->user_id);
+                }
+
+                $q->orWhereRaw('LOWER(email) = ?', [mb_strtolower(trim((string) $precedente->email))]);
+            })
+            ->latest('id')
+            ->first();
+    }
+
     /** Variables communes aux trois façons d'ouvrir le formulaire. */
     private function donneesVue(?Adhesion $precedente = null): array
     {
@@ -88,6 +123,7 @@ class AdhesionController extends Controller
             'precedente'     => $precedente,
             'prefill'        => $prefill,
             'periode'        => AdhesionPeriod::current(),
+            'dejaAJour'      => $this->adhesionDeLaSaison($precedente),
         ];
     }
 

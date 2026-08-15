@@ -110,10 +110,16 @@
                 </div>
                 <div class="p-8">
                     <h2 id="titre-formulaire" class="font-display font-bold text-xl text-mja-gray mb-6">
-                        {{ !empty($precedente) ? 'Renouveler mon adhésion' : "Formulaire d'adhésion" }}
+                        @if(!empty($dejaAJour) && !session('success'))
+                            Ton adhésion est à jour
+                        @elseif(!empty($precedente))
+                            Renouveler mon adhésion
+                        @else
+                            Formulaire d'adhésion
+                        @endif
                     </h2>
 
-                    @if(!empty($precedente) && !session('success'))
+                    @if(!empty($precedente) && empty($dejaAJour) && !session('success'))
                     <div class="bg-mja-blue/5 border border-mja-blue/20 rounded-2xl p-5 mb-6 flex items-start gap-3">
                         <i class="fas fa-rotate-right text-mja-blue mt-0.5 shrink-0"></i>
                         <div class="text-sm text-gray-600 leading-relaxed">
@@ -148,6 +154,61 @@
                         <div>Certains champs nécessitent votre attention. Veuillez vérifier le formulaire ci-dessous.</div>
                     </div>
                     @endif
+
+                    @if(!empty($dejaAJour) && !session('success'))
+                    {{-- Adhésion déjà enregistrée pour la saison : on remercie,
+                         et on ne propose surtout pas un second formulaire. --}}
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-5">
+                            <i class="fas fa-heart text-green-600 text-2xl"></i>
+                        </div>
+                        <h3 class="font-display font-black text-2xl text-mja-gray mb-3">
+                            Tu es des nôtres{{ !empty($periode) ? ' pour la ' . $periode->label : '' }} !
+                        </h3>
+                        <p class="text-gray-600 leading-relaxed max-w-lg mx-auto">
+                            {{ $dejaAJour->prenom }}, ton adhésion est déjà enregistrée
+                            @if($dejaAJour->isAdherent())
+                                et ta cotisation est réglée.
+                            @else
+                                — il ne reste que le règlement de la cotisation, l'équipe revient vers toi.
+                            @endif
+                            Merci de continuer l'aventure avec nous : c'est grâce à toi que les actions existent.
+                        </p>
+
+                        <div class="mt-7 flex flex-wrap items-center justify-center gap-3">
+                            @auth
+                            <a href="{{ route('member.dashboard') }}"
+                               class="inline-flex items-center gap-2 bg-mja-blue hover:bg-mja-bluedark text-white font-display font-bold px-6 py-3 rounded-xl transition-colors">
+                                <i class="fas fa-user"></i> Mon espace adhérent
+                            </a>
+                            @if($dejaAJour->isAdherent())
+                            <a href="{{ route('member.card') }}"
+                               class="inline-flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-display font-bold px-6 py-3 rounded-xl transition-colors">
+                                <i class="fas fa-id-card"></i> Ma carte de membre
+                            </a>
+                            @endif
+                            @else
+                            <a href="{{ route('member.login') }}"
+                               class="inline-flex items-center gap-2 bg-mja-blue hover:bg-mja-bluedark text-white font-display font-bold px-6 py-3 rounded-xl transition-colors">
+                                <i class="fas fa-right-to-bracket"></i> Accéder à mon espace
+                            </a>
+                            @endauth
+                            <a href="{{ route('events.index') }}"
+                               class="inline-flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-display font-bold px-6 py-3 rounded-xl transition-colors">
+                                <i class="fas fa-calendar-days"></i> Les prochains rendez-vous
+                            </a>
+                        </div>
+
+                        <p class="text-xs text-gray-400 mt-6">
+                            Une information à corriger ?
+                            @auth
+                                Modifie-la depuis <a href="{{ route('member.profile.edit') }}" class="text-mja-blue font-semibold hover:underline">ton profil</a>.
+                            @else
+                                <a href="{{ route('contact') }}" class="text-mja-blue font-semibold hover:underline">Écris-nous</a>, on s'en occupe.
+                            @endauth
+                        </p>
+                    </div>
+                    @else
 
                     <form method="POST" action="{{ route('adhesion.store') }}" class="space-y-8" enctype="multipart/form-data">
                         @csrf
@@ -536,6 +597,7 @@
                             <i class="fas fa-lock mr-1"></i> Réglez la cotisation par carte ci-dessus pour activer l'envoi.
                         </p>
                     </form>
+                    @endif
                     @endif
                 </div>
             </div>

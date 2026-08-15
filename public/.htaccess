@@ -66,9 +66,13 @@
     #               hooks.stripe.com → l'authentification 3-D Secure
     #   connect-src api.stripe.com   → confirmation du paiement
     # img-src *.stripe.com couvre les logos de moyens de paiement.
-    # Les dons passent par Stripe Checkout (redirection serveur) et ne dépendent
-    # pas de ces directives.
-    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com data:; img-src 'self' data: https://*.stripe.com; connect-src 'self' https://api.stripe.com; frame-src 'self' https://js.stripe.com https://hooks.stripe.com; base-uri 'self'; form-action 'self'; frame-ancestors 'self'"
+    #   form-action checkout.stripe.com → page de paiement des dons
+    #
+    # form-action est aussi contrôlé sur la redirection qui suit l'envoi d'un
+    # formulaire : le don part vers /don, puis le serveur redirige vers Stripe
+    # Checkout. Sans ce domaine, le navigateur bloque l'envoi en signalant
+    # l'adresse du formulaire, ce qui masque la vraie cause.
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com data:; img-src 'self' data: https://*.stripe.com; connect-src 'self' https://api.stripe.com; frame-src 'self' https://js.stripe.com https://hooks.stripe.com; base-uri 'self'; form-action 'self' https://checkout.stripe.com https://*.stripe.com; frame-ancestors 'self'"
 </IfModule>
 
 # ─── Compression ────────────────────────────────────────────────────────────────
