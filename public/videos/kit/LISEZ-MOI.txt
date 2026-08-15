@@ -27,3 +27,17 @@ Récupérer vos propres vidéos Instagram
   Depuis un téléphone, les vidéos d'origine (avant compression Instagram)
   sont dans la galerie : elles sont toujours de meilleure qualité que
   celles réexportées. Privilégiez-les.
+
+Fiche des plans et ébauches (montage.json)
+  Le fichier montage.json, à côté des rushes, décrit chaque plan — titre
+  lisible, lieu, action, extrait retenu (début et durée), remarque — et
+  propose des montages tout prêts, chargeables d'un clic dans le monteur.
+
+  Un plan absent de ce fichier apparaît quand même dans la bibliothèque,
+  sous son nom de fichier. Ajouter un rush revient donc à :
+    1. le déposer ici, nommé 24-mon-plan.mp4 ;
+    2. lui écrire une entrée dans « plans » de montage.json (facultatif) ;
+    3. le citer dans une ébauche si vous voulez le voir proposé (facultatif).
+
+  Une ébauche dont un plan manque n'est pas affichée : mieux vaut pas de
+  proposition qu'un montage qui s'ouvre à trous.

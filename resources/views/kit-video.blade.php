@@ -20,11 +20,79 @@
 
     $videos = $lister('videos/kit', '*.{mp4,MP4,webm,WEBM,mov,MOV,m4v,M4V}');
 
-    // Les photos du carrousel et du kit servent aussi de plans fixes.
+    // Les photos du carrousel et du kit servent aussi de plans fixes. Celles
+    // déposées à côté des rushes comptent au même titre : le dossier accueille
+    // les deux, comme l'annonce son LISEZ-MOI.
     $photos = array_merge(
+        $lister('videos/kit', '*.{jpg,JPG,jpeg,JPEG,png,PNG,webp,WEBP}'),
         $lister('images/carrousel', '*.{jpg,JPG,jpeg,JPEG,png,PNG,webp,WEBP}'),
         $lister('images/kit', '*.{jpg,JPG,jpeg,JPEG,png,PNG,webp,WEBP}'),
     );
+
+    /**
+     * Fiche des rushes et montages tout prêts, décrits dans
+     * public/videos/kit/montage.json. Le fichier est facultatif : sans lui, la
+     * bibliothèque affiche simplement les noms de fichiers.
+     */
+    $fiche = [];
+    $ebauches = [];
+    $tendances = [];
+    $cheminFiche = public_path('videos/kit/montage.json');
+
+    if (is_file($cheminFiche)) {
+        $lu = json_decode((string) file_get_contents($cheminFiche), true);
+
+        if (is_array($lu)) {
+            $fiche = $lu['plans'] ?? [];
+            // On ne garde que les ébauches dont tous les plans sont là :
+            // proposer un montage qui s'ouvrirait à trous serait pire que rien.
+            $ebauches = array_values(array_filter($lu['ebauches'] ?? [], function ($e) use ($fiche) {
+                foreach ($e['plans'] ?? [] as $plan) {
+                    // Un plan se cite par son nom, ou par un objet qui
+                    // resserre l'extrait — les montages à coupes rapides
+                    // en ont besoin.
+                    $nom = is_array($plan) ? ($plan['fichier'] ?? '') : $plan;
+
+                    if (! isset($fiche[$nom]) || ! is_file(public_path('videos/kit/' . $nom))) {
+                        return false;
+                    }
+                }
+
+                return ! empty($e['plans']);
+            }));
+
+            $tendances = $lu['tendances'] ?? [];
+        }
+    }
+
+    // Musiques déposées par l'association. Aucune n'est livrée avec le site :
+    // les titres du commerce sont protégés, et sur Instagram ou TikTok la
+    // musique s'ajoute de toute façon dans l'application.
+    $musiques = $lister('videos/musiques', '*.{mp3,MP3,m4a,M4A,aac,AAC,wav,WAV,ogg,OGG}');
+
+    // Licences des pistes livrées : plusieurs demandent de citer l'auteur.
+    $creditsMusique = [];
+    $cheminCredits = public_path('videos/musiques/credits.json');
+
+    if (is_file($cheminCredits)) {
+        $lu = json_decode((string) file_get_contents($cheminCredits), true);
+        $creditsMusique = is_array($lu) ? array_column($lu, null, 'fichier') : [];
+    }
+
+    // Montages déjà rendus par la commande mja:montages.
+    $rendus = array_map(function ($v) {
+        $affiche = preg_replace('/\.mp4$/', '.jpg', $v['nom']);
+
+        return $v + [
+            'id' => pathinfo($v['nom'], PATHINFO_FILENAME),
+            'affiche' => is_file(public_path('videos/montages/' . $affiche))
+                ? asset('videos/montages/' . rawurlencode($affiche))
+                : null,
+        ];
+    }, $lister('videos/montages', '*.mp4'));
+
+    // Nom lisible d'un montage rendu, repris de l'ébauche correspondante.
+    $nomEbauche = array_column($ebauches, 'nom', 'id');
 @endphp
 <!DOCTYPE html>
 <html lang="fr">
@@ -57,8 +125,30 @@ header .bar i{flex:1}
 h1{margin:0 0 4px;font-size:26px;font-weight:800}
 header p{margin:0;color:#C9DBFA;font-size:14px;max-width:760px}
 
-.grille{display:grid;grid-template-columns:300px 1fr 330px;gap:18px;margin:20px 0 40px;align-items:start}
+.grille{display:grid;grid-template-columns:300px minmax(0,1fr) 330px;gap:18px;margin:20px 0 22px;align-items:start}
 @media (max-width:1180px){.grille{grid-template-columns:1fr}}
+
+/* Les colonnes latérales défilent pour elles-mêmes : sans cela, une longue
+   bibliothèque repoussait la timeline hors du premier écran. */
+@media (min-width:1181px){
+  .grille > .bloc:first-child,
+  .grille > .bloc:last-child{position:sticky;top:14px;max-height:calc(100vh - 28px);
+                             overflow-y:auto;overscroll-behavior:contain}
+}
+
+/* Panneaux repliables : la flèche remplace le titre cliquable. */
+.repli{border-bottom:1px solid var(--bord)}
+.bloc.repli{border:1px solid var(--bord);border-radius:16px;margin-bottom:20px;background:#fff}
+.repli > summary{list-style:none;cursor:pointer;padding:13px 16px;font-size:14px;font-weight:800;
+                 color:var(--navy);background:#FAFCFF;display:flex;align-items:center;gap:8px;
+                 user-select:none}
+.repli > summary::-webkit-details-marker{display:none}
+.repli > summary::after{content:'\f078';font-family:'Font Awesome 6 Free';font-weight:900;
+                        margin-left:auto;font-size:11px;color:var(--gris);transition:transform .15s}
+.repli[open] > summary::after{transform:rotate(180deg)}
+.repli > summary .cpt{margin-left:auto;font-weight:600;color:var(--gris);font-size:12px}
+.repli > summary .cpt + *{margin-left:0}
+.repli[open] > summary{border-bottom:1px solid var(--bord)}
 
 .bloc{background:#fff;border:1px solid var(--bord);border-radius:16px;overflow:hidden}
 .bloc > h2{margin:0;padding:13px 16px;font-size:14px;font-weight:800;color:var(--navy);
@@ -70,15 +160,52 @@ header p{margin:0;color:#C9DBFA;font-size:14px;max-width:760px}
 .depot{border:2px dashed #C9D8EE;border-radius:12px;padding:16px;text-align:center;color:var(--gris);
        font-size:13px;cursor:pointer;transition:.15s;margin-bottom:12px}
 .depot:hover,.depot.survol{border-color:var(--blue);background:#F2F8FF;color:var(--dark)}
-.media{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-height:360px;overflow-y:auto}
+.media{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .vignette{position:relative;border:1px solid var(--bord);border-radius:9px;overflow:hidden;cursor:pointer;
           aspect-ratio:1;background:#0B1E45;transition:.15s}
 .vignette:hover{border-color:var(--blue);transform:translateY(-2px)}
+.vignette .lg{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(transparent,rgba(11,30,69,.92));
+              color:#fff;font-size:9.5px;line-height:1.25;padding:12px 4px 4px;text-align:left;
+              overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+
+/* Montages tout prêts, en tête de la colonne bibliothèque. */
+.ebauches{display:flex;flex-direction:column;gap:8px;padding-bottom:14px}
+.ebauche{display:block;width:100%;text-align:left;border:1px solid var(--bord);border-radius:11px;
+         background:#fff;padding:10px 12px;cursor:pointer;font:inherit;transition:.15s}
+.ebauche:hover{border-color:var(--blue);background:#F7FBFF;transform:translateY(-1px)}
+.ebauche .n{display:inline-block;font-weight:800;color:var(--navy);font-size:13.5px}
+.ebauche .d{float:right;font-size:11px;color:var(--gris);background:#EEF3FB;border-radius:20px;padding:1px 8px}
+.ebauche .r{display:block;clear:both;font-size:11.5px;color:var(--gris);margin-top:3px;line-height:1.35}
 .vignette img,.vignette video{width:100%;height:100%;object-fit:cover;display:block}
 .vignette .t{position:absolute;left:4px;top:4px;background:rgba(11,30,69,.82);color:#fff;font-size:9px;
              font-weight:800;letter-spacing:.5px;border-radius:5px;padding:2px 5px}
 .vignette .plus{position:absolute;right:4px;bottom:4px;width:20px;height:20px;border-radius:50%;
                 background:var(--yellow);color:var(--navy);font-size:11px;display:flex;align-items:center;justify-content:center}
+
+/* Montages déjà rendus par la commande mja:montages. */
+.rendus{display:flex;flex-direction:column;gap:12px;padding-bottom:14px}
+.rendu{border:1px solid var(--bord);border-radius:12px;overflow:hidden;background:#fff}
+.rendu video{width:100%;display:block;background:#0B1E45;max-height:280px;object-fit:contain}
+.rendu .meta{display:flex;align-items:center;gap:8px;padding:8px 10px;font-size:12px;color:var(--gris)}
+.rendu .meta b{color:var(--navy);font-size:13px;flex:1;min-width:0;
+               white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rendu .meta a{color:var(--bluedark);text-decoration:none;font-weight:700;white-space:nowrap}
+.rendu .meta a:hover{text-decoration:underline}
+
+/* Tendances : musiques et formats de montage. */
+.tendances{display:grid;grid-template-columns:1fr 1fr;gap:26px}
+@media (max-width:900px){.tendances{grid-template-columns:1fr}}
+.tendances h3{margin:0 0 10px;font-size:14px;font-weight:800;color:var(--navy)}
+.famille{border:1px solid var(--bord);border-radius:12px;padding:11px 13px;margin-bottom:9px;background:#FCFDFF}
+.famille > b{color:var(--ink);font-size:13.5px}
+.famille p{margin:4px 0 7px;font-size:12.5px;color:var(--gris);line-height:1.45}
+.famille p.ou{margin:6px 0 0;font-size:11.5px;color:var(--bluedark)}
+.jetons{display:flex;flex-wrap:wrap;gap:5px}
+.jetons span{background:#EEF3FB;color:var(--navy);border-radius:20px;padding:2px 9px;font-size:11.5px;font-weight:600}
+.etapes-son{margin:6px 0 0;padding-left:18px}
+.etapes-son li{font-size:12.5px;color:var(--gris);line-height:1.45;margin-bottom:4px}
+.duree-format{float:right;font-size:11px;color:var(--gris);background:#F2F5FA;border-radius:20px;padding:1px 9px}
+.btn.mini{padding:6px 11px;font-size:12px}
 
 /* ── Montage ──────────────────────────────────────────────────── */
 .clips{max-height:520px;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:9px}
@@ -166,6 +293,49 @@ header p{margin:0;color:#C9DBFA;font-size:14px;max-width:760px}
 
     {{-- ── Bibliothèque ───────────────────────────────────────── --}}
     <div class="bloc">
+      @if($ebauches)
+      <details class="repli" open>
+        <summary><i class="fas fa-wand-magic-sparkles"></i> Ébauches <span class="cpt">{{ count($ebauches) }}</span></summary>
+        <div class="corps ebauches">
+        <p class="aide" style="margin:0 0 10px">
+          Des montages déjà assemblés à partir des rushes du dossier : plans choisis,
+          extraits calés, intro et outro posées. Un clic charge le tout dans la timeline,
+          où rien n'est figé — ordre, durées, effets, tout reste modifiable.
+        </p>
+        @foreach($ebauches as $e)
+        <button type="button" class="ebauche" data-ebauche="{{ $e['id'] }}">
+          <span class="n">{{ $e['nom'] }}</span>
+          <span class="d">{{ count($e['plans']) }} plans</span>
+          <span class="r">{{ $e['resume'] }}</span>
+        </button>
+        @endforeach
+        </div>
+      </details>
+      @endif
+
+      @if($rendus)
+      <details class="repli">
+        <summary><i class="fas fa-circle-check"></i> Déjà prêts <span class="cpt">{{ count($rendus) }}</span></summary>
+        <div class="corps rendus">
+        <p class="aide" style="margin:0 0 10px">
+          Montages déjà exportés en 1080 × 1920, muets, prêts à publier.
+          Regarde, télécharge, ou recharge l'ébauche correspondante pour la retoucher.
+        </p>
+        @foreach($rendus as $r)
+        <div class="rendu">
+          <video src="{{ $r['url'] }}" @if($r['affiche']) poster="{{ $r['affiche'] }}" @endif
+                 controls preload="none" playsinline></video>
+          <div class="meta">
+            <b>{{ $nomEbauche[$r['id']] ?? $r['nom'] }}</b>
+            <span>{{ $r['poids'] }} Mo</span>
+            <a href="{{ $r['url'] }}" download><i class="fas fa-download"></i> Télécharger</a>
+          </div>
+        </div>
+        @endforeach
+        </div>
+      </details>
+      @endif
+
       <h2><i class="fas fa-photo-film"></i> Bibliothèque
         <span class="cpt">{{ count($videos) }} vidéo(s) · {{ count($photos) }} photo(s)</span>
       </h2>
@@ -198,6 +368,21 @@ header p{margin:0;color:#C9DBFA;font-size:14px;max-width:760px}
     <div class="bloc">
       <h2><i class="fas fa-sliders"></i> Réglages</h2>
       <div class="corps">
+        <div class="champ">
+          <label for="opt-qualite">Qualité de l'export</label>
+          <select id="opt-qualite">
+            <option value="normale">Standard — fichier léger</option>
+            <option value="haute" selected>Haute — recommandée</option>
+            <option value="maximale">Maximale — fichier lourd</option>
+          </select>
+          <div class="aide">
+            Les rushes filmés au téléphone puis passés par une messagerie sont
+            souvent en 360 × 640 : agrandis en 1080 × 1920, ils resteront doux
+            quel que soit le réglage. Les fichiers d'origine, non compressés
+            par l'application, changent tout.
+          </div>
+        </div>
+
         <div class="champ">
           <label for="opt-format">Format</label>
           <select id="opt-format">
@@ -257,6 +442,48 @@ header p{margin:0;color:#C9DBFA;font-size:14px;max-width:760px}
         <label class="bascule"><input type="checkbox" id="opt-barre" checked> Filet tricolore</label>
         <label class="bascule"><input type="checkbox" id="opt-son"> Garder le son des vidéos</label>
 
+        <div class="champ">
+          <label for="opt-musique">Musique de fond</label>
+          <select id="opt-musique">
+            <option value="">Aucune — export muet (recommandé pour Instagram)</option>
+            @foreach($musiques as $m)
+            @php $c = $creditsMusique[$m['nom']] ?? null; @endphp
+            <option value="{{ $m['url'] }}"
+                    data-credit="{{ $c ? $c['titre'] . ' — ' . $c['artiste'] . ' (' . $c['licence'] . ')' : '' }}">
+              {{ $c['titre'] ?? $m['nom'] }} — {{ $m['poids'] }} Mo
+            </option>
+            @endforeach
+          </select>
+          <div class="aide">
+            @if($musiques)
+              Mixée à l'export. Pour un réel Instagram, laisse « Aucune » : la musique
+              s'ajoute dans l'application, où elle est sous licence.
+            @else
+              Aucun fichier dans <code>public/videos/musiques/</code>. Pour Instagram,
+              c'est normal et souhaitable : la musique s'ajoute dans l'application.
+              Pour le site ou une projection, dépose-y une piste libre de droits.
+            @endif
+          </div>
+        </div>
+
+        <div class="champ" id="bloc-volume" style="display:none">
+          <label for="opt-depart-musique">
+            Début du morceau <span id="etiquette-depart">0:00</span>
+          </label>
+          <input type="range" id="opt-depart-musique" min="0" max="0" step="1" value="0" style="width:100%">
+          <button type="button" class="btn g mini" id="btn-ecouter" style="margin:6px 0 10px">
+            <i class="fas fa-headphones"></i> Écouter 5 s à partir d'ici
+          </button>
+
+          <label for="opt-volume">Volume de la musique</label>
+          <input type="range" id="opt-volume" min="0" max="100" value="70" style="width:100%">
+          <div class="aide">
+            Le refrain arrive rarement au début : place le curseur sur la montée,
+            écoute, puis lis le montage pour vérifier le calage.
+          </div>
+          <div class="aide" id="credit-musique"></div>
+        </div>
+
         <button class="btn g" id="btn-vider" style="width:100%;justify-content:center;margin-top:6px">
           <i class="fas fa-rotate-left"></i> Vider le montage
         </button>
@@ -272,6 +499,100 @@ header p{margin:0;color:#C9DBFA;font-size:14px;max-width:760px}
     d'origine restés dans la galerie des téléphones sont de bien meilleure qualité que ceux réexportés par Instagram.
     Dépose le tout dans <code>public/videos/kit/</code>.
   </div>
+
+  {{-- ── Tendances, sous la grille : on les consulte, on n'y travaille pas --}}
+    @if($tendances)
+    <details class="bloc repli">
+      <summary><i class="fas fa-fire"></i> Tendances — musiques, sons Instagram et formats de montage</summary>
+      <div class="corps tendances">
+
+        <div>
+          <h3>Quelle musique ?</h3>
+          <div class="note" style="margin:0 0 12px">
+            <b>Sur Instagram, TikTok et Facebook, ajoute la musique dans l'application</b>,
+            pas dans le fichier : leur bibliothèque est sous licence, et un son tendance est
+            mieux poussé par l'algorithme qu'une piste importée. Exporte donc muet.
+            Pour le site, une projection ou WhatsApp, il faut une musique libre de droits —
+            voir <code>public/videos/musiques/LISEZ-MOI.txt</code>.
+          </div>
+          @if(!empty($tendances['musique_gratuite']))
+          @php $gratuite = $tendances['musique_gratuite']; @endphp
+          <div class="famille">
+            <b>{{ $gratuite['titre'] }}</b>
+            <p>{{ implode(' ', $gratuite['preciser']) }}</p>
+            @foreach($gratuite['sources'] as $src)
+            <div style="margin:8px 0 0;padding-left:12px;border-left:3px solid var(--blue)">
+              <b style="font-size:12.5px;color:var(--navy)">{{ $src['nom'] }}</b>
+              <span style="font-size:11.5px;color:var(--bluedark)"> — {{ $src['adresse'] }}</span>
+              <p style="margin:2px 0 0">{{ $src['detail'] }}</p>
+            </div>
+            @endforeach
+            <p class="ou"><i class="fas fa-folder-open"></i> {{ implode(' ', $gratuite['ensuite']) }}</p>
+            @if(!empty($gratuite['votre_dossier']))
+            <p class="ou" style="color:var(--gris)"><i class="fas fa-shield-halved"></i> {{ implode(' ', $gratuite['votre_dossier']) }}</p>
+            @endif
+          </div>
+          @endif
+
+          @foreach($tendances['musiques'] ?? [] as $m)
+          <div class="famille">
+            <b>{{ $m['famille'] }}</b>
+            <p>{{ $m['pourquoi'] }}</p>
+            <div class="jetons">
+              @foreach($m['reperes'] as $r)<span>{{ $r }}</span>@endforeach
+            </div>
+            <p class="ou"><i class="fas fa-magnifying-glass"></i> {{ $m['chercher'] }}</p>
+          </div>
+          @endforeach
+        </div>
+
+        <div>
+          @if(!empty($tendances['ajouter_un_son']))
+          @php $son = $tendances['ajouter_un_son']; @endphp
+          <h3>{{ $son['titre'] }}</h3>
+          <div class="famille">
+            <p>{{ implode(' ', $son['pourquoi']) }}</p>
+            <ol class="etapes-son">
+              @foreach($son['etapes'] as $etape)<li>{{ $etape }}</li>@endforeach
+            </ol>
+          </div>
+          @foreach($son['recherches'] as $r)
+          <div class="famille">
+            <b>{{ $r['quoi'] }}</b>
+            <p>{{ $r['note'] }}</p>
+            <p class="ou"><i class="fas fa-magnifying-glass"></i> {{ $r['ou'] }}</p>
+          </div>
+          @endforeach
+          <div class="famille">
+            <b>Repérer une tendance</b>
+            <p>{{ implode(' ', $son['reperer_une_tendance']) }}</p>
+          </div>
+          @endif
+
+          <h3 style="margin-top:18px">Quel format de montage ?</h3>
+          <p class="aide" style="margin:0 0 12px">
+            Des recettes qui marchent en réel. Celles qui portent un bouton ont une ébauche
+            toute prête dans la colonne de gauche.
+          </p>
+          @foreach($tendances['formats'] ?? [] as $f)
+          <div class="famille">
+            <b>{{ $f['nom'] }}</b>
+            <span class="duree-format">{{ $f['duree'] }}</span>
+            <p>{{ $f['recette'] }}</p>
+            @if(!empty($f['ebauche']))
+            <button type="button" class="btn g mini" data-ebauche="{{ $f['ebauche'] }}">
+              <i class="fas fa-wand-magic-sparkles"></i> Charger cette ébauche
+            </button>
+            @endif
+          </div>
+          @endforeach
+        </div>
+
+      </div>
+    </details>
+    @endif
+
+
 </div>
 
 <script>
@@ -301,6 +622,22 @@ BIBLIO.push({ type:'video', url:@json($v['url']), nom:@json($v['nom']), poids:@j
 BIBLIO.push({ type:'photo', url:@json($p['url']), nom:@json($p['nom']), poids:@json($p['poids']) });
 @endforeach
 
+/* Fiche des rushes : titre lisible, extrait retenu, remarque de tournage.
+   Chaque média la reçoit s'il en a une (repérage par nom de fichier). */
+var FICHES = @json($fiche);
+var EBAUCHES = @json($ebauches);
+
+BIBLIO.forEach(function (m) {
+  var f = FICHES[m.nom];
+  if (!f) return;
+  m.titre = f.titre;
+  m.lieu = f.lieu;
+  m.action = f.action;
+  m.note = f.note;
+  m.depart = f.depart || 0;
+  m.dureeConseillee = f.duree;
+});
+
 /* Cartons d'ouverture et de fermeture. `dessin` reçoit l'avancement t ∈ [0,1]. */
 var INTROS = [
   { id:'aucune', nom:'Aucune',                 duree:0,   aide:"Le montage démarre directement sur le premier plan." },
@@ -316,6 +653,10 @@ var OUTROS = [
   { id:'contact',nom:'Coordonnées',            duree:2.6, aide:"Site, Instagram et téléphone, sur fond navy." }
 ];
 
+/* Bits par pixel et par image. 0,10 est le réglage courant d'une plateforme
+   vidéo ; au-delà de 0,24 le fichier grossit sans gain visible. */
+var QUALITES = { normale:0.10, haute:0.17, maximale:0.24 };
+
 var EFFETS = { aucun:'Aucun', zoom:'Zoom lent', dezoom:'Dézoom', gauche:'Panoramique →',
                nb:'Noir et blanc', chaud:'Teinte chaude' };
 var TRANSITIONS = { fondu:'Fondu', coupe:'Coupe', glisse:'Glissé', fondublanc:'Fondu blanc' };
@@ -327,11 +668,27 @@ var MONTAGE = [];              /* [{ media, duree, effet, transition }] */
 var OPT = {
   largeur:1080, hauteur:1920, intro:'logo', outro:'appel',
   accroche:"MJ'ADHÉSION", sous:'SAISON 2026-2027',
-  transition:'fondu', dureePhoto:2, logo:true, barre:true, son:false
+  transition:'fondu', dureePhoto:2, logo:true, barre:true, son:false,
+  musique:'', volume:0.7, musiqueDepart:0, qualite:'haute'
 };
+
+/* Piste de fond, partagée entre l'aperçu et l'export. */
+var piste = null;
+
+/* Durée du fondu de sortie du son, en secondes. Une coupure nette en fin de
+   réel s'entend et fait bâclé ; le fondu referme la vidéo proprement. */
+var FONDU_SON = 1.2;
+var fermeturePiste = null;
 
 var toile = document.getElementById('toile');
 var ctx = toile.getContext('2d');
+
+/* La plupart des rushes sont en 360 x 640 : agrandis en 1080 x 1920, ils
+   passent par le rééchantillonnage du navigateur, réglé par défaut sur le
+   mode le plus rapide. Le mode « high » coûte quelques millisecondes par
+   image et évite l'aspect pâteux. */
+ctx.imageSmoothingEnabled = true;
+ctx.imageSmoothingQuality = 'high';
 var logoImg = new Image();
 logoImg.src = LOGO_URL;
 
@@ -612,7 +969,41 @@ function composer(temps, seq){
 /* =====================================================================
    7. Lecture
    ===================================================================== */
+/**
+ * Prépare la piste de fond et la remet au début.
+ *
+ * L'élément est conservé d'une lecture à l'autre : une fois branché sur le
+ * graphe audio de l'export, un même élément ne peut plus l'être une seconde
+ * fois, et le recréer perdrait ce branchement.
+ */
+function preparerPiste(){
+  if (!OPT.musique) { if (piste) { try { piste.pause(); } catch (e) {} } return null; }
+
+  if (!piste || piste.dataset.url !== OPT.musique) {
+    if (piste) { try { piste.pause(); } catch (e) {} }
+    piste = new Audio(OPT.musique);
+    piste.dataset.url = OPT.musique;
+    piste.crossOrigin = 'anonymous';
+    piste.loop = true;
+    piste.source = null;
+  }
+
+  piste.volume = OPT.volume;
+  // La position n'est réglable qu'une fois la durée connue ; sur un fichier
+  // encore en cours de chargement, on repasse dès que les données arrivent.
+  var poser = function () {
+    try { piste.currentTime = Math.min(OPT.musiqueDepart, Math.max(0, (piste.duration || 0) - 1)); } catch (e) {}
+  };
+
+  if (piste.readyState >= 1) poser();
+  else piste.addEventListener('loadedmetadata', poser, { once:true });
+
+  return piste;
+}
+
 function arreter(){
+  if (fermeturePiste) { clearInterval(fermeturePiste); fermeturePiste = null; }
+  if (piste) { try { piste.pause(); piste.volume = OPT.volume; } catch (e) {} }
   if (lecture) {
     cancelAnimationFrame(lecture.trame);
     lecture.videos.forEach(function (v) { try { v.pause(); } catch (e) {} });
@@ -621,10 +1012,59 @@ function arreter(){
   document.getElementById('btn-lire').innerHTML = '<i class="fas fa-play"></i> Lire';
 }
 
-function lire(surFin){
+/**
+ * Amène chaque vidéo sur son extrait et attend que l'image soit décodée.
+ *
+ * Sans cette avance, la première image d'un plan est celle du début du
+ * fichier : le déplacement n'a pas eu le temps d'aboutir avant le dessin.
+ */
+function armerVideos(seq){
+  var attentes = [];
+
+  seq.items.forEach(function (it) {
+    if (it.genre !== 'plan' || it.clip.media.type !== 'video') return;
+
+    var el = it.clip.media.element;
+    var cible = it.clip.depart || 0;
+    try { el.pause(); } catch (e) {}
+
+    if (el.readyState >= 2 && Math.abs(el.currentTime - cible) < 0.05) return;
+
+    attentes.push(new Promise(function (resolve) {
+      var fait = false;
+      var fini = function () {
+        if (fait) return;
+        fait = true;
+        el.removeEventListener('seeked', fini);
+        resolve();
+      };
+      el.addEventListener('seeked', fini);
+      // Filet : un déplacement qui n'aboutit pas ne doit pas bloquer la lecture.
+      setTimeout(fini, 900);
+      try { el.currentTime = cible; } catch (e) { fini(); }
+    }));
+  });
+
+  return Promise.all(attentes);
+}
+
+function lire(surFin, surDemarrage){
   arreter();
   var seq = sequence();
   if (!seq.total) { message("Ajoute au moins un plan avant de lire."); return null; }
+
+  // Les vidéos sont calées avant que l'horloge ne démarre : la lecture
+  // commence donc sur la bonne image, sans saut ni clignotement. Le calage
+  // prend un instant, d'où le rendez-vous donné à l'appelant.
+  armerVideos(seq).then(function () {
+    if (surDemarrage) surDemarrage();
+    demarrer(seq, surFin);
+  });
+
+  return seq;
+}
+
+function demarrer(seq, surFin){
 
   var videos = [];
   MONTAGE.forEach(function (c) {
@@ -633,6 +1073,23 @@ function lire(surFin){
       videos.push(c.media.element);
     }
   });
+
+  var fond = preparerPiste();
+  if (fond) {
+    fond.play().catch(function () {});
+
+    // Aperçu : pas de graphe audio, on baisse le volume à la main sur la
+    // dernière seconde pour entendre exactement ce que donnera l'export.
+    var depart = Date.now();
+    var total = seq.total;
+    fermeturePiste = setInterval(function () {
+      var reste = total - (Date.now() - depart) / 1000;
+      if (reste <= FONDU_SON) {
+        fond.volume = Math.max(0, OPT.volume * Math.max(0, reste) / FONDU_SON);
+      }
+      if (reste <= 0) { clearInterval(fermeturePiste); fermeturePiste = null; }
+    }, 60);
+  }
 
   var t0 = performance.now();
   lecture = { videos:videos, trame:0, seq:seq };
@@ -647,13 +1104,33 @@ function lire(surFin){
 
     seq.items.forEach(function (it, i) {
       if (it.genre !== 'plan' || it.clip.media.type !== 'video') return;
-      var el = it.clip.media.element, dedans = temps >= it.debut && temps < it.debut + it.duree;
+      var el = it.clip.media.element;
+      var cible = it.clip.depart || 0;
+      var dedans = temps >= it.debut && temps < it.debut + it.duree;
+
       if (dedans && !joue[i]) {
         joue[i] = true;
-        try { el.currentTime = it.clip.depart || 0; el.play(); } catch (e) {}
+        // Le plan a normalement été calé à l'avance : on ne redéplace que si
+        // ce n'est pas le cas, car un déplacement tardif fait clignoter.
+        if (Math.abs(el.currentTime - cible) > 0.4) {
+          try { el.currentTime = cible; } catch (e) {}
+        }
+        try { el.play(); } catch (e) {}
       } else if (!dedans && joue[i]) {
         joue[i] = false;
         try { el.pause(); } catch (e) {}
+      } else if (!dedans && !joue[i] && temps > it.debut) {
+        // Plan déjà passé : on le remet à son point de départ pour une
+        // éventuelle relecture, tant qu'il n'est plus à l'écran.
+        if (Math.abs(el.currentTime - cible) > 0.4) {
+          try { el.currentTime = cible; } catch (e) {}
+        }
+      } else if (!dedans && temps >= it.debut - 0.5 && temps < it.debut) {
+        // Dernière demi-seconde avant l'entrée : on le cale pendant que le
+        // plan précédent occupe encore l'écran.
+        if (Math.abs(el.currentTime - cible) > 0.05) {
+          try { el.currentTime = cible; } catch (e) {}
+        }
       }
     });
 
@@ -668,15 +1145,20 @@ function lire(surFin){
   }
 
   lecture.trame = requestAnimationFrame(trame);
-  return seq;
 }
 
 /* =====================================================================
    8. Export
    ===================================================================== */
 function formatVideo(){
-  var candidats = ['video/mp4;codecs=avc1.42E01E', 'video/mp4',
-                   'video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'];
+  /* « avc1.42E01E » désigne le profil H.264 Baseline niveau 3.0, plafonné à
+     environ 720 x 576. Le navigateur acceptait le type puis réduisait l'image
+     pour rentrer dans ce plafond : d'où une vidéo presque paysage, le montage
+     vertical étant recollé au centre entre deux bandes noires.
+     On laisse désormais le navigateur choisir son profil, et le VP9 passe
+     avant le MP4 : il encode n'importe quelle taille sans rien rogner. */
+  var candidats = ['video/webm;codecs=vp9', 'video/mp4',
+                   'video/webm;codecs=vp8', 'video/webm'];
   if (!window.MediaRecorder) return null;
   for (var i = 0; i < candidats.length; i++) {
     if (MediaRecorder.isTypeSupported(candidats[i])) return candidats[i];
@@ -691,19 +1173,63 @@ function exporter(){
   var mime = formatVideo();
   if (!mime) { message("Ce navigateur ne sait pas enregistrer de vidéo. Essaie avec Chrome ou Edge."); return; }
 
+  /* La toile est remise à la taille voulue juste avant la capture : le flux
+     hérite de la taille du fond de toile au moment de captureStream(). */
+  if (toile.width !== OPT.largeur || toile.height !== OPT.hauteur) {
+    toile.width = OPT.largeur;
+    toile.height = OPT.hauteur;
+    // Redimensionner une toile remet ses réglages à zéro, celui-ci compris.
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    apercu();
+  }
+
   var flux = toile.captureStream(30);
+
+  /* Contrôle : si le navigateur n'enregistre pas à la taille demandée, mieux
+     vaut le dire tout de suite que de livrer un fichier au mauvais format. */
+  var pisteVideo = flux.getVideoTracks()[0];
+  var reglages = (pisteVideo && pisteVideo.getSettings) ? pisteVideo.getSettings() : {};
+  var largeurReelle = reglages.width || OPT.largeur;
+  var hauteurReelle = reglages.height || OPT.hauteur;
+
+  if (largeurReelle !== OPT.largeur || hauteurReelle !== OPT.hauteur) {
+    message('Attention : le navigateur enregistre en ' + largeurReelle + ' × ' + hauteurReelle
+            + ' au lieu de ' + OPT.largeur + ' × ' + OPT.hauteur + '.');
+  }
 
   /* Le son des vidéos, s'il est demandé, est mixé dans un même flux. */
   var contexte = null;
-  if (OPT.son) {
+  if (OPT.son || OPT.musique) {
     try {
       contexte = new (window.AudioContext || window.webkitAudioContext)();
       var sortie = contexte.createMediaStreamDestination();
-      MONTAGE.forEach(function (c) {
-        if (c.media.type !== 'video' || !c.media.element) return;
-        if (!c.media.source) c.media.source = contexte.createMediaElementSource(c.media.element);
-        c.media.source.connect(sortie);
-      });
+
+      if (OPT.son) {
+        MONTAGE.forEach(function (c) {
+          if (c.media.type !== 'video' || !c.media.element) return;
+          if (!c.media.source) c.media.source = contexte.createMediaElementSource(c.media.element);
+          c.media.source.connect(sortie);
+        });
+      }
+
+      /* La musique passe par un gain : le curseur de volume agit sur le
+         mixage, pas seulement sur ce qu'on entend dans l'aperçu. */
+      var fondExport = preparerPiste();
+      if (fondExport) {
+        if (!fondExport.source) fondExport.source = contexte.createMediaElementSource(fondExport);
+        if (!fondExport.gain) fondExport.gain = contexte.createGain();
+        var horloge = contexte.currentTime;
+        var fin = Math.max(0, seq.total - FONDU_SON);
+        fondExport.gain.gain.setValueAtTime(OPT.volume, horloge);
+        fondExport.gain.gain.setValueAtTime(OPT.volume, horloge + fin);
+        fondExport.gain.gain.linearRampToValueAtTime(0.0001, horloge + seq.total);
+        fondExport.source.connect(fondExport.gain);
+        fondExport.gain.connect(sortie);
+        fondExport.gain.connect(contexte.destination);
+        fondExport.play().catch(function () {});
+      }
+
       sortie.stream.getAudioTracks().forEach(function (p) { flux.addTrack(p); });
     } catch (e) {
       message("Le son n'a pas pu être capté ; la vidéo sera muette.");
@@ -711,7 +1237,17 @@ function exporter(){
   }
 
   var morceaux = [];
-  var enregistreur = new MediaRecorder(flux, { mimeType:mime, videoBitsPerSecond:6000000 });
+  /* Un débit fixe de 6 Mbit/s suffisait à un plan calme, pas à une foule
+     ou à un nuage de poudre colorée : l'encodeur rendait alors une image
+     pâteuse. On le calcule sur la définition réelle, en bits par pixel et
+     par image, ce qui suit automatiquement le format choisi. */
+  var debit = Math.round(largeurReelle * hauteurReelle * 30 * QUALITES[OPT.qualite]);
+
+  var enregistreur = new MediaRecorder(flux, {
+    mimeType: mime,
+    videoBitsPerSecond: debit,
+    audioBitsPerSecond: 160000
+  });
   enregistreur.ondataavailable = function (e) { if (e.data && e.data.size) morceaux.push(e.data); };
 
   enregistreur.onstop = function () {
@@ -719,19 +1255,29 @@ function exporter(){
     var blob = new Blob(morceaux, { type:mime });
     var a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = 'mja-reel-' + OPT.largeur + 'x' + OPT.hauteur + '.' + ext;
+    a.download = 'mja-reel-' + largeurReelle + 'x' + hauteurReelle + '.' + ext;
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
     if (contexte) { try { contexte.close(); } catch (e) {} }
-    message('Vidéo exportée (' + ext.toUpperCase() + ', ' + seq.total.toFixed(1).replace('.', ',') + ' s).');
+    message('Vidéo exportée — ' + largeurReelle + ' × ' + hauteurReelle + ', '
+            + ext.toUpperCase() + ', ' + seq.total.toFixed(1).replace('.', ',') + ' s, '
+            + Math.round(debit / 1000000) + ' Mbit/s, ' + Math.round(blob.size / 1048576) + ' Mo.');
     boutons(false);
   };
 
   boutons(true);
-  message('Enregistrement en cours — laisse cet onglet au premier plan pendant '
-          + seq.total.toFixed(1).replace('.', ',') + ' s…');
-  enregistreur.start();
-  lire(function () { setTimeout(function () { enregistreur.stop(); }, 200); });
+  message('Préparation des plans…');
+
+  /* L'enregistreur ne démarre qu'au premier instant réellement joué : lancé
+     avant le calage des vidéos, il capturait une toile encore vide. */
+  lire(
+    function () { setTimeout(function () { enregistreur.stop(); }, 200); },
+    function () {
+      enregistreur.start();
+      message('Enregistrement en cours — laisse cet onglet au premier plan pendant '
+              + seq.total.toFixed(1).replace('.', ',') + ' s…');
+    }
+  );
 }
 
 function boutons(occupe){
@@ -771,18 +1317,104 @@ function chargerMedia(m){
   });
 }
 
+/** Texte sûr dans une chaîne HTML construite à la main. */
+function echapper(t){
+  return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+                  .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+/**
+ * Charge un montage tout prêt.
+ *
+ * L'ébauche ne fait que poser un point de départ : elle remplace la timeline,
+ * pose l'intro, l'outro et les accroches, puis rend la main. Tout reste
+ * modifiable ensuite, plan par plan.
+ */
+function appliquerEbauche(id){
+  var e = null;
+  for (var i = 0; i < EBAUCHES.length; i++) if (EBAUCHES[i].id === id) e = EBAUCHES[i];
+  if (!e) return;
+
+  if (MONTAGE.length && !confirm('Remplacer le montage en cours par « ' + e.nom + ' » ?')) return;
+
+  /* Un plan se cite par son nom, ou par un objet qui resserre l'extrait. */
+  var choix = e.plans.map(function (entree) {
+    var nom = typeof entree === 'string' ? entree : entree.fichier;
+    for (var i = 0; i < BIBLIO.length; i++) {
+      if (BIBLIO[i].nom === nom) {
+        return { media: BIBLIO[i], reglage: typeof entree === 'string' ? {} : entree };
+      }
+    }
+    return null;
+  }).filter(Boolean);
+
+  var medias = choix.map(function (c) { return c.media; });
+
+  arreter();
+  message('Préparation de « ' + e.nom + ' »…');
+
+  Promise.all(medias.map(chargerMedia)).then(function () {
+    MONTAGE = choix.filter(function (c) { return c.media.element; }).map(function (c) {
+      var m = c.media;
+      var depart = c.reglage.depart !== undefined ? c.reglage.depart : (m.depart || 0);
+
+      return {
+        media: m,
+        duree: c.reglage.duree || m.dureeConseillee || (m.type === 'photo' ? OPT.dureePhoto : 3),
+        effet: m.type === 'photo' ? 'zoom' : 'aucun',
+        transition: e.transition || OPT.transition,
+        depart: Math.min(depart, Math.max(0, (m.duree || 0) - 0.4))
+      };
+    });
+
+    var perdus = choix.length - MONTAGE.length;
+
+    OPT.intro = e.intro || OPT.intro;
+    OPT.outro = e.outro || OPT.outro;
+    OPT.transition = e.transition || OPT.transition;
+    if (e.accroche) OPT.accroche = e.accroche;
+    if (e.sous) OPT.sous = e.sous;
+    refletterOptions();
+
+    dessinerMontage();
+    apercu();
+    message('« ' + e.nom + ' » chargé : ' + MONTAGE.length + ' plans'
+            + (perdus ? ', ' + perdus + ' illisible(s)' : '')
+            + '. Réordonne, ajuste les durées, puis exporte.');
+  });
+}
+
+/** Recopie OPT dans les champs du panneau de réglages. */
+function refletterOptions(){
+  // On simule une saisie plutôt que d'écrire la valeur en douce : les
+  // gestionnaires déjà branchés remettent OPT et les aides à jour tout seuls.
+  [['opt-intro', 'intro', 'change'], ['opt-outro', 'outro', 'change'],
+   ['opt-transition', 'transition', 'change'], ['opt-accroche', 'accroche', 'input'],
+   ['opt-sous', 'sous', 'input']].forEach(function (paire) {
+    var champ = document.getElementById(paire[0]);
+    if (! champ || champ.value === OPT[paire[1]]) return;
+    champ.value = OPT[paire[1]];
+    champ.dispatchEvent(new Event(paire[2]));
+  });
+}
+
 function dessinerBibliotheque(){
   var zone = document.getElementById('media');
   zone.innerHTML = '';
   BIBLIO.forEach(function (m, i) {
     var d = document.createElement('div');
     d.className = 'vignette';
-    d.title = m.nom + (m.poids ? ' — ' + m.poids + ' Mo' : '');
-    d.innerHTML = (m.type === 'video'
-        ? '<video src="' + m.url + '#t=0.5" muted preload="metadata"></video>'
-        : '<img src="' + m.url + '" alt="">')
+    d.title = [m.titre || m.nom, m.lieu, m.note, m.poids ? m.poids + ' Mo' : '']
+                .filter(Boolean).join(' — ');
+    /* Le repere de depart est plus parlant que la premiere image, souvent
+       floue ou prise pendant que la camera se leve. */
+    var vignette = m.type === 'video'
+        ? '<video src="' + m.url + '#t=' + (m.depart || 0.5).toFixed(1) + '" muted preload="metadata"></video>'
+        : '<img src="' + m.url + '" alt="">';
+    d.innerHTML = vignette
       + '<span class="t">' + (m.type === 'video' ? 'VIDÉO' : 'PHOTO') + '</span>'
-      + '<span class="plus"><i class="fas fa-plus"></i></span>';
+      + '<span class="plus"><i class="fas fa-plus"></i></span>'
+      + (m.titre ? '<span class="lg">' + echapper(m.titre) + '</span>' : '');
     d.addEventListener('click', function () { ajouter(i); });
     zone.appendChild(d);
   });
@@ -794,10 +1426,12 @@ function ajouter(index){
     if (!m.element) { message('Ce fichier n\'a pas pu être lu : ' + m.nom); return; }
     MONTAGE.push({
       media: m,
-      duree: m.type === 'video' ? Math.min(m.duree || 3, 4) : OPT.dureePhoto,
+      /* L'extrait de la fiche prime : il vise le moment qui porte le plan. */
+      duree: m.dureeConseillee
+             || (m.type === 'video' ? Math.min(m.duree || 3, 4) : OPT.dureePhoto),
       effet: m.type === 'photo' ? 'zoom' : 'aucun',
       transition: OPT.transition,
-      depart: 0
+      depart: Math.min(m.depart || 0, Math.max(0, (m.duree || 0) - 0.4))
     });
     dessinerMontage();
     apercu();
@@ -919,11 +1553,26 @@ function remplirListe(id, liste, valeur, aideId){
 }
 
 function brancher(){
+  var champQualite = document.getElementById('opt-qualite');
+  if (champQualite) {
+    champQualite.addEventListener('change', function () {
+      OPT.qualite = this.value;
+      var debit = Math.round(OPT.largeur * OPT.hauteur * 30 * QUALITES[OPT.qualite] / 1000000);
+      message('Export à ' + debit + ' Mbit/s environ.');
+    });
+  }
+
   document.getElementById('opt-format').addEventListener('change', function () {
     var d = this.value.split('x');
     OPT.largeur = +d[0]; OPT.hauteur = +d[1];
     toile.width = OPT.largeur; toile.height = OPT.hauteur;
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
     apercu();
+    message(OPT.hauteur > OPT.largeur
+      ? 'Format vertical ' + OPT.largeur + ' × ' + OPT.hauteur + ' — bon pour un réel.'
+      : 'Attention : format paysage ' + OPT.largeur + ' × ' + OPT.hauteur
+        + '. Un réel Instagram se publie en 1080 × 1920.');
   });
 
   ['intro', 'outro'].forEach(function (cle) {
@@ -931,6 +1580,83 @@ function brancher(){
       OPT[cle] = this.value; majDuree(); apercu();
     });
   });
+
+  var champMusique = document.getElementById('opt-musique');
+  var champVolume = document.getElementById('opt-volume');
+  var blocVolume = document.getElementById('bloc-volume');
+
+  if (champMusique) {
+    champMusique.addEventListener('change', function () {
+      OPT.musique = this.value;
+      blocVolume.style.display = this.value ? '' : 'none';
+
+      /* Plusieurs licences Creative Commons imposent de citer l'auteur :
+         le crédit est affiché pour être recopié dans la publication. */
+      var credit = this.options[this.selectedIndex].dataset.credit || '';
+      document.getElementById('credit-musique').textContent =
+        credit ? 'À créditer dans la publication : ' + credit : '';
+
+      OPT.musiqueDepart = 0;
+      if (window.majBorneDepart) window.majBorneDepart();
+      preparerPiste();
+      message(this.value
+        ? 'Musique choisie : elle sera mixée à l\'export.'
+        : 'Export muet — le bon choix pour un réel Instagram.');
+    });
+  }
+
+  if (champVolume) {
+    champVolume.addEventListener('input', function () {
+      OPT.volume = this.value / 100;
+      if (piste) piste.volume = OPT.volume;
+    });
+  }
+
+  var champDepart = document.getElementById('opt-depart-musique');
+  var etiquette = document.getElementById('etiquette-depart');
+  var ecouter = document.getElementById('btn-ecouter');
+  var arretEcoute = null;
+
+  function minutes(secondes){
+    var m = Math.floor(secondes / 60);
+    var s = Math.round(secondes % 60);
+    return m + ':' + (s < 10 ? '0' : '') + s;
+  }
+
+  if (champDepart) {
+    champDepart.addEventListener('input', function () {
+      OPT.musiqueDepart = +this.value;
+      etiquette.textContent = minutes(OPT.musiqueDepart);
+      if (piste) { try { piste.currentTime = OPT.musiqueDepart; } catch (e) {} }
+    });
+  }
+
+  if (ecouter) {
+    ecouter.addEventListener('click', function () {
+      var p = preparerPiste();
+      if (!p) return;
+      if (arretEcoute) clearTimeout(arretEcoute);
+      p.play().catch(function () {});
+      arretEcoute = setTimeout(function () { try { p.pause(); } catch (e) {} }, 5000);
+    });
+  }
+
+  /* La borne du curseur suit la durée du morceau choisi. */
+  window.majBorneDepart = function () {
+    if (!champDepart) return;
+    var p = preparerPiste();
+    if (!p) { champDepart.max = 0; return; }
+    var regler = function () {
+      champDepart.max = Math.max(0, Math.floor((p.duration || 0) - 5));
+      if (OPT.musiqueDepart > champDepart.max) {
+        OPT.musiqueDepart = 0;
+        champDepart.value = 0;
+        etiquette.textContent = '0:00';
+      }
+    };
+    if (p.readyState >= 1) regler();
+    else p.addEventListener('loadedmetadata', regler, { once:true });
+  };
 
   document.getElementById('opt-accroche').addEventListener('input', function () {
     OPT.accroche = this.value.toUpperCase(); apercu();
@@ -999,6 +1725,10 @@ function recevoir(fichiers){
 remplirListe('opt-intro', INTROS, OPT.intro, 'aide-intro');
 remplirListe('opt-outro', OUTROS, OPT.outro, 'aide-outro');
 brancher();
+
+Array.prototype.forEach.call(document.querySelectorAll('[data-ebauche]'), function (bouton) {
+  bouton.addEventListener('click', function () { appliquerEbauche(bouton.dataset.ebauche); });
+});
 dessinerBibliotheque();
 dessinerMontage();
 logoImg.onload = apercu;

@@ -1,0 +1,89 @@
+Musiques du monteur MJA (/kit-video)
+====================================
+
+Dépose ici les fichiers audio à poser sous un montage : ils apparaissent
+dans la liste « Musique » du monteur et peuvent être mixés à l'export.
+
+Formats acceptés
+  .mp3 (recommandé), .m4a, .aac, .wav, .ogg
+
+Nomme les fichiers lisiblement : « bouyon-energique.mp3 », « zouk-doux.mp3 ».
+Le nom est ce que tu verras dans la liste.
+
+
+CE QU'IL FAUT SAVOIR AVANT DE CHOISIR UNE MUSIQUE
+-------------------------------------------------
+
+Aucune musique n'est livrée avec le site, et ce n'est pas un oubli : les
+titres du commerce — bouyon, shatta, rap, pop — sont protégés. Les
+distribuer avec le projet serait de la contrefaçon, même pour une
+association et même sans but lucratif.
+
+Deux chemins légaux, selon l'endroit où la vidéo sera vue.
+
+
+1. POUR INSTAGRAM, TIKTOK, FACEBOOK, YOUTUBE SHORTS
+   → Ajoute la musique DANS l'application, pas ici.
+
+   Ces plateformes ont signé des accords avec les ayants droit : leur
+   bibliothèque audio est utilisable librement dans leurs publications.
+   Une musique importée dans le fichier vidéo, elle, peut être coupée ou
+   faire retirer la publication.
+
+   Exporte donc le montage muet, puis dans Instagram :
+     Reels > ajouter le son > Parcourir > onglet « Tendances »
+
+   Bonus : un réel qui utilise un son tendance est davantage poussé par
+   l'algorithme qu'un réel avec une piste importée. Rester muet ici est
+   donc aussi le meilleur choix pour la portée.
+
+
+2. POUR LE SITE, UNE PROJECTION, WHATSAPP, UN ÉCRAN EN STAND
+   → Il faut une musique libre de droits, téléchargée puis déposée ici.
+
+   Sources gratuites et fiables :
+     - Bibliothèque audio YouTube   studio.youtube.com > Bibliothèque audio
+     - Pixabay Music                pixabay.com/music
+     - Free Music Archive           freemusicarchive.org
+     - Uppbeat                      uppbeat.io (gratuit avec crédit)
+
+   Filtre par genre : dancehall, reggaeton, afrobeat, tropical house
+   donnent l'énergie la plus proche des sons antillais.
+
+   Vérifie toujours la licence affichée : certaines demandent de citer
+   l'auteur dans la description de la publication.
+
+
+LES SUGGESTIONS DU MONTEUR
+---------------------------
+
+L'onglet « Tendances » de /kit-video propose des familles de sons et des
+artistes de référence — antillais, français, internationaux. Ce sont des
+repères pour chercher dans la bibliothèque d'Instagram, pas des fichiers
+à télécharger : les tendances changent toutes les semaines, l'onglet
+« Tendances » de l'application reste la seule source à jour.
+
+LES PISTES LIVRÉES AVEC LE PROJET
+----------------------------------
+
+Le dossier contient quelques morceaux sous licence Creative Commons,
+récupérés sur archive.org. Ils sont là pour dépanner : une musique sous
+la main vaut mieux qu'un montage muet quand il faut aller vite.
+
+  - Aucune n'est un titre du commerce. Yozo, Gazo, Burna Boy et les sons
+    qui tournent sur les réseaux sont protégés : les livrer ici serait de
+    la contrefaçon. Sur Instagram et TikTok, ils sont de toute façon
+    accessibles gratuitement et légalement dans l'application.
+
+  - Les licences retenues autorisent toutes l'adaptation, condition
+    indispensable pour poser une piste sous une vidéo. Les licences
+    « ND » (pas de modification) ont été écartées pour cette raison.
+
+  - Le détail — titre, artiste, licence, adresse d'origine — est dans
+    credits.json, et s'affiche dans le monteur au moment du choix.
+    Plusieurs licences imposent de citer l'auteur : recopiez la mention
+    affichée dans la description de la publication.
+
+  - Ces morceaux n'ont pas été écoutés avant d'être déposés : passez-les
+    en revue et supprimez ce qui ne vous convient pas, c'est un simple
+    effacement de fichier.

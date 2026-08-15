@@ -1,0 +1,812 @@
+{
+  "_lisez_moi": [
+    "Fiche des rushes et ébauches de montage, lues par /kit-video.",
+    "",
+    "  plans     : un descriptif par fichier. « depart » et « duree » donnent",
+    "              l'extrait retenu, en secondes ; ils servent quand le plan est",
+    "              ajouté au montage, à la main ou par une ébauche.",
+    "  ebauches  : des montages tout prêts. Un clic les charge dans la timeline,",
+    "              où tout reste modifiable — ordre, durées, effets, transitions.",
+    "",
+    "Ce fichier est facultatif : sans lui, la bibliothèque fonctionne comme avant.",
+    "Un fichier absent d'ici apparaît quand même, sous son nom de fichier."
+  ],
+  "plans": {
+    "01-caravane-soiree.mp4": {
+      "titre": "Caravane de l'unité — la soirée",
+      "lieu": "Martinique",
+      "action": "La Caravane de l'unité",
+      "depart": 0.6,
+      "duree": 2.6,
+      "note": "Lumière violette, ambiance de fin de journée. Le tee-shirt de l'action est lisible."
+    },
+    "02-exterieur-pluie.mp4": {
+      "titre": "Sous la pluie, on y va quand même",
+      "lieu": "Martinique",
+      "action": "Logistique",
+      "depart": 3.0,
+      "duree": 2.2,
+      "note": "Plan large et gris — à garder pour un montage « coulisses », pas pour une accroche."
+    },
+    "03-collecte-point-equipe.mp4": {
+      "titre": "Le point d'équipe avant la fin",
+      "lieu": "Martinique",
+      "action": "Collecte solidaire",
+      "depart": 1.2,
+      "duree": 2.6,
+      "note": "Groupe devant le magasin, caddies visibles."
+    },
+    "04-collecte-chargement-camion.mp4": {
+      "titre": "Chargement du camion",
+      "lieu": "Fort-de-France",
+      "action": "Collecte solidaire",
+      "depart": 3.5,
+      "duree": 3.0,
+      "note": "Le plan le plus parlant de la collecte : le volume ramassé se voit."
+    },
+    "05-collecte-chariot-courses.mp4": {
+      "titre": "Les courses arrivent",
+      "lieu": "Martinique",
+      "action": "Collecte solidaire",
+      "depart": 1.0,
+      "duree": 2.8,
+      "note": "Bonne définition, mouvement franc de gauche à droite."
+    },
+    "06-atelier-tour-de-table.mp4": {
+      "titre": "Le tour de table",
+      "lieu": "Martinique",
+      "action": "Atelier",
+      "depart": 6.0,
+      "duree": 3.0,
+      "note": "Visages, sourires, ambiance de groupe. Le plan le plus chaleureux du lot."
+    },
+    "07-atelier-mise-en-place.mp4": {
+      "titre": "Mise en place de l'atelier",
+      "lieu": "Martinique",
+      "action": "Atelier",
+      "depart": 2.0,
+      "duree": 2.6,
+      "note": "Les préparatifs — utile juste avant un plan d'atelier en action."
+    },
+    "08-equipe-clap-de-fin.mp4": {
+      "titre": "Clap de fin, repos bien mérité",
+      "lieu": "Martinique",
+      "action": "Vie de l'équipe",
+      "depart": 1.0,
+      "duree": 2.6,
+      "note": "Fatigue joyeuse et complicité : le plan de clôture idéal."
+    },
+    "09-relais-pour-la-vie.mp4": {
+      "titre": "Relais pour la Vie 2025 avec la MAD'TEAM",
+      "lieu": "Martinique",
+      "action": "Relais pour la Vie",
+      "depart": 4.0,
+      "duree": 3.0,
+      "note": "Contient déjà un carton titre incrusté — parfait pour annoncer l'action sans rien rajouter."
+    },
+    "10-equipe-camion-trajet.mp4": {
+      "titre": "Dans le camion, entre deux étapes",
+      "lieu": "Martinique",
+      "action": "Vie de l'équipe",
+      "depart": 2.0,
+      "duree": 2.6,
+      "note": "Tee-shirts de l'association bien visibles."
+    },
+    "11-equipe-sud-le-marin.mp4": {
+      "titre": "L'équipe sud avait faim",
+      "lieu": "Le Marin",
+      "action": "Vie de l'équipe",
+      "depart": 8.0,
+      "duree": 2.6,
+      "note": "Séquence longue : n'en garder qu'un extrait."
+    },
+    "12-reunion-salle.mp4": {
+      "titre": "Réunion de préparation",
+      "lieu": "Martinique",
+      "action": "Vie associative",
+      "depart": 1.5,
+      "duree": 2.4,
+      "note": "Montre le travail de fond, moins spectaculaire mais utile au récit."
+    },
+    "13-le-carbet.mp4": {
+      "titre": "Au Carbet",
+      "lieu": "Le Carbet",
+      "action": "Sortie",
+      "depart": 0.8,
+      "duree": 2.0,
+      "note": "Sombre et peu lisible — à réserver à un montage long, sinon à écarter."
+    },
+    "14-stand-kakemonos.mp4": {
+      "titre": "Le stand et les kakémonos",
+      "lieu": "Martinique",
+      "action": "Forum",
+      "depart": 4.0,
+      "duree": 2.6,
+      "note": "L'identité visuelle de l'association apparaît en fond."
+    },
+    "15-collation-cupcakes.mp4": {
+      "titre": "Et bien sûr, la p'tite collation",
+      "lieu": "Martinique",
+      "action": "Fwi Ti Dèj",
+      "depart": 1.0,
+      "duree": 2.4,
+      "note": "Couleurs de l'association sur les gâteaux : très bon plan de respiration."
+    },
+    "16-caravane-preparation.mp4": {
+      "titre": "En mode préparation",
+      "lieu": "Martinique",
+      "action": "La Caravane de l'unité",
+      "depart": 6.0,
+      "duree": 2.8,
+      "note": "Le nom de l'action se lit sur le tee-shirt — sert de plan d'annonce."
+    },
+    "17-arrivee-portail.mp4": {
+      "titre": "Hop hop hop, on arrive",
+      "lieu": "Martinique",
+      "action": "Logistique",
+      "depart": 1.5,
+      "duree": 2.4,
+      "note": "Mouvement d'entrée : enchaîne bien avant un plan d'action."
+    },
+    "18-foule-fumigenes.mp4": {
+      "titre": "La foule et les fumigènes",
+      "lieu": "Martinique",
+      "action": "Grand rassemblement",
+      "depart": 2.0,
+      "duree": 3.0,
+      "note": "Plan large spectaculaire, bonne définition. Excellente ouverture."
+    },
+    "19-afterwork-gateau.mp4": {
+      "titre": "MJ'AfterWork — celebrate life",
+      "lieu": "Martinique",
+      "action": "Vie communautaire",
+      "depart": 9.0,
+      "duree": 2.8,
+      "note": "Les bougies arrivent en fin de plan : ne pas démarrer au début."
+    },
+    "20-afterwork-pizza.mp4": {
+      "titre": "Man-ééé, la pizza",
+      "lieu": "Martinique",
+      "action": "Vie communautaire",
+      "depart": 2.0,
+      "duree": 2.2,
+      "note": "Gros plan gourmand, ton léger. À doser."
+    },
+    "21-foyal-color-poudres.mp4": {
+      "titre": "Foyal Color — nuage de couleurs",
+      "lieu": "Fort-de-France",
+      "action": "Foyal Color",
+      "depart": 4.0,
+      "duree": 3.0,
+      "note": "Le plan le plus énergique du lot : à mettre en tête de réel."
+    },
+    "22-photocall-engagement.jpg": {
+      "titre": "Photocall « Je m'engage pour la paix »",
+      "lieu": "Martinique",
+      "action": "La Caravane de l'unité",
+      "duree": 2.2,
+      "note": "Le cadre porte le logo et le message : plan fixe de marque."
+    },
+    "23-tee-shirt-caravane.jpg": {
+      "titre": "Tee-shirt La Caravane de l'unité",
+      "lieu": "Martinique",
+      "action": "La Caravane de l'unité",
+      "duree": 2.0,
+      "note": "Logo et nom de l'action en grand : bon plan juste avant l'outro."
+    }
+  },
+  "ebauches": [
+    {
+      "id": "rentree",
+      "nom": "Réel de rentrée",
+      "resume": "L'énergie d'abord, puis les actions, puis l'équipe. Le montage le plus polyvalent.",
+      "intro": "compte",
+      "outro": "appel",
+      "accroche": "MJ'ADHÉSION",
+      "sous": "SAISON 2026-2027",
+      "transition": "fondu",
+      "plans": [
+        "21-foyal-color-poudres.mp4",
+        "16-caravane-preparation.mp4",
+        "04-collecte-chargement-camion.mp4",
+        "05-collecte-chariot-courses.mp4",
+        "06-atelier-tour-de-table.mp4",
+        "18-foule-fumigenes.mp4",
+        "19-afterwork-gateau.mp4",
+        "08-equipe-clap-de-fin.mp4"
+      ],
+      "saison": "SAISON 2026-2027"
+    },
+    {
+      "id": "actions",
+      "nom": "Nos actions",
+      "resume": "Ce que fait concrètement l'association, de la préparation à la distribution.",
+      "intro": "flash",
+      "outro": "logo",
+      "accroche": "NOS ACTIONS",
+      "sous": "MADIN' JEUNES AMBITION",
+      "transition": "coupe",
+      "plans": [
+        "09-relais-pour-la-vie.mp4",
+        "16-caravane-preparation.mp4",
+        "03-collecte-point-equipe.mp4",
+        "04-collecte-chargement-camion.mp4",
+        "05-collecte-chariot-courses.mp4",
+        "15-collation-cupcakes.mp4",
+        "23-tee-shirt-caravane.jpg"
+      ],
+      "saison": "SAISON 2026-2027"
+    },
+    {
+      "id": "equipe",
+      "nom": "La vie de l'équipe",
+      "resume": "Les coulisses et la bonne humeur — pour donner envie de rejoindre le groupe.",
+      "intro": "logo",
+      "outro": "contact",
+      "accroche": "REJOINS-NOUS",
+      "sous": "SAISON 2026-2027",
+      "transition": "fondu",
+      "plans": [
+        "06-atelier-tour-de-table.mp4",
+        "10-equipe-camion-trajet.mp4",
+        "11-equipe-sud-le-marin.mp4",
+        "12-reunion-salle.mp4",
+        "20-afterwork-pizza.mp4",
+        "19-afterwork-gateau.mp4",
+        "08-equipe-clap-de-fin.mp4",
+        "22-photocall-engagement.jpg"
+      ],
+      "saison": "SAISON 2026-2027"
+    },
+    {
+      "id": "teaser",
+      "nom": "Teaser court",
+      "resume": "Douze secondes, quatre plans : à publier en story pour annoncer la saison.",
+      "intro": "titre",
+      "outro": "appel",
+      "accroche": "SAISON 2026-2027",
+      "sous": "ÇA COMMENCE",
+      "transition": "glisse",
+      "plans": [
+        "21-foyal-color-poudres.mp4",
+        "18-foule-fumigenes.mp4",
+        "01-caravane-soiree.mp4",
+        "23-tee-shirt-caravane.jpg"
+      ],
+      "saison": "SAISON 2026-2027"
+    },
+    {
+      "id": "hook",
+      "nom": "Accroche 3 secondes",
+      "resume": "Coupes très rapides sur le temps fort, sans carton d'ouverture. Le format qui retient le mieux.",
+      "intro": "aucune",
+      "outro": "appel",
+      "accroche": "MJ’ADHÉSION",
+      "sous": "SAISON 2026-2027",
+      "saison": "SAISON 2026-2027",
+      "transition": "coupe",
+      "plans": [
+        {
+          "fichier": "21-foyal-color-poudres.mp4",
+          "depart": 5.0,
+          "duree": 1.1
+        },
+        {
+          "fichier": "18-foule-fumigenes.mp4",
+          "depart": 2.5,
+          "duree": 1.1
+        },
+        {
+          "fichier": "04-collecte-chargement-camion.mp4",
+          "depart": 4.0,
+          "duree": 1.1
+        },
+        {
+          "fichier": "06-atelier-tour-de-table.mp4",
+          "depart": 7.0,
+          "duree": 1.4
+        },
+        {
+          "fichier": "19-afterwork-gateau.mp4",
+          "depart": 9.5,
+          "duree": 1.6
+        },
+        {
+          "fichier": "16-caravane-preparation.mp4",
+          "depart": 6.5,
+          "duree": 2.0
+        },
+        {
+          "fichier": "08-equipe-clap-de-fin.mp4",
+          "depart": 1.2,
+          "duree": 2.4
+        }
+      ]
+    },
+    {
+      "id": "journee",
+      "nom": "Un jour avec nous",
+      "resume": "Le récit d'une journée, de la mise en place au clap de fin. Le plus parlant pour donner envie de venir.",
+      "intro": "titre",
+      "outro": "appel",
+      "accroche": "UN JOUR AVEC NOUS",
+      "sous": "MADIN’ JEUNES AMBITION",
+      "saison": "SAISON 2026-2027",
+      "transition": "fondu",
+      "plans": [
+        "07-atelier-mise-en-place.mp4",
+        "16-caravane-preparation.mp4",
+        "17-arrivee-portail.mp4",
+        "10-equipe-camion-trajet.mp4",
+        "03-collecte-point-equipe.mp4",
+        "04-collecte-chargement-camion.mp4",
+        "15-collation-cupcakes.mp4",
+        "11-equipe-sud-le-marin.mp4",
+        "08-equipe-clap-de-fin.mp4"
+      ]
+    },
+    {
+      "id": "avant-apres",
+      "nom": "Avant / après",
+      "resume": "La préparation dans le calme, puis l'action au complet. Deux temps, un contraste.",
+      "intro": "flash",
+      "outro": "logo",
+      "accroche": "AVANT / APRÈS",
+      "sous": "LA CARAVANE DE L’UNITÉ",
+      "saison": "SAISON 2026-2027",
+      "transition": "glisse",
+      "plans": [
+        {
+          "fichier": "12-reunion-salle.mp4",
+          "duree": 2.2
+        },
+        {
+          "fichier": "07-atelier-mise-en-place.mp4",
+          "duree": 2.2
+        },
+        {
+          "fichier": "16-caravane-preparation.mp4",
+          "duree": 2.4
+        },
+        {
+          "fichier": "18-foule-fumigenes.mp4",
+          "duree": 2.6
+        },
+        {
+          "fichier": "21-foyal-color-poudres.mp4",
+          "duree": 2.8
+        },
+        {
+          "fichier": "01-caravane-soiree.mp4",
+          "duree": 2.4
+        }
+      ]
+    },
+    {
+      "id": "saison",
+      "nom": "Toute la saison",
+      "resume": "Le panorama complet : chaque action a son plan. Le montage à montrer sur un stand ou en assemblée générale.",
+      "intro": "titre",
+      "outro": "contact",
+      "accroche": "NOTRE SAISON",
+      "sous": "MADIN’ JEUNES AMBITION",
+      "saison": "SAISON 2026-2027",
+      "transition": "fondu",
+      "plans": [
+        {
+          "fichier": "09-relais-pour-la-vie.mp4",
+          "duree": 3.2,
+          "depart": 4.0
+        },
+        {
+          "fichier": "16-caravane-preparation.mp4",
+          "duree": 3.0,
+          "depart": 6.0
+        },
+        {
+          "fichier": "01-caravane-soiree.mp4",
+          "duree": 2.6,
+          "depart": 0.6
+        },
+        {
+          "fichier": "03-collecte-point-equipe.mp4",
+          "duree": 2.8,
+          "depart": 1.2
+        },
+        {
+          "fichier": "04-collecte-chargement-camion.mp4",
+          "duree": 3.2,
+          "depart": 3.5
+        },
+        {
+          "fichier": "05-collecte-chariot-courses.mp4",
+          "duree": 2.8,
+          "depart": 1.0
+        },
+        {
+          "fichier": "15-collation-cupcakes.mp4",
+          "duree": 2.4,
+          "depart": 1.0
+        },
+        {
+          "fichier": "06-atelier-tour-de-table.mp4",
+          "duree": 3.2,
+          "depart": 6.0
+        },
+        {
+          "fichier": "14-stand-kakemonos.mp4",
+          "duree": 2.6,
+          "depart": 4.0
+        },
+        {
+          "fichier": "18-foule-fumigenes.mp4",
+          "duree": 3.0,
+          "depart": 2.0
+        },
+        {
+          "fichier": "21-foyal-color-poudres.mp4",
+          "duree": 3.0,
+          "depart": 4.0
+        },
+        {
+          "fichier": "08-equipe-clap-de-fin.mp4",
+          "duree": 2.8,
+          "depart": 1.0
+        },
+        {
+          "fichier": "22-photocall-engagement.jpg",
+          "duree": 2.4
+        }
+      ]
+    },
+    {
+      "id": "retrospective",
+      "nom": "Rétrospective",
+      "resume": "Le récit d'une année dans l'ordre : on prépare, on part, on agit, on partage, on recommence.",
+      "intro": "logo",
+      "outro": "appel",
+      "accroche": "UNE ANNÉE AVEC MJA",
+      "sous": "RÉTROSPECTIVE",
+      "saison": "SAISON 2026-2027",
+      "transition": "fondu",
+      "plans": [
+        {
+          "fichier": "12-reunion-salle.mp4",
+          "duree": 2.8,
+          "depart": 1.5
+        },
+        {
+          "fichier": "07-atelier-mise-en-place.mp4",
+          "duree": 3.0,
+          "depart": 2.0
+        },
+        {
+          "fichier": "17-arrivee-portail.mp4",
+          "duree": 2.6,
+          "depart": 1.5
+        },
+        {
+          "fichier": "10-equipe-camion-trajet.mp4",
+          "duree": 3.0,
+          "depart": 2.0
+        },
+        {
+          "fichier": "02-exterieur-pluie.mp4",
+          "duree": 2.4,
+          "depart": 3.0
+        },
+        {
+          "fichier": "03-collecte-point-equipe.mp4",
+          "duree": 2.8,
+          "depart": 1.2
+        },
+        {
+          "fichier": "04-collecte-chargement-camion.mp4",
+          "duree": 3.2,
+          "depart": 3.5
+        },
+        {
+          "fichier": "11-equipe-sud-le-marin.mp4",
+          "duree": 2.8,
+          "depart": 8.0
+        },
+        {
+          "fichier": "20-afterwork-pizza.mp4",
+          "duree": 2.4,
+          "depart": 2.0
+        },
+        {
+          "fichier": "19-afterwork-gateau.mp4",
+          "duree": 3.0,
+          "depart": 9.0
+        },
+        {
+          "fichier": "06-atelier-tour-de-table.mp4",
+          "duree": 3.2,
+          "depart": 6.0
+        },
+        {
+          "fichier": "08-equipe-clap-de-fin.mp4",
+          "duree": 2.8,
+          "depart": 1.0
+        }
+      ]
+    },
+    {
+      "id": "presentation",
+      "nom": "Présentation de l'association",
+      "resume": "Rythme posé, plans plus longs : conçu pour tourner en boucle sur un écran de stand, sans lasser.",
+      "intro": "logo",
+      "outro": "contact",
+      "accroche": "QUI SOMMES-NOUS ?",
+      "sous": "JEUNES ENGAGÉS EN MARTINIQUE",
+      "saison": "SAISON 2026-2027",
+      "transition": "fondu",
+      "plans": [
+        {
+          "fichier": "23-tee-shirt-caravane.jpg",
+          "duree": 3.0
+        },
+        {
+          "fichier": "06-atelier-tour-de-table.mp4",
+          "duree": 3.6,
+          "depart": 6.0
+        },
+        {
+          "fichier": "12-reunion-salle.mp4",
+          "duree": 3.0,
+          "depart": 1.5
+        },
+        {
+          "fichier": "16-caravane-preparation.mp4",
+          "duree": 3.4,
+          "depart": 6.0
+        },
+        {
+          "fichier": "04-collecte-chargement-camion.mp4",
+          "duree": 3.6,
+          "depart": 3.5
+        },
+        {
+          "fichier": "05-collecte-chariot-courses.mp4",
+          "duree": 3.2,
+          "depart": 1.0
+        },
+        {
+          "fichier": "15-collation-cupcakes.mp4",
+          "duree": 2.8,
+          "depart": 1.0
+        },
+        {
+          "fichier": "14-stand-kakemonos.mp4",
+          "duree": 3.0,
+          "depart": 4.0
+        },
+        {
+          "fichier": "18-foule-fumigenes.mp4",
+          "duree": 3.4,
+          "depart": 2.0
+        },
+        {
+          "fichier": "21-foyal-color-poudres.mp4",
+          "duree": 3.4,
+          "depart": 4.0
+        },
+        {
+          "fichier": "22-photocall-engagement.jpg",
+          "duree": 3.0
+        }
+      ]
+    }
+  ],
+  "tendances": {
+    "_lisez_moi": [
+      "Repères pour choisir un son et un format de montage.",
+      "Aucune musique n'est fournie : les titres du commerce sont protégés.",
+      "Sur Instagram et TikTok, la musique s'ajoute DANS l'application — leur",
+      "bibliothèque est sous licence, et un son tendance est mieux poussé par",
+      "l'algorithme qu'une piste importée. Voir public/videos/musiques/LISEZ-MOI.txt."
+    ],
+    "musiques": [
+      {
+        "famille": "Antilles — bouyon, shatta, dancehall",
+        "pourquoi": "L'énergie qui parle immédiatement au public d'ici. À réserver aux plans de foule, de fête, de sortie.",
+        "reperes": [
+          "Yozo",
+          "Asa Bantan",
+          "Jahyanaï",
+          "Kalash",
+          "Tiitof",
+          "Krys",
+          "Admiral T"
+        ],
+        "chercher": "Instagram > Reels > Son > Parcourir, taper « bouyon » ou « shatta » puis trier par tendance."
+      },
+      {
+        "famille": "Antilles — zouk et kompa",
+        "pourquoi": "Pour un montage plus posé : témoignage, remerciements, rétrospective de saison.",
+        "reperes": [
+          "Fanny J",
+          "Misié Sadik",
+          "Jocelyne Béroard",
+          "Kassav’",
+          "T Matt"
+        ],
+        "chercher": "Même chemin, mots-clés « zouk » ou « kompa love »."
+      },
+      {
+        "famille": "France — rap, afro, pop",
+        "pourquoi": "Sons très présents dans les fils hexagonaux : utile si la publication vise au-delà de la Martinique.",
+        "reperes": [
+          "Tiakola",
+          "Gazo",
+          "Aya Nakamura",
+          "Ninho",
+          "Werenoi",
+          "Santa",
+          "Zaho de Sagazan"
+        ],
+        "chercher": "L'onglet « Tendances » de la bibliothèque audio, filtré sur la France."
+      },
+      {
+        "famille": "International — afrobeats, amapiano, latino",
+        "pourquoi": "Rythmes qui portent bien les montages rapides et les transitions sur le temps fort.",
+        "reperes": [
+          "Burna Boy",
+          "Rema",
+          "Tyla",
+          "Ayra Starr",
+          "Bad Bunny",
+          "Karol G"
+        ],
+        "chercher": "Mots-clés « afrobeats », « amapiano », « reggaeton »."
+      },
+      {
+        "famille": "Libre de droits — pour le site et les projections",
+        "pourquoi": "Seule famille réellement téléchargeable et mixable dans le fichier vidéo. Indispensable hors réseaux sociaux.",
+        "reperes": [
+          "Bibliothèque audio YouTube",
+          "Pixabay Music",
+          "Free Music Archive",
+          "Uppbeat"
+        ],
+        "chercher": "Télécharger, déposer dans public/videos/musiques/, puis choisir la piste dans le monteur."
+      }
+    ],
+    "formats": [
+      {
+        "nom": "Accroche en 3 secondes",
+        "recette": "Ouvrir sur le plan le plus fort, sans carton. Trois plans d'une seconde, puis on ralentit. Le spectateur décide en trois secondes s'il reste.",
+        "duree": "10 à 15 s",
+        "ebauche": "hook"
+      },
+      {
+        "nom": "Transition sur le temps fort",
+        "recette": "Caler chaque changement de plan sur la frappe de la musique. Dans le monteur : durées égales, transition « coupe », puis ajuster au dixième.",
+        "duree": "15 à 25 s",
+        "ebauche": "hook"
+      },
+      {
+        "nom": "Un jour avec nous",
+        "recette": "Récit chronologique : préparation, trajet, action, repas, clap de fin. Le montage le plus simple à comprendre, et celui qui donne le plus envie de rejoindre.",
+        "duree": "25 à 35 s",
+        "ebauche": "journee"
+      },
+      {
+        "nom": "Avant / après",
+        "recette": "Deux temps nettement séparés : le lieu vide et la mise en place, puis le même lieu plein. Marche très bien sur une action récurrente.",
+        "duree": "12 à 20 s",
+        "ebauche": "avant-apres"
+      },
+      {
+        "nom": "Boucle parfaite",
+        "recette": "Terminer sur un plan proche du premier : la vidéo se relance sans couture et les vues doublent. Choisir deux plans de même cadrage.",
+        "duree": "8 à 15 s",
+        "ebauche": null
+      },
+      {
+        "nom": "Texte à l’écran",
+        "recette": "Une phrase courte par plan, ajoutée dans Instagram après l'export. Indispensable : la majorité des réels sont regardés sans le son.",
+        "duree": "tous formats",
+        "ebauche": null
+      }
+    ],
+    "ajouter_un_son": {
+      "titre": "Poser un son sur un montage déjà exporté",
+      "pourquoi": [
+        "Les montages sortent muets, et c'est voulu : la bibliothèque audio",
+        "d'Instagram et de TikTok est sous licence, gratuite pour l'association,",
+        "et un son de cette bibliothèque est davantage poussé par l'algorithme",
+        "qu'une piste incrustée dans le fichier. Une musique importée peut même",
+        "faire couper le son de la publication, voire la faire retirer."
+      ],
+      "etapes": [
+        "Télécharger le montage sur le téléphone (bouton « Télécharger » ci-dessus).",
+        "Instagram > + > Reel > sélectionner la vidéo dans la galerie.",
+        "Icône « Musique » (la note de musique) en haut de l'écran de montage.",
+        "Coller ou taper le nom de l'artiste ou du titre dans la recherche.",
+        "Faire glisser la forme d'onde pour caler le début du son sur le premier plan.",
+        "Baisser « Vidéo » à 0 dans le mélangeur si le rush a du son parasite.",
+        "Publier. Le même fichier peut resservir avec un autre son la semaine suivante."
+      ],
+      "recherches": [
+        {
+          "quoi": "Yozo",
+          "ou": "Instagram > Reels > Musique > taper « Yozo »",
+          "note": "Bouyon guadeloupéen, tempo rapide : va avec Foyal Color, la foule, les fumigènes."
+        },
+        {
+          "quoi": "Vybz Kartel",
+          "ou": "Instagram > Reels > Musique > taper « Vybz Kartel »",
+          "note": "Dancehall classique : porte bien les montages « vie de l'équipe » et les coupes rapides."
+        },
+        {
+          "quoi": "Dancehall classics",
+          "ou": "Chercher « dancehall 2000s » ou « old school dancehall »",
+          "note": "Les sons anciens reviennent par vagues : regardez le compteur de réels à côté du titre."
+        },
+        {
+          "quoi": "Le titre que vous avez repéré",
+          "ou": "Copier le nom depuis YouTube, le coller dans la recherche d'Instagram",
+          "note": "Presque tout le catalogue commercial est dans la bibliothèque : inutile de télécharger quoi que ce soit."
+        }
+      ],
+      "reperer_une_tendance": [
+        "Dans la bibliothèque, un son tendance affiche une flèche montante.",
+        "Le nombre de réels indiqué sous le titre dit s'il est déjà saturé :",
+        "entre 5 000 et 200 000 réels, le son est encore porteur ; au-delà,",
+        "la vague est passée.",
+        "Autre méthode : ouvrir trois comptes d'associations martiniquaises,",
+        "noter les sons qui reviennent, les enregistrer en favoris."
+      ]
+    },
+    "musique_gratuite": {
+      "titre": "Télécharger de la musique gratuitement, et légalement",
+      "preciser": [
+        "Un titre écoutable gratuitement sur YouTube n'est pas pour autant libre :",
+        "l'écoute en streaming est autorisée, le téléchargement et le remontage ne",
+        "le sont pas. C'est la même chose pour Spotify ou Deezer. Un site qui",
+        "propose de « convertir » une vidéo ne change rien à cela.",
+        "Il existe en revanche de la vraie musique gratuite, y compris chez YouTube."
+      ],
+      "sources": [
+        {
+          "nom": "SoundCloud — pistes avec bouton de téléchargement",
+          "adresse": "soundcloud.com, filtre « À utiliser commercialement » ou « Téléchargement gratuit »",
+          "detail": "Beaucoup d'artistes, dont des producteurs dancehall et bouyon, activent eux-mêmes le téléchargement ou publient sous licence Creative Commons. Dans la recherche, ouvrir « Filtres » puis « Licence ». Le bouton « Plus » sous le lecteur affiche « Télécharger le fichier » quand l'artiste l'autorise : dans ce cas c'est lui qui donne l'accord, il n'y a rien à contourner."
+        },
+        {
+          "nom": "Bibliothèque audio YouTube",
+          "adresse": "studio.youtube.com → Bibliothèque audio",
+          "detail": "Des milliers de morceaux en téléchargement MP3, utilisables partout, y compris hors YouTube. Filtres par genre — reggae, hip-hop, danse — et par humeur. La colonne « Attribution » indique ceux qui demandent de citer l'auteur."
+        },
+        {
+          "nom": "Pixabay Music",
+          "adresse": "pixabay.com/music",
+          "detail": "Téléchargement sans compte, aucune citation obligatoire. Fonds correct en tropical house, afrobeat et percussions."
+        },
+        {
+          "nom": "Free Music Archive",
+          "adresse": "freemusicarchive.org",
+          "detail": "Creative Commons, avec un filtre par licence. Écarter les mentions « ND » : elles interdisent de poser la piste sous une vidéo."
+        },
+        {
+          "nom": "Uppbeat",
+          "adresse": "uppbeat.io",
+          "detail": "Gratuit contre un crédit dans la description. Catalogue plus proche des sons qui tournent sur les réseaux."
+        }
+      ],
+      "ensuite": [
+        "Déposer les fichiers dans public/videos/musiques/ : ils apparaissent",
+        "aussitôt dans la liste « Musique » du monteur, et se mixent à l'export",
+        "avec un fondu de sortie. Dix morceaux sont déjà là pour dépanner."
+      ],
+      "votre_dossier": [
+        "Le dossier public/videos/musiques/ vous appartient : le monteur y liste",
+        "tout fichier audio qu'il trouve, avec ou sans fiche de licence, et rien",
+        "dans le site n'en efface aucun. Déposez ce que vous voulez, la liste se",
+        "met à jour au rechargement de la page."
+      ]
+    }
+  }
+}

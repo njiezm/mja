@@ -1,0 +1,603 @@
+<?php
+
+namespace App\Console\Commands;
+
+use Illuminate\Console\Command;
+use Symfony\Component\Process\Process;
+
+/**
+ * Rend en vidéo les ébauches décrites dans public/videos/kit/montage.json.
+ *
+ * Le monteur du navigateur (/kit-video) sert à ajuster et à réexporter ; cette
+ * commande, elle, produit les fichiers déjà prêts à publier, pour n'avoir rien
+ * à faire quand il faut poster vite.
+ *
+ * Les réels sortent muets : sur Instagram et TikTok la musique s'ajoute dans
+ * l'application, et une piste importée serait de toute façon remplacée.
+ *
+ *   php artisan mja:montages
+ *   php artisan mja:montages --force --seulement=teaser
+ */
+class GenererMontagesVideo extends Command
+{
+    protected $signature = 'mja:montages
+        {--force : Refait les montages déjà présents}
+        {--seulement= : Ne rend qu\'une ébauche, par son identifiant}
+        {--musique= : Fichier de public/videos/musiques/ à poser sous le montage}
+        {--musique-depart=0 : Seconde du morceau où commencer — le refrain est rarement au début}';
+
+    protected $description = 'Assemble les ébauches de /kit-video en réels 1080x1920 prêts à publier';
+
+    private const L = 1080;
+    private const H = 1920;
+    private const IPS = 30;
+
+    /** Durée du fondu entre deux plans, en secondes. */
+    private const FONDU = 0.4;
+
+    /** Fondu de sortie du son : une coupure nette en fin de réel s'entend. */
+    private const FONDU_SON = 1.2;
+
+    private string $ffmpeg;
+    private string $ffprobe;
+    private string $travail;
+
+    public function handle(): int
+    {
+        if (! $this->outils()) {
+            return self::FAILURE;
+        }
+
+        $fiche = json_decode((string) @file_get_contents(public_path('videos/kit/montage.json')), true);
+
+        if (! is_array($fiche) || empty($fiche['ebauches'])) {
+            $this->error('Aucune ébauche lisible dans public/videos/kit/montage.json.');
+
+            return self::FAILURE;
+        }
+
+        $sortie = public_path('videos/montages');
+        $this->travail = storage_path('app/montages-tmp');
+
+        foreach ([$sortie, $this->travail] as $dossier) {
+            if (! is_dir($dossier)) {
+                mkdir($dossier, 0755, true);
+            }
+        }
+
+        $seulement = $this->option('seulement');
+        $faits = 0;
+
+        foreach ($fiche['ebauches'] as $ebauche) {
+            if ($seulement && $ebauche['id'] !== $seulement) {
+                continue;
+            }
+
+            $destination = $sortie . '/' . $ebauche['id'] . '.mp4';
+
+            if (is_file($destination) && ! $this->option('force')) {
+                $this->line("  {$ebauche['id']}.mp4 déjà présent — --force pour le refaire");
+                continue;
+            }
+
+            $this->info("▸ {$ebauche['nom']}");
+
+            if ($this->rendre($ebauche, $fiche['plans'], $destination)) {
+                $faits++;
+            }
+        }
+
+        $this->nettoyer();
+
+        $this->newLine();
+        $this->info($faits . ' montage(s) écrit(s) dans public/videos/montages/.');
+
+        return self::SUCCESS;
+    }
+
+    /** Localise ffmpeg et ffprobe, sans quoi rien n'est possible. */
+    private function outils(): bool
+    {
+        $candidats = [
+            'ffmpeg',
+            'C:/Users/' . (getenv('USERNAME') ?: '') . '/AppData/Local/Microsoft/WinGet/Packages/Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe/ffmpeg-8.1.1-full_build/bin/ffmpeg.exe',
+            '/usr/bin/ffmpeg',
+            '/usr/local/bin/ffmpeg',
+        ];
+
+        foreach ($candidats as $chemin) {
+            $test = new Process([$chemin, '-version']);
+            $test->run();
+
+            if ($test->isSuccessful()) {
+                $this->ffmpeg = $chemin;
+                $this->ffprobe = str_replace('ffmpeg', 'ffprobe', $chemin);
+
+                return true;
+            }
+        }
+
+        $this->error('ffmpeg est introuvable — impossible de rendre les montages.');
+        $this->line('Installez-le (winget install Gyan.FFmpeg, ou apt install ffmpeg) puis relancez.');
+
+        return false;
+    }
+
+    /** Assemble une ébauche : cartons, plans normalisés, fondus, export. */
+    private function rendre(array $ebauche, array $plans, string $destination): bool
+    {
+        $segments = [];
+
+        // ── Carton d'ouverture ───────────────────────────────────────
+        $intro = $this->carton($ebauche['id'] . '-intro', $ebauche['accroche'] ?? '', $ebauche['sous'] ?? '', 'intro');
+        if ($intro) {
+            $segments[] = ['image' => $intro, 'duree' => 2.4, 'carton' => true];
+        }
+
+        // ── Les plans ────────────────────────────────────────────────
+        foreach ($ebauche['plans'] as $entree) {
+            // Un plan se cite par son nom, ou par un objet qui resserre
+            // l'extrait — les montages à coupes rapides en ont besoin.
+            $nom = is_array($entree) ? ($entree['fichier'] ?? '') : $entree;
+            $source = public_path('videos/kit/' . $nom);
+
+            if ($nom === '' || ! is_file($source)) {
+                $this->warn("    plan absent, ignoré : {$nom}");
+                continue;
+            }
+
+            $meta = $plans[$nom] ?? [];
+            $duree = (float) (is_array($entree) ? ($entree['duree'] ?? $meta['duree'] ?? 3) : ($meta['duree'] ?? 3));
+            $depart = (float) (is_array($entree) ? ($entree['depart'] ?? $meta['depart'] ?? 0) : ($meta['depart'] ?? 0));
+
+            $segments[] = str_ends_with(strtolower($nom), '.mp4')
+                ? ['video' => $source, 'depart' => $depart, 'duree' => $duree]
+                : ['image' => $source, 'duree' => $duree, 'zoom' => true];
+        }
+
+        // ── Carton de fermeture ──────────────────────────────────────
+        // Le sous-titre de l'intro ne convient pas au carton de fin : « ÇA
+        // COMMENCE » sous « J'ADHÈRE » n'a aucun sens. On y met la saison.
+        $outro = $this->carton($ebauche['id'] . '-outro', "J'ADHÈRE",
+                               $ebauche['saison'] ?? 'SAISON 2026-2027', 'outro');
+        if ($outro) {
+            $segments[] = ['image' => $outro, 'duree' => 2.4, 'carton' => true];
+        }
+
+        if (count($segments) < 2) {
+            $this->warn('    pas assez de plans exploitables.');
+
+            return false;
+        }
+
+        // Chaque segment est d'abord ramené au même format : c'est la seule
+        // façon fiable d'enchaîner des sources de tailles et de cadences
+        // différentes sans que ffmpeg refuse le raccord.
+        $normalises = [];
+
+        foreach ($segments as $i => $segment) {
+            $this->output->write('.');
+            $fichier = $this->travail . '/' . $ebauche['id'] . '-' . str_pad((string) $i, 2, '0', STR_PAD_LEFT) . '.mp4';
+
+            if (! $this->normaliser($segment, $fichier)) {
+                $this->warn('    segment ' . $i . ' illisible, ignoré.');
+                continue;
+            }
+
+            $normalises[] = ['fichier' => $fichier, 'duree' => $segment['duree']];
+        }
+
+        $this->output->write(' assemblage… ');
+
+        $ok = ($ebauche['transition'] ?? 'fondu') === 'coupe'
+            ? $this->assemblerCoupe($normalises, $destination)
+            : $this->assemblerFondu($normalises, $destination);
+
+        if (! $ok) {
+            $this->error('échec');
+
+            return false;
+        }
+
+        if ($this->option('musique') && ! $this->poserMusique($destination)) {
+            $this->warn('    musique non ajoutée.');
+        }
+
+        $this->affiche($destination);
+        $duree = $this->duree($destination);
+        $poids = round(filesize($destination) / 1048576, 1);
+        $this->line("terminé — {$duree} s, {$poids} Mo");
+
+        return true;
+    }
+
+    /**
+     * Ramène un segment au format cible : 1080x1920, 30 ips, sans son.
+     *
+     * Le recadrage est « couvrant » (l'image remplit sans se déformer), les
+     * filets tricolores et le logo sont incrustés ici pour que tous les plans
+     * reçoivent le même habillage.
+     */
+    private function normaliser(array $segment, string $destination): bool
+    {
+        $cmd = [$this->ffmpeg, '-y', '-v', 'error'];
+
+        if (isset($segment['video'])) {
+            $cmd[] = '-ss';
+            $cmd[] = (string) $segment['depart'];
+            $cmd[] = '-t';
+            $cmd[] = (string) $segment['duree'];
+            $cmd[] = '-i';
+            $cmd[] = $segment['video'];
+        } else {
+            $cmd[] = '-loop';
+            $cmd[] = '1';
+            $cmd[] = '-t';
+            $cmd[] = (string) $segment['duree'];
+            $cmd[] = '-i';
+            $cmd[] = $segment['image'];
+        }
+
+        // Les cartons portent déjà le logo en grand : pas de badge en coin.
+        $badge = empty($segment['carton']);
+
+        if ($badge) {
+            $cmd[] = '-i';
+            $cmd[] = $this->badgeLogo();
+        }
+
+        // « flags=lanczos » : la plupart des rushes sont en 360 x 640 et
+        // doivent tripler de taille. Le rééchantillonnage par défaut les rend
+        // pâteux ; lanczos garde les contours nets.
+        $habillage = 'scale=' . self::L . ':' . self::H . ':force_original_aspect_ratio=increase:flags=lanczos'
+            . ',crop=' . self::L . ':' . self::H
+            . ',fps=' . self::IPS . ',setsar=1,format=yuv420p';
+
+        // Un plan fixe respire mieux avec un léger zoom.
+        if (! empty($segment['zoom'])) {
+            $images = (int) round($segment['duree'] * self::IPS);
+            $habillage = 'scale=' . (self::L * 2) . ':' . (self::H * 2)
+                . ':force_original_aspect_ratio=increase:flags=lanczos,crop=' . (self::L * 2) . ':' . (self::H * 2)
+                . ',zoompan=z=\'min(zoom+0.0009,1.12)\':d=' . $images
+                . ':x=\'iw/2-(iw/zoom/2)\':y=\'ih/2-(ih/zoom/2)\':s=' . self::L . 'x' . self::H
+                . ',fps=' . self::IPS . ',setsar=1,format=yuv420p';
+        }
+
+        $tiers = (int) (self::L / 3);
+        $barres = '';
+        foreach ([[0, '0x3DAEF5'], [$tiers, '0xF5A623'], [2 * $tiers, '0xD0021B']] as [$x, $couleur]) {
+            $largeur = $x === 2 * $tiers ? self::L - 2 * $tiers : $tiers;
+            $barres .= ",drawbox=x={$x}:y=0:w={$largeur}:h=10:color={$couleur}@1:t=fill";
+            $barres .= ',drawbox=x=' . $x . ':y=' . (self::H - 10) . ":w={$largeur}:h=10:color={$couleur}@1:t=fill";
+        }
+
+        $filtre = '[0:v]' . $habillage . $barres . ($badge ? '[v];' : '[out]');
+
+        if ($badge) {
+            $filtre .= '[v][1:v]overlay=x=' . (self::L - 150) . ':y=44[out]';
+        }
+
+        $cmd = array_merge($cmd, [
+            '-filter_complex', $filtre,
+            '-map', '[out]',
+            '-an',
+            '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '14',
+            '-pix_fmt', 'yuv420p',
+            '-t', (string) $segment['duree'],
+            $destination,
+        ]);
+
+        return $this->lancer($cmd);
+    }
+
+    /** Enchaînement par coupes franches, via le démultiplexeur concat. */
+    private function assemblerCoupe(array $segments, string $destination): bool
+    {
+        $liste = $this->travail . '/liste-' . basename($destination, '.mp4') . '.txt';
+        $lignes = array_map(
+            fn ($s) => "file '" . str_replace('\\', '/', $s['fichier']) . "'",
+            $segments
+        );
+        file_put_contents($liste, implode("\n", $lignes) . "\n");
+
+        // Les intermédiaires sont encodés très finement : les recopier tels
+        // quels conserve toute leur qualité, sans seconde compression.
+        return $this->lancer([
+            $this->ffmpeg, '-y', '-v', 'error',
+            '-f', 'concat', '-safe', '0', '-i', $liste,
+            '-c', 'copy', '-movflags', '+faststart', $destination,
+        ]);
+    }
+
+    /**
+     * Enchaînement par fondus (xfade), en une seule passe.
+     *
+     * Chaque fondu empiète sur le plan précédent : l'instant de bascule se
+     * calcule donc sur les durées déjà cumulées, moins les fondus consommés.
+     */
+    private function assemblerFondu(array $segments, string $destination): bool
+    {
+        if (count($segments) < 2) {
+            return false;
+        }
+
+        $cmd = [$this->ffmpeg, '-y', '-v', 'error'];
+
+        foreach ($segments as $s) {
+            $cmd[] = '-i';
+            $cmd[] = $s['fichier'];
+        }
+
+        $filtre = '';
+        $courant = '[0:v]';
+        $ecoule = $segments[0]['duree'];
+
+        for ($i = 1; $i < count($segments); $i++) {
+            $bascule = round($ecoule - self::FONDU, 3);
+            $sortie = $i === count($segments) - 1 ? '[out]' : "[x{$i}]";
+            $filtre .= $courant . "[{$i}:v]xfade=transition=fade:duration=" . self::FONDU
+                . ":offset={$bascule}{$sortie};";
+            $courant = $sortie;
+            $ecoule += $segments[$i]['duree'] - self::FONDU;
+        }
+
+        $cmd = array_merge($cmd, [
+            '-filter_complex', rtrim($filtre, ';'),
+            '-map', '[out]',
+            '-an',
+            '-c:v', 'libx264', '-preset', 'slow', '-crf', '18',
+            '-profile:v', 'high', '-level', '4.2',
+            '-pix_fmt', 'yuv420p', '-movflags', '+faststart',
+            $destination,
+        ]);
+
+        return $this->lancer($cmd);
+    }
+
+    /**
+     * Pose une musique sous le montage, avec fondus d'entrée et de sortie.
+     *
+     * À réserver aux vidéos qui ne passeront pas par Instagram ou TikTok :
+     * ces plateformes fournissent leur propre bibliothèque, sous licence, et
+     * une piste importée peut faire retirer la publication.
+     */
+    private function poserMusique(string $video): bool
+    {
+        $piste = public_path('videos/musiques/' . $this->option('musique'));
+
+        if (! is_file($piste)) {
+            $this->warn('    musique introuvable : ' . $piste);
+
+            return false;
+        }
+
+        $duree = (float) str_replace(',', '.', $this->duree($video));
+        $sonorise = preg_replace('/\.mp4$/', '-son.mp4', $video);
+
+        // Le filtre doit désigner explicitement la piste d'entrée et sa
+        // sortie : sans étiquettes, ffmpeg ne sait pas à quoi l'appliquer.
+        $filtre = '[1:a]afade=t=in:st=0:d=0.8'
+            . ',afade=t=out:st=' . round(max(0, $duree - self::FONDU_SON), 2) . ':d=' . self::FONDU_SON
+            . ',volume=0.8[son]';
+
+        // Le point de départ se pose avant l'entrée : ffmpeg décode alors
+        // directement à partir de là, sans lire tout ce qui précède.
+        $depart = max(0, (float) $this->option('musique-depart'));
+
+        $ok = $this->lancer([
+            $this->ffmpeg, '-y', '-v', 'error',
+            '-i', $video,
+            '-ss', (string) $depart,
+            '-i', $piste,
+            '-filter_complex', $filtre,
+            '-map', '0:v', '-map', '[son]',
+            '-c:v', 'copy', '-c:a', 'aac', '-b:a', '160k',
+            '-shortest', '-movflags', '+faststart',
+            $sonorise,
+        ]);
+
+        if ($ok) {
+            @unlink($video);
+            rename($sonorise, $video);
+        } else {
+            @unlink($sonorise);
+        }
+
+        return $ok;
+    }
+
+    /** Carton d'ouverture ou de fermeture, composé au pixel avec GD. */
+    private function carton(string $nom, string $titre, string $sous, string $genre): ?string
+    {
+        if (! extension_loaded('gd')) {
+            return null;
+        }
+
+        $police = $this->police();
+        $toile = imagecreatetruecolor(self::L, self::H);
+
+        // Dégradé vertical navy → bleu, dans l'esprit de la charte.
+        for ($y = 0; $y < self::H; $y++) {
+            $t = $y / self::H;
+            $couleur = imagecolorallocate($toile,
+                (int) (20 + 30 * $t), (int) (48 + 40 * $t), (int) (110 + 70 * $t));
+            imagefilledrectangle($toile, 0, $y, self::L, $y, $couleur);
+        }
+
+        $blanc = imagecolorallocate($toile, 255, 255, 255);
+        $jaune = imagecolorallocate($toile, 245, 166, 35);
+        $bleuClair = imagecolorallocate($toile, 189, 212, 245);
+
+        // Filets tricolores.
+        $tiers = (int) (self::L / 3);
+        foreach ([[0, [61, 174, 245]], [$tiers, [245, 166, 35]], [2 * $tiers, [208, 2, 27]]] as [$x, $rvb]) {
+            $c = imagecolorallocate($toile, ...$rvb);
+            $fin = $x === 2 * $tiers ? self::L : $x + $tiers;
+            imagefilledrectangle($toile, $x, 0, $fin, 10, $c);
+            imagefilledrectangle($toile, $x, self::H - 10, $fin, self::H, $c);
+        }
+
+        // Logo, au centre haut.
+        $logo = @imagecreatefromjpeg(public_path('images/logo.jpg'));
+        if ($logo) {
+            $cote = 280;
+            $x = (int) ((self::L - $cote) / 2);
+            $this->pastille($toile, $x, 520, $cote, $cote, 46, $blanc);
+            imagecopyresampled($toile, $logo, $x + 22, 542, 0, 0, $cote - 44, $cote - 44,
+                imagesx($logo), imagesy($logo));
+            imagedestroy($logo);
+        }
+
+        if ($police) {
+            $this->centre($toile, $titre, 900, 96, $blanc, $police['gras']);
+            imagefilledrectangle($toile, (int) (self::L / 2) - 70, 960, (int) (self::L / 2) + 70, 968, $jaune);
+            $this->centre($toile, $sous, 1050, 44, $bleuClair, $police['normale']);
+
+            if ($genre === 'outro') {
+                $this->centre($toile, 'mja-martinique.com', 1320, 46, $blanc, $police['gras']);
+                $this->centre($toile, '@madin_jeunes_ambition', 1400, 40, $bleuClair, $police['normale']);
+            } else {
+                $this->centre($toile, "MADIN' JEUNES AMBITION", 1320, 44, $blanc, $police['gras']);
+                $this->centre($toile, 'Relève tous les défis !', 1390, 38, $bleuClair, $police['italique']);
+            }
+        }
+
+        $chemin = $this->travail . '/' . $nom . '.png';
+        imagepng($toile, $chemin);
+        imagedestroy($toile);
+
+        return $chemin;
+    }
+
+    /** Badge blanc arrondi portant le logo, incrusté sur chaque plan. */
+    private function badgeLogo(): string
+    {
+        $chemin = $this->travail . '/badge.png';
+
+        if (is_file($chemin)) {
+            return $chemin;
+        }
+
+        $cote = 106;
+        $toile = imagecreatetruecolor($cote, $cote);
+        imagesavealpha($toile, true);
+        imagefill($toile, 0, 0, imagecolorallocatealpha($toile, 0, 0, 0, 127));
+
+        $this->pastille($toile, 0, 0, $cote - 1, $cote - 1, 22, imagecolorallocate($toile, 255, 255, 255));
+
+        $logo = @imagecreatefromjpeg(public_path('images/logo.jpg'));
+        if ($logo) {
+            imagecopyresampled($toile, $logo, 9, 9, 0, 0, $cote - 18, $cote - 18,
+                imagesx($logo), imagesy($logo));
+            imagedestroy($logo);
+        }
+
+        imagepng($toile, $chemin);
+        imagedestroy($toile);
+
+        return $chemin;
+    }
+
+    /** Vignette d'aperçu, prise au premier plan de contenu. */
+    private function affiche(string $video): void
+    {
+        $this->lancer([
+            $this->ffmpeg, '-y', '-v', 'error',
+            '-ss', '3', '-i', $video, '-frames:v', '1',
+            '-vf', 'scale=540:-1',
+            preg_replace('/\.mp4$/', '.jpg', $video),
+        ]);
+    }
+
+    private function duree(string $fichier): string
+    {
+        $p = new Process([$this->ffprobe, '-v', 'error', '-show_entries', 'format=duration',
+                          '-of', 'csv=p=0', $fichier]);
+        $p->run();
+
+        return number_format((float) trim($p->getOutput()), 1, ',', '');
+    }
+
+    private function lancer(array $cmd): bool
+    {
+        $p = new Process($cmd, null, null, null, 600);
+        $p->run();
+
+        if (! $p->isSuccessful()) {
+            $erreur = trim($p->getErrorOutput() ?: $p->getOutput());
+            if ($erreur !== '') {
+                $this->newLine();
+                $this->line(substr($erreur, 0, 900));
+            }
+        }
+
+        return $p->isSuccessful();
+    }
+
+    /** Rectangle à coins arrondis — GD n'en propose pas. */
+    private function pastille($toile, int $x, int $y, int $l, int $h, int $r, int $couleur): void
+    {
+        imagefilledrectangle($toile, $x + $r, $y, $x + $l - $r, $y + $h, $couleur);
+        imagefilledrectangle($toile, $x, $y + $r, $x + $l, $y + $h - $r, $couleur);
+
+        foreach ([[$x + $r, $y + $r], [$x + $l - $r, $y + $r],
+                  [$x + $r, $y + $h - $r], [$x + $l - $r, $y + $h - $r]] as [$cx, $cy]) {
+            imagefilledellipse($toile, $cx, $cy, $r * 2, $r * 2, $couleur);
+        }
+    }
+
+    /** Écrit un texte centré, en réduisant la taille jusqu'à ce qu'il tienne. */
+    private function centre($toile, string $texte, int $y, int $taille, int $couleur, string $police): void
+    {
+        if ($texte === '') {
+            return;
+        }
+
+        $marge = 120;
+
+        do {
+            $boite = imagettfbbox($taille, 0, $police, $texte);
+            $largeur = $boite[2] - $boite[0];
+            if ($largeur <= self::L - $marge || $taille <= 22) {
+                break;
+            }
+            $taille -= 3;
+        } while (true);
+
+        imagettftext($toile, $taille, 0, (int) ((self::L - $largeur) / 2), $y, $couleur, $police, $texte);
+    }
+
+    /** @return array{gras: string, normale: string, italique: string}|null */
+    private function police(): ?array
+    {
+        $jeux = [
+            'gras' => ['C:/Windows/Fonts/arialbd.ttf', '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',
+                       '/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf'],
+            'normale' => ['C:/Windows/Fonts/arial.ttf', '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+                          '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf'],
+            'italique' => ['C:/Windows/Fonts/ariali.ttf', '/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf',
+                           '/usr/share/fonts/truetype/liberation/LiberationSans-Italic.ttf'],
+        ];
+
+        $trouve = [];
+
+        foreach ($jeux as $style => $chemins) {
+            foreach ($chemins as $chemin) {
+                if (is_file($chemin)) {
+                    $trouve[$style] = $chemin;
+                    break;
+                }
+            }
+        }
+
+        return count($trouve) === 3 ? $trouve : null;
+    }
+
+    /** Les intermédiaires ne servent qu'au temps du rendu. */
+    private function nettoyer(): void
+    {
+        foreach (glob($this->travail . '/*') ?: [] as $fichier) {
+            @unlink($fichier);
+        }
+    }
+}
