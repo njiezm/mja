@@ -19,10 +19,13 @@ class StripeService
             && Setting::has('stripe_public_key');
     }
 
-    /** Montant de la cotisation en centimes. */
+    /**
+     * Montant débité par carte, en centimes : cotisation + frais de transaction
+     * répercutés sur le payeur (voir App\Support\Cotisation).
+     */
     public static function amountCents(): int
     {
-        return (int) round(((float) Setting::get('cotisation_amount', 20)) * 100);
+        return \App\Support\Cotisation::montantCarteCents();
     }
 
     private static function secret(): ?string

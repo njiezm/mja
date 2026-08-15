@@ -2,7 +2,7 @@
 
 namespace App\Mail;
 
-use App\Models\Member;
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -18,7 +18,7 @@ class MemberPasswordReset extends Mailable
     use Queueable, SerializesModels;
 
     public function __construct(
-        public Member $member,
+        public User $member,
         public string $plainPassword,
         public bool $nouveauCompte = false,
     ) {}

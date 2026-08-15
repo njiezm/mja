@@ -31,7 +31,7 @@
         <div>
             <h2 class="font-display font-bold text-xl text-mja-gray mb-3">1. Responsable du traitement</h2>
             <p>Le responsable du traitement est l'association Madin'Jeunes Ambition, dont le siège est situé 22, passage du Cœur sur la Main, 97200 Fort-de-France, Martinique.<br>
-            Contact : <a href="mailto:contact@mja-martinique.com" class="text-mja-blue hover:underline">contact@mja-martinique.com</a></p>
+            Contact : <a href="mailto:{{ config('mja.contact_email') }}" class="text-mja-blue hover:underline">{{ config('mja.contact_email') }}</a></p>
         </div>
 
         <div>
@@ -96,7 +96,7 @@
             <h2 class="font-display font-bold text-xl text-mja-gray mb-3">6. Vos droits</h2>
             <p>Conformément au RGPD, vous disposez des droits suivants sur vos données : droit d'<strong>accès</strong>, de <strong>rectification</strong>, d'<strong>effacement</strong>, de <strong>limitation</strong>, d'<strong>opposition</strong>, de <strong>portabilité</strong>, ainsi que le droit de <strong>retirer votre consentement</strong> à tout moment.</p>
             <p class="mt-2">Pour exercer ces droits, contactez-nous à
-                <a href="mailto:contact@mja-martinique.com" class="text-mja-blue hover:underline">contact@mja-martinique.com</a>.
+                <a href="mailto:{{ config('mja.contact_email') }}" class="text-mja-blue hover:underline">{{ config('mja.contact_email') }}</a>.
                 Nous nous engageons à répondre dans un délai d'un mois.</p>
             <p class="mt-2">Si vous estimez, après nous avoir contactés, que vos droits ne sont pas respectés, vous pouvez introduire une réclamation auprès de la
                 <a href="https://www.cnil.fr" target="_blank" rel="noopener" class="text-mja-blue hover:underline">CNIL</a>

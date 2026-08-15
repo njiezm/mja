@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('title', "Contact — Madin'Jeunes Ambition")
-@section('meta_description', "Contactez Madin'Jeunes Ambition — association basée à Fort-de-France, Martinique. Pour toute question, partenariat ou information sur nos programmes.")
+@section('meta_description', "Contactez Madin'Jeunes Ambition — association de jeunes bénévoles en Martinique et au-delà. Pour toute question, partenariat ou information sur nos programmes.")
 
 @section('content')
 
@@ -34,8 +34,8 @@
                                 <i class="fas fa-map-marker-alt text-mja-blue"></i>
                             </div>
                             <div>
-                                <div class="font-display font-bold text-mja-gray text-sm">Adresse</div>
-                                <div class="text-gray-500 text-sm mt-0.5">22, passage du Cœur sur la Main<br>97200 Fort-de-France, Martinique</div>
+                                <div class="font-display font-bold text-mja-gray text-sm">Où nous agissons</div>
+                                <div class="text-gray-500 text-sm mt-0.5">Martinique et au-delà</div>
                             </div>
                         </div>
                         <div class="flex gap-4 items-start">
@@ -44,7 +44,7 @@
                             </div>
                             <div>
                                 <div class="font-display font-bold text-mja-gray text-sm">Email</div>
-                                <a href="mailto:contact@mja-martinique.com" class="text-mja-blue hover:underline text-sm mt-0.5 block">contact@mja-martinique.com</a>
+                                <a href="mailto:{{ config('mja.contact_email') }}" class="text-mja-blue hover:underline text-sm mt-0.5 block">{{ config('mja.contact_email') }}</a>
                             </div>
                         </div>
                     </div>
@@ -57,7 +57,6 @@
                                 ['fab fa-facebook','Facebook','MadinJeunesAmbition','https://www.facebook.com/MadinJeunesAmbition/','#1877F2'],
                                 ['fab fa-instagram','Instagram','@madin_jeunes_ambition','https://www.instagram.com/madin_jeunes_ambition/','#E1306C'],
                                 ['fab fa-tiktok','TikTok','@fwi_ti_dej','https://www.tiktok.com/@fwi_ti_dej','#010101'],
-                                ['fab fa-snapchat','Snapchat','(bientôt)','https://www.snapchat.com/','#FFFC00'],
                                 ['fab fa-youtube','YouTube','MJA Officiel','https://www.youtube.com/channel/UCX6nyVEv_QyFuLREyVvOMLw','#FF0000'],
                             ] as [$icon,$name,$handle,$url,$color])
                             <a href="{{ $url }}" target="_blank"
@@ -66,7 +65,7 @@
                                 <span class="text-xs font-display font-bold text-mja-gray">{{ $name }}</span>
                             </a>
                             @endforeach
-                            <a href="mailto:contact@mja-martinique.com"
+                            <a href="mailto:{{ config('mja.contact_email') }}"
                                class="flex flex-col items-center gap-1.5 bg-mja-blue/10 hover:bg-mja-blue/20 border border-mja-blue/20 rounded-xl p-3 transition-colors text-center">
                                 <i class="fas fa-envelope text-xl text-mja-blue"></i>
                                 <span class="text-xs font-display font-bold text-mja-blue">Email</span>

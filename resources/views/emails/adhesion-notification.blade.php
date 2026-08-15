@@ -40,7 +40,6 @@
             ['Profession',          $adhesion->profession],
             ['Téléphone',           $adhesion->telephone],
             ['Email',               $adhesion->email],
-            ['Adresse postale',     $adhesion->adresse_postale],
           ] as [$label, $val])
           <tr style="border-bottom:1px solid #f0f4ff">
             <td style="padding:9px 20px;font-size:13px;color:#666;font-weight:600;width:40%;background:#fafbff">{{ $label }}</td>

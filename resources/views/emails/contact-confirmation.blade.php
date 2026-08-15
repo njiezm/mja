@@ -46,13 +46,13 @@
         </table>
 
         <p style="font-size:14px;color:#777;line-height:1.7;margin:0">
-          Pour toute question urgente : <a href="mailto:contact@njiezm.fr" style="color:#2048A4;font-weight:600">contact@njiezm.fr</a>
+          Pour toute question urgente : <a href="mailto:{{ config('mja.contact_email') }}" style="color:#2048A4;font-weight:600">{{ config('mja.contact_email') }}</a>
         </p>
       </td></tr>
 
       {{-- Footer --}}
       <tr><td style="background:#f0f5ff;padding:20px 32px;text-align:center">
-        <p style="margin:0;font-size:11px;color:#999">Madin'Jeunes Ambition — Fort-de-France, Martinique</p>
+        <p style="margin:0;font-size:11px;color:#999">Madin'Jeunes Ambition — Martinique et au-delà</p>
         <p style="margin:4px 0 0;font-size:11px;color:#bbb">Cet email vous a été envoyé automatiquement suite à votre prise de contact.</p>
       </td></tr>
 

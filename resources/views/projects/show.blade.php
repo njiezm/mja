@@ -2,7 +2,7 @@
 @section('title', "{$project->titre} — Madin'Jeunes Ambition")
 @section('meta_description', $project->description ? \Illuminate\Support\Str::limit(strip_tags($project->description), 155) : "Projet de Madin'Jeunes Ambition — association de jeunes bénévoles en Martinique.")
 @if($project->image ?? null)
-@section('og_image', asset('storage/'.$project->image))
+@section('og_image', $project->imageUrl())
 @endif
 
 @section('content')
@@ -39,7 +39,7 @@
 <section class="py-16">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         @if($project->image)
-        <img src="{{ asset("storage/{$project->image}") }}" alt="{{ $project->titre }}"
+        <img src="{{ $project->imageUrl() }}" alt="{{ $project->titre }}"
              class="w-full rounded-2xl mb-10 object-cover max-h-96 shadow-md">
         @endif
         @if($project->description_courte)
@@ -47,8 +47,8 @@
             {{ $project->description_courte }}
         </p>
         @endif
-        <div class="text-gray-700 leading-loose text-[15px]">
-            {!! nl2br(e($project->description)) !!}
+        <div class="prose-mja text-gray-700 leading-loose text-[15px]">
+            {!! \App\Support\HtmlRiche::rendre($project->description) !!}
         </div>
 
         @php $projectEvents = $project->events()->where('publie', true)->orderByDesc('date_debut')->get(); @endphp

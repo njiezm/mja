@@ -28,8 +28,9 @@
                 $nomAffiche = $a->prenom . ' ' . mb_strtoupper(mb_substr($a->nom, 0, 1)) . '.';
                 $initiale = mb_strtoupper(mb_substr($a->prenom, 0, 1));
             @endphp
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 text-center card-hover {{ $me && $m->id === $me->id ? 'ring-2 ring-mja-blue' : '' }}">
             <button type="button"
-                    class="w-full bg-white rounded-2xl border border-gray-100 shadow-sm p-4 text-center card-hover cursor-pointer focus:outline-none focus:ring-2 focus:ring-mja-blue {{ $me && $m->id === $me->id ? 'ring-2 ring-mja-blue' : '' }}"
+                    class="w-full text-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-mja-blue rounded-xl"
                     data-photo="{{ $a->photo ? Storage::url($a->photo) : '' }}"
                     data-nom="{{ $nomAffiche }}"
                     data-initiale="{{ $initiale }}"
@@ -47,6 +48,34 @@
                 </div>
                 @if($me && $m->id === $me->id)<div class="text-[11px] text-mja-blue font-semibold mt-0.5">Vous</div>@endif
             </button>
+
+                {{-- Réseaux partagés par l'adhérent : hors du bouton, un lien ne
+                     pouvant pas être imbriqué dans un élément interactif. --}}
+                @if($a->reseaux_sociaux)
+                <div class="flex justify-center flex-wrap gap-2 mt-2.5">
+                    @foreach($a->reseaux_sociaux as $cle => $valeur)
+                    @php
+                        $meta = \App\Models\Adhesion::RESEAUX[$cle] ?? null;
+                        $lien = $meta ? \App\Support\ReseauSocial::url($cle, $valeur) : null;
+                    @endphp
+                    @if($meta)
+                        @if($lien)
+                        <a href="{{ $lien }}" target="_blank" rel="noopener noreferrer"
+                           title="{{ $meta[0] }} : {{ $meta[2] }}{{ $valeur }}"
+                           class="w-7 h-7 rounded-lg bg-gray-50 hover:bg-mja-blue hover:text-white text-gray-500 flex items-center justify-center transition-colors text-xs">
+                            <i class="{{ $meta[1] }}" aria-hidden="true"></i>
+                        </a>
+                        @else
+                        <span title="{{ $meta[0] }} : {{ $meta[2] }}{{ $valeur }}"
+                              class="w-7 h-7 rounded-lg bg-gray-50 text-gray-400 flex items-center justify-center text-xs">
+                            <i class="{{ $meta[1] }}" aria-hidden="true"></i>
+                        </span>
+                        @endif
+                    @endif
+                    @endforeach
+                </div>
+                @endif
+            </div>
             @endforeach
         </div>
         <p class="text-xs text-gray-400 text-center mt-8">

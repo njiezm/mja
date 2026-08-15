@@ -60,6 +60,7 @@ class Setting extends Model
         $emails = array_filter($emails, fn ($e) => filter_var($e, FILTER_VALIDATE_EMAIL));
         $emails = array_values(array_unique($emails));
 
-        return $emails ?: ['contact@njiezm.fr'];
+        // Repli : l'adresse publique de l'association, jamais une boîte vide.
+        return $emails ?: [(string) config('mja.contact_email')];
     }
 }

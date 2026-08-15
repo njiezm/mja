@@ -18,8 +18,11 @@ class UserController extends Controller
     {
         $actor = $request->user();
 
+        // Cette page ne concerne que les comptes ayant un accès au back-office ;
+        // les adhérents sans rôle figurent dans « Comptes adhérents ».
         // Super admin voit tout ; admin ne voit que les gestionnaires de contenu.
         $users = User::query()
+            ->whereIn('role', [User::ROLE_CONTENT, User::ROLE_ADMIN, User::ROLE_SUPER_ADMIN])
             ->when(! $actor->isSuperAdmin(), fn ($q) => $q->where('role', User::ROLE_CONTENT))
             ->orderByRaw("CASE role WHEN 'super_admin' THEN 0 WHEN 'admin' THEN 1 ELSE 2 END")
             ->orderBy('name')

@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Member;
+use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -114,7 +114,7 @@ class MotsDePasseMembres extends Command
             $email = Str::lower(trim($cols[2]));
             $mdp = $cols[3];
 
-            $member = Member::where('email', $email)->first();
+            $member = User::where('email', $email)->first();
 
             if (! $member) {
                 $inconnus[] = $email;
@@ -185,7 +185,7 @@ class MotsDePasseMembres extends Command
         $lignes = [];
 
         foreach ($membres as $m) {
-            $mdp = Member::motDePasseTemporaire();
+            $mdp = User::motDePasseTemporaire();
             $m->setPasswordAndCopy($mdp);
             $m->save();
 
@@ -200,10 +200,11 @@ class MotsDePasseMembres extends Command
         return self::SUCCESS;
     }
 
-    /** @return \Illuminate\Database\Eloquent\Collection<int, Member> */
+    /** @return \Illuminate\Database\Eloquent\Collection<int, User> */
     private function cibles()
     {
-        $query = Member::with('adhesion');
+        // Ne cible que les comptes rattachés à une adhésion.
+        $query = User::with('adhesion')->whereNotNull('adhesion_id');
 
         if ($email = $this->option('email')) {
             $query->where('email', Str::lower(trim($email)));

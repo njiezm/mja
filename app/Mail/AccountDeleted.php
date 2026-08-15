@@ -2,7 +2,7 @@
 
 namespace App\Mail;
 
-use App\Models\Member;
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -13,7 +13,7 @@ class AccountDeleted extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public function __construct(public Member $member, public string $restoreUrl, public string $purgeDate) {}
+    public function __construct(public User $member, public string $restoreUrl, public string $purgeDate) {}
 
     public function envelope(): Envelope
     {

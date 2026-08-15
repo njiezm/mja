@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('title', "À propos — Madin'Jeunes Ambition")
-@section('meta_description', "Découvrez l'histoire, les valeurs et l'équipe de Madin'Jeunes Ambition — association de jeunes bénévoles fondée en 2011 à Fort-de-France, Martinique.")
+@section('meta_description', "Découvrez l'histoire, les valeurs et l'équipe de Madin'Jeunes Ambition — association de jeunes bénévoles fondée en 2011, active en Martinique et au-delà.")
 
 @section('content')
 
@@ -34,15 +34,15 @@
                     Une association née de<br>l'engagement des jeunes
                 </h2>
                 <div class="space-y-4 text-gray-600 leading-relaxed">
-                    <p>Madin'Jeunes Ambition (MJA) a été créée le <strong class="text-mja-gray font-display font-bold">5 novembre 2011</strong> à Fort-de-France, Martinique. L'association est née de la volonté de jeunes bénévoles dynamiques de créer du lien entre les jeunes de l'île et de porter des actions concrètes en faveur de leur épanouissement.</p>
+                    <p>Madin'Jeunes Ambition (MJA) a été créée le <strong class="text-mja-gray font-display font-bold">5 novembre 2011</strong> en Martinique. L'association est née de la volonté de jeunes bénévoles dynamiques de créer du lien entre les jeunes de l'île et de porter des actions concrètes en faveur de leur épanouissement.</p>
                     <p>Depuis sa création, l'association est portée entièrement par des bénévoles qui œuvrent au quotidien pour organiser des actions éducatives, culturelles, sociales, sportives et de santé, tout en entretenant des liens intergénérationnels précieux.</p>
-                    <p>Avec <strong class="text-mja-gray font-display font-bold">43 membres</strong> et une soixantaine de sympathisants, MJA est un acteur reconnu de la jeunesse martiniquaise.</p>
+                    <p>Portée par ses adhérents et ses sympathisants, MJA est un acteur reconnu de la jeunesse martiniquaise.</p>
                 </div>
             </div>
             <!-- Timeline -->
             <div class="space-y-4">
                 @foreach([
-                    ['2011','bg-mja-blue','Création de l\'association MJA le 5 novembre à Fort-de-France.'],
+                    ['2011','bg-mja-blue','Création de l\'association MJA le 5 novembre en Martinique.'],
                     ['2012','bg-mja-yellow text-mja-dark','Co-organisation des Trophées Lumina « Les grands trophées de la jeunesse ».'],
                     ['2016','bg-mja-red','Lancement de l\'opération Ti Dèj pour les candidats au baccalauréat.'],
                     ['2017','bg-mja-blue','Madin\'Santé Challenge et renouvellement de l\'opération Ti Dèj.'],

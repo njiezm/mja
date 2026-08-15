@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Adhesion;
-use App\Models\Member;
+use App\Models\User;
 use Illuminate\Console\Command;
 
 /**
@@ -25,11 +25,11 @@ class DiagPhotosMembres extends Command
         $ok = true;
 
         // 1. Comptes affichés dans le trombinoscope
-        $membres = Member::where('show_in_directory', true)->with('adhesion')->get()
+        $membres = User::where('show_in_directory', true)->whereNotNull('adhesion_id')->with('adhesion')->get()
             ->filter(fn ($m) => $m->adhesion !== null);
 
         $this->line('Adhésions en base ........ ' . Adhesion::count());
-        $this->line('Comptes adhérents ........ ' . Member::count());
+        $this->line('Comptes adhérents ........ ' . User::whereNotNull('adhesion_id')->count());
         $this->line('Visibles trombinoscope ... ' . $membres->count());
 
         if ($membres->isEmpty()) {

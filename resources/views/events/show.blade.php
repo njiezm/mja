@@ -3,7 +3,7 @@
 @section('meta_description', $event->description ? \Illuminate\Support\Str::limit(strip_tags($event->description), 155) : "Événement organisé par Madin'Jeunes Ambition en Martinique.")
 @section('og_type', 'event')
 @if($event->image ?? null)
-@section('og_image', asset('storage/'.$event->image))
+@section('og_image', $event->imageUrl())
 @endif
 
 @push('head')
@@ -17,11 +17,11 @@
     "eventStatus": "https://schema.org/EventScheduled",
     "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
     "description": @json(\Illuminate\Support\Str::limit(strip_tags($event->description ?? ''), 300)),
-    @if($event->image)"image": "{{ asset('storage/'.$event->image) }}",@endif
+    @if($event->image)"image": "{{ $event->imageUrl() }}",@endif
     "location": {
         "@@type": "Place",
         "name": @json($event->lieu ?: "Martinique"),
-        "address": @json($event->adresse ?: ($event->lieu ?: "Fort-de-France, Martinique"))
+        "address": @json($event->adresse ?: ($event->lieu ?: "Martinique"))
     },
     "organizer": {
         "@@type": "Organization",
@@ -71,7 +71,7 @@
 <section class="py-16">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         @if($event->image)
-        <img src="{{ asset("storage/{$event->image}") }}" alt="{{ $event->titre }}"
+        <img src="{{ $event->imageUrl() }}" alt="{{ $event->titre }}"
              class="w-full rounded-2xl mb-10 object-cover max-h-80 shadow-md">
         @endif
 
@@ -134,8 +134,8 @@
             {{ $event->description_courte }}
         </p>
         @endif
-        <div class="text-gray-700 leading-loose text-[15px]">
-            {!! nl2br(e($event->description)) !!}
+        <div class="prose-mja text-gray-700 leading-loose text-[15px]">
+            {!! \App\Support\HtmlRiche::rendre($event->description) !!}
         </div>
         <div class="mt-12 pt-6 border-t border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <a href="{{ route('events.index') }}" class="text-mja-blue hover:text-mja-bluedark font-display font-bold flex items-center gap-2 transition-colors">

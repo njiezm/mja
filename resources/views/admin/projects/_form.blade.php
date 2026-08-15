@@ -40,8 +40,7 @@
     </div>
     <div>
         <label class="block text-sm font-semibold text-gray-700 mb-1.5">Description complète</label>
-        <textarea name="description" rows="10"
-            class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-mja-blue resize-y">{{ old('description', $project->description ?? '') }}</textarea>
+        <x-editeur-riche name="description" :value="$project->description ?? null" :rows="10" />
     </div>
     <div class="grid grid-cols-2 gap-5 items-end">
         <div>

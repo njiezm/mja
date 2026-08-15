@@ -10,9 +10,11 @@
         · <span class="text-amber-600 font-semibold">{{ $sansCompte->total() }} adhérent(s) payé(s) sans compte</span>
         @endif
     </p>
+    @if($peutVoirMotsDePasse)
     <a href="{{ route('admin.members.export') }}" class="bg-mja-blue hover:bg-mja-bluedark text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition-colors flex items-center gap-2">
         <i class="fas fa-file-csv"></i> Exporter
     </a>
+    @endif
 </div>
 
 @if($illisibles > 0)
@@ -54,6 +56,7 @@
                 <th class="text-left px-6 py-3 font-display font-bold text-gray-500 text-xs uppercase tracking-wider">Adhérent</th>
                 <th class="text-left px-6 py-3 font-display font-bold text-gray-500 text-xs uppercase tracking-wider">Email</th>
                 <th class="text-left px-6 py-3 font-display font-bold text-gray-500 text-xs uppercase tracking-wider">Mot de passe</th>
+                <th class="text-left px-6 py-3 font-display font-bold text-gray-500 text-xs uppercase tracking-wider">Rôle</th>
                 <th class="text-left px-6 py-3 font-display font-bold text-gray-500 text-xs uppercase tracking-wider">Trombinoscope</th>
                 <th class="px-6 py-3"></th>
             </tr>
@@ -76,14 +79,22 @@
                         </div>
                         @endif
                         <div>
-                            <div class="font-display font-bold text-gray-900">{{ $a?->prenom }} {{ $a?->nom }}</div>
+                                    <div class="font-display font-bold text-gray-900">{{ $a?->prenom }} {{ $a?->nom }}
+                                @if($m->canAccessBackOffice())
+                                <span class="ml-1 align-middle inline-flex items-center gap-1 bg-mja-yellow/15 text-yellow-700 text-[10px] font-display font-bold px-2 py-0.5 rounded-full" title="Ce compte a aussi accès à l'administration">
+                                    <i class="fas fa-sliders text-[9px]"></i> {{ $m->roleLabel() }}
+                                </span>
+                                @endif
+                            </div>
                             @if($a?->period)<div class="text-xs text-gray-400">{{ $a->period->label }}</div>@endif
                         </div>
                     </div>
                 </td>
                 <td class="px-6 py-4 text-gray-600">{{ $m->email }}</td>
                 <td class="px-6 py-4">
-                    @if($pwd)
+                    @if(! $peutVoirMotsDePasse)
+                    <span class="text-xs text-gray-400 italic" title="Réservé au super administrateur">masqué</span>
+                    @elseif($pwd)
                     <div class="flex items-center gap-2">
                         <code class="pwd-mask font-mono text-xs bg-gray-100 rounded px-2 py-1 text-gray-700" data-pwd="{{ $pwd }}">••••••••</code>
                         <button type="button" onclick="togglePwd(this)" class="text-gray-400 hover:text-mja-blue transition-colors" title="Afficher / masquer">
@@ -95,6 +106,26 @@
                     </div>
                     @else
                     <span class="text-xs text-gray-400 italic">non lisible — régénérer</span>
+                    @endif
+                </td>
+                <td class="px-6 py-4">
+                    {{-- Nommer un adhérent gestionnaire ou administrateur : son compte
+                         existe déjà, on ne fait qu'élargir ses droits. --}}
+                    @php $rolesPossibles = auth()->user()->assignableRolesForMember(); @endphp
+                    @if($rolesPossibles && ! auth()->user()->is($m) && auth()->user()->canManage($m))
+                    <form method="POST" action="{{ route('admin.members.role', $m) }}" class="flex items-center gap-1.5">
+                        @csrf @method('PATCH')
+                        <select name="role" class="border border-gray-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-mja-blue">
+                            @foreach($rolesPossibles as $cle)
+                            <option value="{{ $cle }}" @selected($m->role === $cle)>{{ \App\Models\User::ROLES[$cle] }}</option>
+                            @endforeach
+                        </select>
+                        <button class="w-7 h-7 bg-gray-100 hover:bg-mja-blue hover:text-white text-gray-600 rounded-lg flex items-center justify-center transition-colors" title="Enregistrer le rôle">
+                            <i class="fas fa-check text-[10px]"></i>
+                        </button>
+                    </form>
+                    @else
+                    <span class="text-xs text-gray-500">{{ $m->roleLabel() }}</span>
                     @endif
                 </td>
                 <td class="px-6 py-4">

@@ -6,7 +6,7 @@
     <div class="max-w-4xl mx-auto px-4 flex items-center justify-between gap-4">
         <div>
             <h1 class="font-display font-black text-3xl sm:text-4xl mb-1">Mon espace</h1>
-            <p class="text-gray-300">Bonjour {{ $adhesion->prenom }} 👋</p>
+            <p class="text-gray-300">Bonjour {{ $adhesion?->prenom ?? $member->displayName() }} 👋</p>
         </div>
         <form method="POST" action="{{ route('member.logout') }}">
             @csrf
@@ -26,8 +26,60 @@
         </div>
         @endif
 
+        @if(!empty($aRenouveler))
+        {{-- Le renouvellement se fait en un clic : le formulaire s'ouvre déjà
+             pré-rempli, il n'y a rien à ressaisir. --}}
+        <div class="bg-mja-yellow/10 border-2 border-mja-yellow/40 rounded-2xl p-6 mb-6 flex flex-col sm:flex-row sm:items-center gap-5">
+            <div class="w-12 h-12 bg-mja-yellow/25 text-yellow-700 rounded-2xl flex items-center justify-center shrink-0">
+                <i class="fas fa-rotate-right text-lg"></i>
+            </div>
+            <div class="flex-1">
+                <h2 class="font-display font-bold text-mja-gray mb-1">
+                    Votre adhésion est à renouveler{{ !empty($periode) ? ' pour la saison ' . $periode->label : '' }}
+                </h2>
+                <p class="text-sm text-gray-600 leading-relaxed">
+                    Vos informations sont déjà enregistrées : vérifiez ce qui a changé, réglez la cotisation,
+                    c'est terminé en deux minutes.
+                </p>
+            </div>
+            <a href="{{ route('adhesion.renouveler.espace') }}"
+               class="btn-yellow font-display font-bold text-sm px-6 py-3 rounded-xl transition-colors text-center shrink-0">
+                Renouveler mon adhésion
+            </a>
+        </div>
+        @endif
+
+        @if($member->canAccessBackOffice())
+        <a href="{{ route('admin.dashboard') }}"
+           class="flex items-center gap-4 bg-mja-dark text-white rounded-2xl p-5 mb-6 hover:bg-mja-navy transition-colors">
+            <span class="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center shrink-0"><i class="fas fa-sliders"></i></span>
+            <span class="flex-1">
+                <span class="block font-display font-bold">Espace administrateur</span>
+                <span class="block text-sm text-gray-300">{{ $member->roleLabel() }} — gérer le contenu et les adhésions du site.</span>
+            </span>
+            <i class="fas fa-arrow-right text-mja-yellow"></i>
+        </a>
+        @endif
+
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {{-- Carte profil --}}
+            {{-- Carte profil. Un compte purement administrateur n'a pas
+                 d'adhésion : on affiche alors une invitation à en créer une
+                 plutôt que de masquer tout l'espace. --}}
+            @if(! $adhesion)
+            <div class="md:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
+                <div class="w-14 h-14 bg-mja-blue/10 text-mja-blue rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-id-card text-xl"></i>
+                </div>
+                <h2 class="font-display font-black text-lg text-mja-gray mb-2">Aucune adhésion rattachée à ce compte</h2>
+                <p class="text-sm text-gray-500 leading-relaxed mb-5 max-w-md mx-auto">
+                    Votre compte donne accès au site, mais aucune fiche d'adhérent n'y est liée.
+                    Remplissez le formulaire d'adhésion pour rejoindre l'association et apparaître au trombinoscope.
+                </p>
+                <a href="{{ route('adhesion') }}" class="inline-flex items-center gap-2 btn-blue font-display font-bold text-sm px-5 py-2.5 rounded-xl transition-colors">
+                    <i class="fas fa-user-plus"></i> Adhérer à MJA
+                </a>
+            </div>
+            @else
             <div class="md:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                 <div class="p-6 flex items-center gap-5 border-b border-gray-50">
                     @if($adhesion->photo)
@@ -54,10 +106,21 @@
                         <div class="font-semibold text-gray-800">{{ $v }}</div>
                     </div>
                     @endforeach
+                    @if($adhesion->reseaux_sociaux)
                     <div class="sm:col-span-2">
-                        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Adresse</div>
-                        <div class="font-semibold text-gray-800 whitespace-pre-line">{{ $adhesion->adresse_postale }}</div>
+                        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Réseaux sociaux</div>
+                        <div class="flex flex-wrap gap-2">
+                            @foreach($adhesion->reseaux_sociaux as $cle => $valeur)
+                            @php $meta = \App\Models\Adhesion::RESEAUX[$cle] ?? null; @endphp
+                            @if($meta)
+                            <span class="inline-flex items-center gap-1.5 bg-gray-50 border border-gray-100 rounded-lg px-2.5 py-1 text-xs font-semibold text-gray-600">
+                                <i class="{{ $meta[1] }}"></i> {{ $meta[2] }}{{ $valeur }}
+                            </span>
+                            @endif
+                            @endforeach
+                        </div>
                     </div>
+                    @endif
                 </div>
                 <div class="px-6 pb-6">
                     <a href="{{ route('member.profile.edit') }}" class="inline-flex items-center gap-2 btn-blue font-display font-bold text-sm px-5 py-2.5 rounded-xl transition-colors">
@@ -65,6 +128,7 @@
                     </a>
                 </div>
             </div>
+            @endif
 
             {{-- Colonne actions --}}
             <div class="space-y-6">
@@ -75,7 +139,7 @@
                     <span class="inline-flex items-center gap-1.5 text-mja-blue font-display font-bold text-sm">Voir le trombinoscope <i class="fas fa-arrow-right text-xs"></i></span>
                 </a>
 
-                @if($adhesion->isAdherent())
+                @if($adhesion?->isAdherent())
                 <a href="{{ route('member.card') }}" target="_blank" class="block bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
                     <div class="w-10 h-10 bg-mja-blue/15 text-mja-blue rounded-xl flex items-center justify-center mb-3"><i class="fas fa-id-card"></i></div>
                     <h3 class="font-display font-bold text-mja-gray mb-1">Carte de membre</h3>
@@ -86,10 +150,25 @@
 
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                     <h3 class="font-display font-bold text-mja-gray mb-1">Mon compte</h3>
+                    @if($member->canAccessBackOffice())
+                    {{-- Un compte qui administre le site ne se supprime pas
+                         tout seul : la suppression passe par un autre
+                         administrateur, sinon on risque de retirer le dernier
+                         accès au back-office. --}}
+                    <p class="text-sm text-gray-500 mb-4">
+                        Votre compte dispose d'un accès à l'administration ({{ $member->roleLabel() }}).
+                        Sa suppression doit être faite par un autre administrateur, depuis
+                        <span class="font-semibold">Comptes</span> dans le back-office.
+                    </p>
+                    <span class="text-gray-400 text-sm font-display font-bold flex items-center gap-2 cursor-not-allowed" title="Suppression réservée à un autre administrateur">
+                        <i class="fas fa-lock"></i> Supprimer mon compte
+                    </span>
+                    @else
                     <p class="text-sm text-gray-500 mb-4">Vous pouvez supprimer votre compte. Vous aurez <strong>30 jours</strong> pour le restaurer avant sa suppression définitive.</p>
                     <button type="button" onclick="openDeleteModal()" class="text-mja-red hover:text-red-700 text-sm font-display font-bold flex items-center gap-2">
                         <i class="fas fa-trash"></i> Supprimer mon compte
                     </button>
+                    @endif
                 </div>
             </div>
         </div>

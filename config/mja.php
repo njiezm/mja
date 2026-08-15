@@ -15,4 +15,20 @@ return [
     */
     'show_sns' => env('MJA_SHOW_SNS', false),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Adresse de contact publique
+    |--------------------------------------------------------------------------
+    |
+    | Adresse affichée sur le site et dans les emails (page contact, pied de
+    | page, mentions légales, confidentialité, kit de communication). Centralisée
+    | ici pour n'avoir qu'un seul endroit à modifier le jour où elle change.
+    |
+    | À ne pas confondre avec les destinataires des notifications
+    | d'administration, réglables en back-office (Paramètres › Emails de
+    | notification), ni avec l'expéditeur technique (MAIL_FROM_ADDRESS).
+    |
+    */
+    'contact_email' => env('MJA_CONTACT_EMAIL', 'madinjeunesambition@gmail.com'),
+
 ];

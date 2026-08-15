@@ -52,7 +52,7 @@
         </a>
 
         <p style="font-size:13px;color:#999;margin:0">
-          En cas de problème, contactez l'équipe : <a href="mailto:contact@njiezm.fr" style="color:#2048A4">contact@njiezm.fr</a>
+          En cas de problème, contactez l'équipe : <a href="mailto:{{ config('mja.contact_email') }}" style="color:#2048A4">{{ config('mja.contact_email') }}</a>
         </p>
       </td></tr>
 

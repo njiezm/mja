@@ -43,10 +43,6 @@ return [
             'provider' => 'users',
         ],
 
-        'member' => [
-            'driver' => 'session',
-            'provider' => 'members',
-        ],
     ],
 
     /*
@@ -72,10 +68,6 @@ return [
             'model' => env('AUTH_MODEL', User::class),
         ],
 
-        'members' => [
-            'driver' => 'eloquent',
-            'model' => App\Models\Member::class,
-        ],
 
         // 'users' => [
         //     'driver' => 'database',
@@ -110,8 +102,11 @@ return [
             'throttle' => 60,
         ],
 
+        // Réinitialisation depuis l'espace adhérent : même table de comptes que
+        // le back-office, mais jetons et email distincts (le lien renvoie vers
+        // /espace et non vers la connexion administrateur).
         'members' => [
-            'provider' => 'members',
+            'provider' => 'users',
             'table' => 'member_password_reset_tokens',
             'expire' => 60,
             'throttle' => 60,

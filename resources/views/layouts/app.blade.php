@@ -12,8 +12,8 @@
     <link rel="apple-touch-icon" href="{{ asset('images/logo.jpg') }}">
 
     {{-- ── SEO ─────────────────────────────────────────────────── --}}
-    <meta name="description" content="@yield('meta_description', "Madin'Jeunes Ambition — Association de jeunes bénévoles à Fort-de-France, Martinique. Actions éducatives, culturelles, sociales, sportives et de santé.")">
-    <meta name="keywords" content="MJA, Madin'Jeunes Ambition, Martinique, jeunesse, bénévolat, Fort-de-France, association, engagement">
+    <meta name="description" content="@yield('meta_description', "Madin'Jeunes Ambition — Association de jeunes bénévoles en Martinique et au-delà. Actions éducatives, culturelles, sociales, sportives et de santé.")">
+    <meta name="keywords" content="MJA, Madin'Jeunes Ambition, Martinique, Guadeloupe, Guyane, jeunesse, bénévolat, association, engagement">
     <meta name="author" content="Madin'Jeunes Ambition">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="{{ url()->current() }}">
@@ -22,7 +22,7 @@
     <meta property="og:type"        content="@yield('og_type', 'website')">
     <meta property="og:site_name"   content="Madin'Jeunes Ambition">
     <meta property="og:title"       content="@yield('title', "Madin'Jeunes Ambition")">
-    <meta property="og:description" content="@yield('meta_description', "Madin'Jeunes Ambition — Association de jeunes bénévoles à Fort-de-France, Martinique.")">
+    <meta property="og:description" content="@yield('meta_description', "Madin'Jeunes Ambition — Association de jeunes bénévoles en Martinique et au-delà.")">
     <meta property="og:image"       content="@yield('og_image', asset('images/logomjat.png'))">
     <meta property="og:image:width"  content="1200">
     <meta property="og:image:height" content="630">
@@ -32,7 +32,7 @@
     {{-- ── Twitter Card ─────────────────────────────────────────── --}}
     <meta name="twitter:card"        content="@yield('twitter_card', 'summary_large_image')">
     <meta name="twitter:title"       content="@yield('title', "Madin'Jeunes Ambition")">
-    <meta name="twitter:description" content="@yield('meta_description', "Association de jeunes bénévoles à Fort-de-France, Martinique.")">
+    <meta name="twitter:description" content="@yield('meta_description', "Association de jeunes bénévoles en Martinique et au-delà.")">
     <meta name="twitter:image"       content="@yield('og_image', asset('images/logomjat.png'))">
 
     {{-- ── Préchargement des polices critiques (au-dessus de la ligne de flottaison) ──
@@ -99,6 +99,60 @@
         .btn-yellow { background: #F5A623; color: #14264D; }
         .btn-yellow:hover { background: #e0941a; }
 
+        /* Contenus rédigés dans l'éditeur du back-office : Tailwind remet à zéro
+           listes et titres, il faut donc les réhabiller ici. text-align posé sur
+           les blocs par l'éditeur reste prioritaire (aucune règle ne l'écrase). */
+        .prose-mja p { margin: 0 0 1em; }
+        .prose-mja p:last-child { margin-bottom: 0; }
+        .prose-mja ul, .prose-mja ol { margin: 0 0 1em; padding-left: 1.5rem; }
+        .prose-mja ul { list-style: disc; }
+        .prose-mja ol { list-style: decimal; }
+        .prose-mja li { margin-bottom: .35em; }
+        .prose-mja h2, .prose-mja h3, .prose-mja h4 {
+            font-family: 'Gill Sans', 'Montserrat', sans-serif;
+            font-weight: 700; color: #14264D; margin: 1.6em 0 .6em; line-height: 1.3;
+        }
+        .prose-mja h2 { font-size: 1.4em; }
+        .prose-mja h3 { font-size: 1.2em; }
+        .prose-mja h4 { font-size: 1.05em; }
+        .prose-mja a { color: #1A7BB8; text-decoration: underline; }
+        .prose-mja a:hover { color: #15679B; }
+        .prose-mja blockquote {
+            margin: 0 0 1em; padding: .25em 0 .25em 1rem;
+            border-left: 3px solid #F5A623; color: #555; font-style: italic;
+        }
+        .prose-mja strong { font-weight: 700; color: #14264D; }
+
+        /* Éditeur du back-office : la zone de saisie montre le même rendu que
+           le site public, sans quoi l'alignement se juge à l'aveugle. */
+        .er-zone p { margin: 0 0 .8em; }
+        .er-zone ul, .er-zone ol { margin: 0 0 .8em; padding-left: 1.5rem; }
+        .er-zone ul { list-style: disc; }
+        .er-zone ol { list-style: decimal; }
+        .er-zone h2, .er-zone h3, .er-zone h4 { font-weight: 700; color: #14264D; margin: 1em 0 .4em; }
+        .er-zone h3 { font-size: 1.15em; }
+        .er-zone a { color: #1A7BB8; text-decoration: underline; }
+
+        /* Barre de navigation.
+           Le menu compte désormais un onglet de plus (Administration) : à 768 px
+           les libellés passaient à la ligne. Le menu complet n'apparaît donc
+           qu'à partir de 1024 px, sans retour à la ligne possible, et les
+           libellés se resserrent entre 1024 et 1280 px. Écrit en CSS et non en
+           classes Tailwind : la feuille du site est précompilée. */
+        .nav-desktop { display: none; }
+        .nav-desktop > * { white-space: nowrap; }
+        .nav-burger { display: inline-flex; }
+        @media (min-width: 1024px) {
+            .nav-desktop { display: flex; flex-wrap: nowrap; align-items: center; }
+            .nav-burger { display: none; }
+            .nav-mobile { display: none !important; }
+        }
+        @media (min-width: 1024px) and (max-width: 1279px) {
+            .nav-desktop { gap: 0; }
+            .nav-desktop a { font-size: .875rem; }
+            .nav-desktop > a { padding-left: .5rem; padding-right: .5rem; margin-left: 0; }
+        }
+
         /* Accessibilité : focus clavier visible */
         a:focus-visible, button:focus-visible, input:focus-visible,
         select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
@@ -122,15 +176,12 @@
         "url": "{{ url('/') }}",
         "logo": "{{ asset('images/logomjat.png') }}",
         "foundingDate": "2011",
-        "description": "Association de jeunes bénévoles à Fort-de-France, Martinique. Actions éducatives, culturelles, sociales, sportives et de santé.",
-        "address": {
-            "@@type": "PostalAddress",
-            "streetAddress": "22, passage du Cœur sur la Main",
-            "postalCode": "97200",
-            "addressLocality": "Fort-de-France",
-            "addressRegion": "Martinique",
-            "addressCountry": "FR"
+        "description": "Association de jeunes bénévoles en Martinique et au-delà. Actions éducatives, culturelles, sociales, sportives et de santé.",
+        "areaServed": {
+            "@@type": "AdministrativeArea",
+            "name": "Martinique et au-delà"
         },
+        "email": "{{ config('mja.contact_email') }}",
         "sameAs": [
             "https://www.facebook.com/MadinJeunesAmbition/",
             "https://www.instagram.com/madin_jeunes_ambition/",
@@ -194,7 +245,7 @@
                 </a>
 
                 <!-- Desktop nav -->
-                <div class="hidden md:flex items-center gap-1">
+                <div class="nav-desktop gap-1">
                     @foreach($navLinks as [$label, $route, $pattern])
                     <a href="{{ route($route) }}"
                        @if(request()->routeIs($pattern ?: $route)) aria-current="page" @endif
@@ -207,10 +258,16 @@
                        class="ml-1 flex items-center justify-center w-10 h-10 rounded-lg transition-colors {{ request()->routeIs('search') ? 'text-mja-blue' : 'text-gray-600 hover:text-mja-blue' }}">
                         <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
                     </a>
-                    <a href="{{ auth('member')->check() ? route('member.dashboard') : route('member.login') }}"
+                    <a href="{{ auth()->check() ? route('member.dashboard') : route('member.login') }}"
                        class="ml-1 flex items-center gap-1.5 text-base font-display font-semibold px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('member.*') ? 'text-mja-blue' : 'text-gray-600 hover:text-mja-blue' }}">
-                        <i class="fas fa-circle-user"></i> {{ auth('member')->check() ? 'Mon espace' : 'Espace membre' }}
+                        <i class="fas fa-circle-user"></i> {{ auth()->check() ? 'Mon espace' : 'Espace membre' }}
                     </a>
+                    @if(auth()->user()?->canAccessBackOffice())
+                    <a href="{{ route('admin.dashboard') }}"
+                       class="ml-1 flex items-center gap-1.5 text-base font-display font-semibold px-3 py-2 rounded-lg text-mja-dark hover:text-mja-blue transition-colors">
+                        <i class="fas fa-sliders"></i> Admin
+                    </a>
+                    @endif
                     <a href="{{ route('adhesion') }}"
                        class="ml-1 bg-mja-yellow hover:bg-yellow-400 text-[#14264D] font-display font-bold text-sm px-4 py-2 rounded-full transition-colors {{ request()->routeIs('adhesion') ? 'ring-2 ring-mja-yellow ring-offset-2 ring-offset-white' : '' }}">
                         Adhérer
@@ -222,23 +279,28 @@
                 </div>
 
                 <!-- Mobile toggle -->
-                <button id="menu-btn" type="button" class="md:hidden text-mja-dark hover:text-mja-blue p-2"
+                <button id="menu-btn" type="button" class="nav-burger text-mja-dark hover:text-mja-blue p-2"
                         aria-label="Ouvrir le menu de navigation" aria-controls="mobile-menu" aria-expanded="false">
                     <i class="fas fa-bars text-xl" aria-hidden="true"></i>
                 </button>
             </div>
 
             <!-- Mobile menu -->
-            <div id="mobile-menu" class="hidden md:hidden pb-4 border-t border-gray-100 mt-1 pt-3 space-y-1">
+            <div id="mobile-menu" class="hidden nav-mobile pb-4 border-t border-gray-100 mt-1 pt-3 space-y-1">
                 @foreach($navLinks as [$label, $route, $pattern])
                 <a href="{{ route($route) }}" class="block px-3 py-2 text-gray-700 hover:text-mja-blue text-sm font-semibold font-display transition-colors">{{ $label }}</a>
                 @endforeach
                 <a href="{{ route('search') }}" class="block px-3 py-2 text-gray-700 hover:text-mja-blue text-sm font-semibold font-display transition-colors"><i class="fas fa-magnifying-glass mr-1"></i> Rechercher</a>
                 <a href="{{ route('contact') }}" class="block px-3 py-2 text-gray-700 hover:text-mja-blue text-sm font-semibold font-display transition-colors">Contact</a>
                 <a href="{{ route('adhesion') }}" class="block px-3 py-2 text-mja-dark hover:text-mja-navy text-sm font-bold font-display transition-colors">Adhérer</a>
-                <a href="{{ auth('member')->check() ? route('member.dashboard') : route('member.login') }}" class="block px-3 py-2 text-gray-700 hover:text-mja-blue text-sm font-semibold font-display transition-colors border-t border-gray-100 mt-1 pt-2">
-                    <i class="fas fa-circle-user mr-1"></i> {{ auth('member')->check() ? 'Mon espace' : 'Espace membre' }}
+                <a href="{{ auth()->check() ? route('member.dashboard') : route('member.login') }}" class="block px-3 py-2 text-gray-700 hover:text-mja-blue text-sm font-semibold font-display transition-colors border-t border-gray-100 mt-1 pt-2">
+                    <i class="fas fa-circle-user mr-1"></i> {{ auth()->check() ? 'Mon espace' : 'Espace membre' }}
                 </a>
+                @if(auth()->user()?->canAccessBackOffice())
+                <a href="{{ route('admin.dashboard') }}" class="block px-3 py-2 text-mja-dark hover:text-mja-blue text-sm font-bold font-display transition-colors">
+                    <i class="fas fa-sliders mr-1"></i> Administration
+                </a>
+                @endif
             </div>
         </div>
     </nav>@include('partials.seasonal-banner')</div>{{-- /sticky --}}
@@ -274,7 +336,7 @@
                         </div>
                     </div>
                     <p class="text-sm leading-relaxed text-gray-400 max-w-sm">
-                        Créée en 2011 à Fort-de-France, Martinique. Nous rassemblons les jeunes autour d'actions éducatives, culturelles, sociales, sportives et de santé.
+                        Créée en 2011, active en Martinique et au-delà. Nous rassemblons les jeunes autour d'actions éducatives, culturelles, sociales, sportives et de santé.
                     </p>
                     <div class="flex flex-wrap gap-3 mt-5">
                         <a href="https://www.facebook.com/MadinJeunesAmbition/" target="_blank" rel="noopener" title="Facebook" aria-label="MJA sur Facebook"
@@ -289,15 +351,13 @@
                            class="w-9 h-9 bg-white/5 hover:bg-[#010101] rounded-xl flex items-center justify-center transition-colors text-sm">
                             <i class="fab fa-tiktok" aria-hidden="true"></i>
                         </a>
-                        <a href="https://www.snapchat.com/" target="_blank" rel="noopener" title="Snapchat" aria-label="MJA sur Snapchat"
-                           class="w-9 h-9 bg-white/5 hover:bg-[#FFFC00] hover:text-black rounded-xl flex items-center justify-center transition-colors text-sm">
-                            <i class="fab fa-snapchat" aria-hidden="true"></i>
-                        </a>
+                        {{-- Snapchat masqué : le lien du compte MJA n'est pas connu,
+                             et pointer vers snapchat.com n'aide personne. --}}
                         <a href="https://www.youtube.com/channel/UCX6nyVEv_QyFuLREyVvOMLw" target="_blank" rel="noopener" title="YouTube" aria-label="MJA sur YouTube"
                            class="w-9 h-9 bg-white/5 hover:bg-[#FF0000] rounded-xl flex items-center justify-center transition-colors text-sm">
                             <i class="fab fa-youtube" aria-hidden="true"></i>
                         </a>
-                        <a href="mailto:contact@mja-martinique.com" title="Email" aria-label="Envoyer un email à MJA"
+                        <a href="mailto:{{ config('mja.contact_email') }}" title="Email" aria-label="Envoyer un email à MJA"
                            class="w-9 h-9 bg-white/5 hover:bg-mja-blue rounded-xl flex items-center justify-center transition-colors text-sm">
                             <i class="fas fa-envelope" aria-hidden="true"></i>
                         </a>
@@ -325,7 +385,7 @@
                     <ul class="space-y-3 text-sm">
                         <li class="flex gap-2 items-start">
                             <i class="fas fa-map-marker-alt text-mja-yellow mt-0.5 w-4 shrink-0"></i>
-                            <span>22, passage du Cœur sur la Main<br>97200 Fort-de-France</span>
+                            <span>Martinique et au-delà</span>
                         </li>
                         <li class="flex gap-2 items-center">
                             <i class="fas fa-envelope text-mja-yellow w-4 shrink-0"></i>
@@ -355,15 +415,15 @@
                 <div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
                     <a href="{{ route('mentions-legales') }}" class="hover:text-mja-yellow transition-colors">Mentions légales</a>
                     <a href="{{ route('confidentialite') }}" class="hover:text-mja-yellow transition-colors">Confidentialité</a>
-                    @auth
+                    @if(auth()->user()?->canAccessBackOffice())
                     <a href="{{ route('admin.dashboard') }}" class="hover:text-mja-yellow transition-colors font-semibold">
                         <i class="fas fa-cog mr-1" aria-hidden="true"></i>Administration
                     </a>
                     @else
-                    <a href="{{ route('login') }}" class="hover:text-mja-yellow transition-colors">
+                    <a href="{{ route('member.login') }}" class="hover:text-mja-yellow transition-colors">
                         <i class="fas fa-lock mr-1" aria-hidden="true"></i>Administration
                     </a>
-                    @endauth
+                    @endif
                 </div>
             </div>
         </div>

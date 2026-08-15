@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Adhesion;
 use App\Models\AdhesionPeriod;
-use App\Models\Member;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
@@ -100,26 +100,38 @@ class MembresActuelsSeeder extends Seeder
             $adhesion->updated_at = $date;
             $adhesion->save();
 
-            // Compte espace adhérent — aucun email n'est envoyé.
-            $member = Member::withTrashed()->where('adhesion_id', $adhesion->id)->first()
-                ?? Member::withTrashed()->where('email', $email)->first();
+            // Compte adhérent — aucun email n'est envoyé. Depuis la fusion des
+            // comptes, c'est la même table que le back-office : si la personne
+            // est déjà administratrice, on rattache l'adhésion sans rien créer.
+            $member = User::withTrashed()->where('adhesion_id', $adhesion->id)->first()
+                ?? User::withTrashed()->where('email', $email)->first();
 
             if ($member) {
                 if ($member->trashed()) {
                     $member->restore();
                 }
+                if (! $member->adhesion_id) {
+                    $member->adhesion_id = $adhesion->id;
+                    $member->save();
+                }
+                $adhesion->update(['user_id' => $member->id]);
                 continue; // compte déjà existant : on ne touche pas au mot de passe
             }
 
-            $motDePasse = Member::motDePasseTemporaire();
+            $motDePasse = User::motDePasseTemporaire();
 
-            $member = new Member();
+            $member = new User();
+            $member->name = trim($ligne['prenom'] . ' ' . $ligne['nom']);
             $member->adhesion_id = $adhesion->id;
             $member->email = $email;
+            $member->role = User::ROLE_MEMBER;
+            $member->is_active = true;
             $member->show_in_directory = true;
             // Hash + copie chiffrée : le mot de passe reste consultable en back-office.
             $member->setPasswordAndCopy($motDePasse);
             $member->save();
+
+            $adhesion->update(['user_id' => $member->id]);
 
             $credentials[] = [
                 $ligne['nom'],

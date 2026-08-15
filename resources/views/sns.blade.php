@@ -321,7 +321,7 @@
                 <h2 class="font-display font-black text-3xl text-white mb-2">Fwi Ti Dèj</h2>
                 <p class="text-orange-400/80 text-sm font-display font-semibold mb-4">"Fwi" = fruit en créole martiniquais</p>
                 <p class="text-gray-300 text-sm leading-relaxed">
-                    Née à Fort-de-France en 2016, Fwi Ti Dèj est un réseau de petits-déjeuners solidaires destinés aux lycéens et collégiens. Le concept&nbsp;: distribuer chaque matin un petit-déjeuner complet et équilibré, offert gratuitement, accompagné d'un message de prévention.
+                    Née en Martinique en 2016, Fwi Ti Dèj est un réseau de petits-déjeuners solidaires destinés aux lycéens et collégiens. Le concept&nbsp;: distribuer chaque matin un petit-déjeuner complet et équilibré, offert gratuitement, accompagné d'un message de prévention.
                 </p>
             </div>
             <div class="flex-1">
@@ -331,7 +331,7 @@
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
                     @foreach([
-                        ['Martinique', 'Madin\' Ti Dèj', 'Fort-de-France', 'fa-globe-americas text-orange-400', 'Territoire fondateur. Opérationnel dans plusieurs établissements de Fort-de-France depuis 2016.', 'border-orange-500/40', 'bg-orange-500/10', 'text-orange-400'],
+                        ['Martinique', 'Madin\' Ti Dèj', 'Toute la Martinique', 'fa-globe-americas text-orange-400', 'Territoire fondateur. Opérationnel dans les établissements de toute la Martinique depuis 2016.', 'border-orange-500/40', 'bg-orange-500/10', 'text-orange-400'],
                         ['Guadeloupe', 'Karu\' Ti Dèj', 'Pointe-à-Pitre',  'fa-globe-americas text-mja-yellow', 'La déclinaison guadeloupéenne, portée par les jeunes bénévoles de Guadeloupe.', 'border-mja-yellow/30', 'bg-mja-yellow/10', 'text-mja-yellow'],
                         ['Guyane',     'Guia\' Ti Dèj', 'Cayenne',         'fa-globe-americas text-mja-red',    'La déclinaison guyanaise, adaptée aux réalités nutritionnelles de la Guyane.',  'border-mja-red/30',    'bg-mja-red/10',    'text-mja-red'],
                     ] as [$pays, $nom, $ville, $flag, $desc, $cardBorder, $cardBg, $textColor])
@@ -582,7 +582,7 @@ const QUIZZES = {
                 q: "En quelle année Madin'Jeunes Ambition a-t-elle lancé Fwi Ti Dèj ?",
                 options: ["2012", "2014", "2016", "2019"],
                 correct: 2,
-                explanation: "2016 - Fwi Ti Dèj est né à Fort-de-France en 2016 et n'a cessé de grandir depuis !"
+                explanation: "2016 - Fwi Ti Dèj est né en Martinique en 2016 et n'a cessé de grandir depuis !"
             },
             {
                 q: "Que signifie « Fwi » en créole martiniquais ?",

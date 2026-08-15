@@ -45,7 +45,7 @@ class AdhesionController extends Controller
             fprintf($out, "\xEF\xBB\xBF"); // BOM UTF-8 (Excel)
             fputcsv($out, [
                 'Reçue le', 'Statut', 'Type', 'Civilité', 'Nom', 'Prénom', 'Date naissance',
-                'Profession', 'Téléphone', 'Email', 'Adresse', 'T-shirt', 'Permis',
+                'Profession', 'Téléphone', 'Email', 'T-shirt', 'Permis',
                 'Problèmes santé', 'Contact urgence', 'Moyen paiement', 'Période',
             ], ';');
             foreach ($adhesions as $a) {

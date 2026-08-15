@@ -29,6 +29,10 @@ class LoginController extends Controller
             'password' => 'required',
         ]);
 
+        // Emails stockés en minuscules ; PostgreSQL compare `=` de façon
+        // sensible à la casse, donc on normalise avant la recherche du compte.
+        $credentials['email'] = Str::lower(trim($credentials['email']));
+
         $this->ensureIsNotRateLimited($request);
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
@@ -42,7 +46,15 @@ class LoginController extends Controller
 
             RateLimiter::clear($this->throttleKey($request));
             $request->session()->regenerate();
-            return redirect()->intended(route('admin.dashboard'));
+
+            // Depuis la fusion des comptes, un adhérent sans rôle
+            // d'administration peut arriver ici : on l'envoie vers son espace
+            // plutôt que sur un 403.
+            $destination = Auth::user()->canAccessBackOffice()
+                ? route('admin.dashboard')
+                : route('member.dashboard');
+
+            return redirect()->intended($destination);
         }
 
         RateLimiter::hit($this->throttleKey($request), self::DECAY_SECONDS);

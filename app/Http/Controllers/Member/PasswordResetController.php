@@ -26,9 +26,13 @@ class PasswordResetController extends Controller
         $request->validate(['email' => 'required|email']);
 
         // Emails stockés en minuscules (comparaison `=` sensible à la casse sous PostgreSQL).
-        $status = $this->broker()->sendResetLink([
-            'email' => Str::lower(trim($request->input('email'))),
-        ]);
+        // Le compte étant désormais partagé avec le back-office, on impose
+        // explicitement l'email « espace adhérent » : sans cela le lien reçu
+        // renverrait vers la réinitialisation administrateur.
+        $this->broker()->sendResetLink(
+            ['email' => Str::lower(trim($request->input('email')))],
+            fn ($user, $token) => $user->notify(new \App\Notifications\MemberResetPassword($token)),
+        );
 
         // Message neutre (ne révèle pas si l'email existe)
         return back()->with('status', "Si un compte existe pour cette adresse, un lien de réinitialisation vient d'être envoyé.");
@@ -59,7 +63,10 @@ class PasswordResetController extends Controller
                 ['email' => Str::lower(trim($request->input('email')))],
             ),
             function ($member, $password) {
-                $member->forceFill(['password' => Hash::make($password)])->setRememberToken(Str::random(60));
+                // setPasswordAndCopy garde la copie chiffrée à jour : sinon le
+                // back-office afficherait un mot de passe qui n'a plus cours.
+                $member->setPasswordAndCopy($password);
+                $member->setRememberToken(Str::random(60));
                 $member->save();
                 event(new PasswordReset($member));
             }

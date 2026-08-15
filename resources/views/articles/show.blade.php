@@ -3,7 +3,7 @@
 @section('meta_description', $article->extrait ?? \Illuminate\Support\Str::limit(strip_tags($article->contenu ?? ''), 155))
 @section('og_type', 'article')
 @if($article->image)
-@section('og_image', asset('storage/'.$article->image))
+@section('og_image', $article->imageUrl())
 @endif
 
 @push('head')
@@ -13,7 +13,7 @@
     "@@type": "NewsArticle",
     "headline": @json($article->titre),
     "description": @json($article->extrait ?? \Illuminate\Support\Str::limit(strip_tags($article->contenu ?? ''), 155)),
-    @if($article->image)"image": "{{ asset('storage/'.$article->image) }}",@endif
+    @if($article->image)"image": "{{ $article->imageUrl() }}",@endif
     @if($article->publie_le)"datePublished": "{{ $article->publie_le->toAtomString() }}",@endif
     "dateModified": "{{ ($article->updated_at ?? $article->publie_le)?->toAtomString() }}",
     "articleSection": @json($article->categorie),
@@ -63,12 +63,12 @@
 
             <article class="lg:col-span-2">
                 @if($article->image)
-                <img src="{{ asset("storage/{$article->image}") }}" alt="{{ $article->titre }}" class="w-full rounded-2xl mb-8 object-cover max-h-80">
+                <img src="{{ $article->imageUrl() }}" alt="{{ $article->titre }}" class="w-full rounded-2xl mb-8 object-cover max-h-80">
                 @endif
                 @if($article->extrait)
                 <p class="text-xl text-gray-600 font-display font-semibold leading-relaxed mb-8 border-l-4 border-mja-blue pl-5 py-1">{{ $article->extrait }}</p>
                 @endif
-                <div class="text-gray-700 leading-loose text-[15px]">{!! nl2br(e($article->contenu)) !!}</div>
+                <div class="prose-mja text-gray-700 leading-loose text-[15px]">{!! \App\Support\HtmlRiche::rendre($article->contenu) !!}</div>
                 <div class="mt-10 pt-6 border-t border-gray-100 flex items-center justify-between">
                     <a href="{{ route('articles.index') }}" class="text-mja-blue hover:text-mja-bluedark font-display font-bold flex items-center gap-2 transition-colors">
                         <i class="fas fa-arrow-left"></i> Retour aux actualités
@@ -85,7 +85,7 @@
                         @foreach($recents as $recent)
                         <a href="{{ route('articles.show', $recent) }}" class="flex gap-3 group">
                             @if($recent->image)
-                            <img src="{{ asset("storage/{$recent->image}") }}" alt="" class="w-14 h-14 rounded-xl object-cover shrink-0">
+                            <img src="{{ $recent->imageUrl() }}" alt="" class="w-14 h-14 rounded-xl object-cover shrink-0">
                             @else
                             <div class="w-14 h-14 rounded-xl bg-mja-blue/10 flex items-center justify-center shrink-0">
                                 <i class="fas fa-newspaper text-mja-blue"></i>

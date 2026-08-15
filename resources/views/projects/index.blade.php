@@ -28,7 +28,7 @@
                class="group bg-white rounded-2xl shadow-sm card-hover overflow-hidden border border-gray-100 {{ $accents[$i % 3] }}">
                 @if($project->image)
                 <div class="aspect-video bg-gray-100 overflow-hidden">
-                    <img src="{{ asset("storage/{$project->image}") }}" alt="{{ $project->titre }}"
+                    <img src="{{ $project->imageUrl() }}" alt="{{ $project->titre }}"
                          class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                 </div>
                 @else

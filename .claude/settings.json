@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "PowerShell($php = Get-ChildItem \"C:\\\\laragon\\\\bin\\\\php\" -Directory -ErrorAction SilentlyContinue | Select-Object -First 1; if\\($php\\){ $exe = Join-Path $php.FullName \"php.exe\"; \"php: $exe\"; & $exe -v | Select-Object -First 1 } else { \"php introuvable dans C:\\\\laragon\\\\bin\\\\php\" })"
+      "PowerShell($php = Get-ChildItem \"C:\\\\laragon\\\\bin\\\\php\" -Directory -ErrorAction SilentlyContinue | Select-Object -First 1; if\\($php\\){ $exe = Join-Path $php.FullName \"php.exe\"; \"php: $exe\"; & $exe -v | Select-Object -First 1 } else { \"php introuvable dans C:\\\\laragon\\\\bin\\\\php\" })",
+      "PowerShell(Get-Process chrome -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue; Start-Sleep -Seconds 2; $d = \"C:\\\\Users\\\\Wakers\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--laragon-www-mja\\\\83774117-424c-47aa-9dd7-de1457db0bf5\\\\scratchpad\"; $c = \"C:\\\\Program Files\\\\Google\\\\Chrome\\\\Application\\\\chrome.exe\"; & $c --headless=new --disable-gpu --no-sandbox --user-data-dir=\"$d\\\\csp1\" --virtual-time-budget=12000 --dump-dom \"http://mja.test/_csptest.html\" 2>$null | Select-String -Pattern 'id=\"r\"' | Select-Object -First 1)",
+      "Bash(curl -s -o /dev/null -w \"status=%{http_code}\\\\n\" http://mja.test/_csptest.html)",
+      "Bash(curl -s http://mja.test/_csptest.html)",
+      "PowerShell(Get-Process chrome -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue; Start-Sleep -Seconds 3; $d = \"C:\\\\Users\\\\Wakers\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--laragon-www-mja\\\\83774117-424c-47aa-9dd7-de1457db0bf5\\\\scratchpad\"; $c = \"C:\\\\Program Files\\\\Google\\\\Chrome\\\\Application\\\\chrome.exe\"; & $c --headless=new --disable-gpu --no-sandbox --user-data-dir=\"$d\\\\csp4\" --virtual-time-budget=14000 --dump-dom \"http://mja.test/_csptest.html\" 2>$null | Out-File -Encoding utf8 \"$d\\\\csp.html\"; Select-String -Path \"$d\\\\csp.html\" -Pattern 'id=\"r\"' | ForEach-Object { $_.Line.Trim\\(\\) })"
     ]
   }
 }

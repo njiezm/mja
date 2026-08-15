@@ -12,6 +12,15 @@
 
 @section('content')
 
+@php
+    /**
+     * Valeur affichée dans un champ : ce que le visiteur vient de saisir
+     * (old) l'emporte, sinon la reprise de l'adhésion précédente, sinon vide.
+     */
+    $prefill = $prefill ?? [];
+    $pre = fn ($cle, $defaut = null) => old($cle, data_get($prefill, $cle, $defaut));
+@endphp
+
 <section class="hero-gradient text-white py-16 relative overflow-hidden">
     <div class="absolute -right-16 -top-16 w-64 h-64 opacity-10">
         <svg viewBox="0 0 200 200" fill="none"><circle cx="100" cy="100" r="95" stroke="#3DAEF5" stroke-width="2"/><circle cx="100" cy="100" r="65" stroke="#F5A623" stroke-width="2"/></svg>
@@ -47,8 +56,18 @@
                         <i class="fas fa-info-circle text-mja-yellow"></i> Modalités d'inscription
                     </h3>
                     <ul class="space-y-2 text-sm text-gray-600">
-                        <li class="flex items-start gap-2"><i class="fas fa-check text-mja-blue mt-0.5 shrink-0"></i> Cotisation de <strong>20 €</strong> pour finaliser l'inscription</li>
-                        <li class="flex items-start gap-2"><i class="fas fa-check text-mja-blue mt-0.5 shrink-0"></i> Dépose ta photo directement dans le formulaire</li>
+                        {{-- Une directive Blade collée au mot précédent n'est pas
+                             reconnue : garder l'espace avant @if. --}}
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check text-mja-blue mt-0.5 shrink-0"></i>
+                            <span>
+                                Cotisation de <strong>{{ \App\Support\Cotisation::formatee() }}</strong> pour finaliser l'inscription
+                                @if(!empty($stripeEnabled) && \App\Support\Cotisation::fraisCarte() > 0)
+                                <span class="text-gray-500">({{ \App\Support\Cotisation::carteFormatee() }} par carte, frais bancaires inclus)</span>
+                                @endif
+                            </span>
+                        </li>
+                        <li class="flex items-start gap-2"><i class="fas fa-check text-mja-blue mt-0.5 shrink-0"></i> Photo facultative — tu peux la déposer maintenant ou plus tard</li>
                         <li class="flex items-start gap-2"><i class="fas fa-check text-mja-blue mt-0.5 shrink-0"></i> Tu seras présenté(e) aux autres membres</li>
                     </ul>
                 </div>
@@ -90,7 +109,23 @@
                     <div class="flex-1 bg-mja-red"></div>
                 </div>
                 <div class="p-8">
-                    <h2 class="font-display font-bold text-xl text-mja-gray mb-6">Formulaire d'adhésion</h2>
+                    <h2 id="titre-formulaire" class="font-display font-bold text-xl text-mja-gray mb-6">
+                        {{ !empty($precedente) ? 'Renouveler mon adhésion' : "Formulaire d'adhésion" }}
+                    </h2>
+
+                    @if(!empty($precedente) && !session('success'))
+                    <div class="bg-mja-blue/5 border border-mja-blue/20 rounded-2xl p-5 mb-6 flex items-start gap-3">
+                        <i class="fas fa-rotate-right text-mja-blue mt-0.5 shrink-0"></i>
+                        <div class="text-sm text-gray-600 leading-relaxed">
+                            <strong class="text-mja-gray font-display">Bon retour, {{ $precedente->prenom }} !</strong>
+                            Tes informations de l'an dernier sont déjà là — vérifie-les, corrige ce qui a changé,
+                            puis règle ta cotisation{{ !empty($periode) ? ' pour la saison ' . $periode->label : '' }}.
+                            @if($precedente->photo)
+                            <span class="block mt-1 text-gray-500">Ta photo est conservée : ne dépose un nouveau fichier que si tu veux la remplacer.</span>
+                            @endif
+                        </div>
+                    </div>
+                    @endif
 
                     @if(session('success'))
                     <div class="bg-green-50 border border-green-200 text-green-800 rounded-2xl p-6 mb-6 text-center">
@@ -101,8 +136,8 @@
                         <h3 class="font-display font-bold text-lg mb-2">Paiement confirmé — bienvenue ! 🎉</h3>
                         <p class="text-sm leading-relaxed">Ta cotisation a bien été reçue : tu es désormais officiellement <strong>adhérent(e)</strong> de MJA. Un email de bienvenue vient de t'être envoyé.</p>
                         @else
-                        <h3 class="font-display font-bold text-lg mb-2">Merci pour ta demande !</h3>
-                        <p class="text-sm leading-relaxed">Nous avons bien reçu ton formulaire d'adhésion, avec ta photo. Les instructions pour régler ta cotisation t'ont été envoyées par email — dès réception du paiement, tu deviendras officiellement adhérent(e).</p>
+                        <h3 class="font-display font-bold text-lg mb-2">{{ session('renouvellement') ? 'Renouvellement enregistré !' : 'Merci pour ta demande !' }}</h3>
+                        <p class="text-sm leading-relaxed">Nous avons bien reçu ton formulaire. Les instructions pour régler ta cotisation t'ont été envoyées par email — dès réception du paiement, tu {{ session('renouvellement') ? 'seras à jour pour la nouvelle saison' : 'deviendras officiellement adhérent(e)' }}.</p>
                         @endif
                     </div>
                     @else
@@ -119,6 +154,9 @@
                         <div aria-hidden="true" style="position:absolute;left:-9999px;height:0;overflow:hidden" tabindex="-1">
                             <label>Ne pas remplir<input type="text" name="site_web" tabindex="-1" autocomplete="off"></label>
                         </div>
+                        @if(!empty($precedente?->renouvellement_token))
+                        <input type="hidden" name="renouvellement_token" value="{{ $precedente->renouvellement_token }}">
+                        @endif
 
                         {{-- Bloc 1 : Type d'adhésion --}}
                         <div>
@@ -131,7 +169,7 @@
                                 @foreach(['premiere' => 'Première adhésion', 'readhesion' => 'Réadhésion', 'information' => 'Prise d\'informations'] as $val => $label)
                                 <label class="relative cursor-pointer">
                                     <input type="radio" name="premiere_adhesion" value="{{ $val }}"
-                                        {{ old('premiere_adhesion') === $val ? 'checked' : '' }}
+                                        {{ $pre('premiere_adhesion') === $val ? 'checked' : '' }}
                                         class="peer sr-only">
                                     <div class="border-2 border-gray-100 peer-checked:border-mja-blue peer-checked:bg-mja-blue/5 rounded-xl p-3 text-center text-sm font-display font-bold text-gray-500 peer-checked:text-mja-blue transition-all hover:border-gray-200">
                                         {{ $label }}
@@ -140,6 +178,23 @@
                                 @endforeach
                             </div>
                             @error('premiere_adhesion')<p class="text-mja-red text-xs mt-1.5 font-display font-semibold">{{ $message }}</p>@enderror
+
+                            @if(empty($precedente))
+                            {{-- Réadhésion : inutile de tout retaper si le compte
+                                 existe déjà. Le lien mène à l'écran pré-rempli
+                                 (connexion demandée en chemin si nécessaire). --}}
+                            <div id="bloc-readhesion" class="hidden mt-4 bg-mja-blue/5 border border-mja-blue/20 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+                                <i class="fas fa-rotate-right text-mja-blue shrink-0"></i>
+                                <p class="flex-1 text-sm text-gray-600 leading-relaxed">
+                                    Tu as déjà un espace adhérent ? Renouvelle depuis ton compte :
+                                    ton formulaire s'ouvre <strong>pré-rempli</strong>, tu n'as plus qu'à vérifier et payer.
+                                </p>
+                                <a href="{{ route('adhesion.renouveler.espace') }}"
+                                   class="shrink-0 btn-blue font-display font-bold text-sm px-4 py-2 rounded-xl transition-colors text-center">
+                                    Renouveler depuis mon espace
+                                </a>
+                            </div>
+                            @endif
                         </div>
 
                         {{-- Bloc 2 : Identité --}}
@@ -155,7 +210,7 @@
                                         @foreach(['Madame', 'Monsieur'] as $civ)
                                         <label class="relative cursor-pointer flex-1">
                                             <input type="radio" name="civilite" value="{{ $civ }}"
-                                                {{ old('civilite') === $civ ? 'checked' : '' }}
+                                                {{ $pre('civilite') === $civ ? 'checked' : '' }}
                                                 class="peer sr-only">
                                             <div class="border-2 border-gray-100 peer-checked:border-mja-blue peer-checked:bg-mja-blue/5 rounded-xl p-3 text-center text-sm font-display font-bold text-gray-500 peer-checked:text-mja-blue transition-all hover:border-gray-200">
                                                 {{ $civ }}
@@ -168,30 +223,30 @@
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <label for="a-nom" class="block text-sm font-display font-bold text-mja-gray mb-1.5">Nom <span class="text-mja-red" aria-hidden="true">*</span></label>
-                                        <input type="text" id="a-nom" name="nom" value="{{ old('nom') }}" required autocomplete="family-name"
+                                        <input type="text" id="a-nom" name="nom" value="{{ $pre('nom') }}" required autocomplete="family-name"
                                             class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl px-4 py-3 text-sm outline-none transition-colors @error('nom') border-mja-red @enderror"
                                             placeholder="DUPONT">
                                         @error('nom')<p class="text-mja-red text-xs mt-1 font-display font-semibold">{{ $message }}</p>@enderror
                                     </div>
                                     <div>
                                         <label for="a-prenom" class="block text-sm font-display font-bold text-mja-gray mb-1.5">Prénom <span class="text-mja-red" aria-hidden="true">*</span></label>
-                                        <input type="text" id="a-prenom" name="prenom" value="{{ old('prenom') }}" required autocomplete="given-name"
+                                        <input type="text" id="a-prenom" name="prenom" value="{{ $pre('prenom') }}" required autocomplete="given-name"
                                             class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl px-4 py-3 text-sm outline-none transition-colors @error('prenom') border-mja-red @enderror"
                                             placeholder="Jean">
                                         @error('prenom')<p class="text-mja-red text-xs mt-1 font-display font-semibold">{{ $message }}</p>@enderror
                                     </div>
                                 </div>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" data-mode="adhesion">
                                     <div>
                                         <label for="a-naissance" class="block text-sm font-display font-bold text-mja-gray mb-1.5">Date de naissance <span class="text-mja-red" aria-hidden="true">*</span></label>
-                                        <input type="text" id="a-naissance" name="date_naissance" value="{{ old('date_naissance') }}" required
+                                        <input type="text" id="a-naissance" name="date_naissance" value="{{ $pre('date_naissance') }}" required
                                             class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl px-4 py-3 text-sm outline-none transition-colors @error('date_naissance') border-mja-red @enderror"
                                             placeholder="JJ/MM/AAAA" maxlength="10">
                                         @error('date_naissance')<p class="text-mja-red text-xs mt-1 font-display font-semibold">{{ $message }}</p>@enderror
                                     </div>
                                     <div>
                                         <label for="a-profession" class="block text-sm font-display font-bold text-mja-gray mb-1.5">Profession / Secteur d'activité <span class="text-mja-red" aria-hidden="true">*</span></label>
-                                        <input type="text" id="a-profession" name="profession" value="{{ old('profession') }}" required
+                                        <input type="text" id="a-profession" name="profession" value="{{ $pre('profession') }}" required
                                             class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl px-4 py-3 text-sm outline-none transition-colors @error('profession') border-mja-red @enderror"
                                             placeholder="Étudiant, Commerce...">
                                         @error('profession')<p class="text-mja-red text-xs mt-1 font-display font-semibold">{{ $message }}</p>@enderror
@@ -210,30 +265,70 @@
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-sm font-display font-bold text-mja-gray mb-1.5">Numéro de téléphone <span class="text-mja-red">*</span></label>
-                                        <x-phone-field :value="old('telephone')" :indicatif="old('indicatif', '+596')" :required="true" />
+                                        <x-phone-field :value="$pre('telephone')" :indicatif="$pre('indicatif', '+596')" :required="true" />
                                         @error('telephone')<p class="text-mja-red text-xs mt-1 font-display font-semibold">{{ $message }}</p>@enderror
                                         @error('indicatif')<p class="text-mja-red text-xs mt-1 font-display font-semibold">{{ $message }}</p>@enderror
                                     </div>
                                     <div>
                                         <label for="a-email" class="block text-sm font-display font-bold text-mja-gray mb-1.5">Adresse mail <span class="text-mja-red" aria-hidden="true">*</span></label>
-                                        <input type="email" id="a-email" name="email" value="{{ old('email') }}" required autocomplete="email"
+                                        <input type="email" id="a-email" name="email" value="{{ $pre('email') }}" required autocomplete="email"
                                             class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl px-4 py-3 text-sm outline-none transition-colors @error('email') border-mja-red @enderror"
                                             placeholder="jean@exemple.com">
                                         @error('email')<p class="text-mja-red text-xs mt-1 font-display font-semibold">{{ $message }}</p>@enderror
                                     </div>
                                 </div>
-                                <div>
-                                    <label for="a-adresse" class="block text-sm font-display font-bold text-mja-gray mb-1.5">Adresse postale complète <span class="text-mja-red" aria-hidden="true">*</span></label>
-                                    <textarea id="a-adresse" name="adresse_postale" rows="2" required autocomplete="street-address"
-                                        class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl px-4 py-3 text-sm outline-none transition-colors resize-none @error('adresse_postale') border-mja-red @enderror"
-                                        placeholder="N° rue, quartier, code postal, ville">{{ old('adresse_postale') }}</textarea>
-                                    @error('adresse_postale')<p class="text-mja-red text-xs mt-1 font-display font-semibold">{{ $message }}</p>@enderror
+                                {{-- Réseaux sociaux, facultatifs --}}
+                                <div data-mode="adhesion">
+                                    <div class="flex items-center justify-between gap-3 mb-2">
+                                        <label class="block text-sm font-display font-bold text-mja-gray">
+                                            Tes réseaux sociaux <span class="text-gray-500 font-normal">(facultatif)</span>
+                                        </label>
+                                        <button type="button" id="btn-reseaux"
+                                            class="text-mja-blue font-display font-bold text-xs hover:underline">
+                                            <i class="fas fa-plus-circle mr-1"></i> Ajouter mes réseaux
+                                        </button>
+                                    </div>
+                                    <p class="text-xs text-gray-400 mb-3">Uniquement si tu souhaites les partager avec l'équipe — ils apparaîtront sur ta fiche du trombinoscope.</p>
+                                    <div id="bloc-reseaux" class="grid grid-cols-1 sm:grid-cols-2 gap-3 {{ collect($pre('reseaux_sociaux', []) ?: [])->filter()->isEmpty() ? 'hidden' : '' }}">
+                                        @foreach(\App\Models\Adhesion::RESEAUX as $cle => [$label, $icone, $prefixe, $exemple])
+                                        <div>
+                                            <label for="a-res-{{ $cle }}" class="block text-xs font-display font-bold text-gray-500 mb-1">
+                                                <i class="{{ $icone }} mr-1"></i> {{ $label }}
+                                            </label>
+                                            <div class="flex items-stretch border-2 border-gray-100 focus-within:border-mja-blue rounded-xl overflow-hidden transition-colors">
+                                                @if($prefixe)<span class="pl-3 flex items-center text-sm text-gray-400 font-display font-bold">{{ $prefixe }}</span>@endif
+                                                <input type="text" id="a-res-{{ $cle }}" name="reseaux_sociaux[{{ $cle }}]"
+                                                    value="{{ $pre('reseaux_sociaux.'.$cle) }}" maxlength="150"
+                                                    class="flex-1 bg-transparent border-0 px-3 py-2.5 text-sm outline-none min-w-0"
+                                                    placeholder="{{ $exemple }}">
+                                            </div>
+                                        </div>
+                                        @endforeach
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
+                        {{-- Bloc « votre question » : prise d'informations uniquement.
+                             Une demande de renseignements n'a pas à livrer date de
+                             naissance, taille de T-shirt ni contact d'urgence. --}}
+                        <div data-mode="info" style="display:none">
+                            <h3 class="font-display font-bold text-mja-gray text-sm uppercase tracking-wider mb-4 flex items-center gap-2">
+                                <span class="w-6 h-6 bg-mja-blue text-white rounded-full flex items-center justify-center text-xs font-black">4</span>
+                                Votre demande
+                            </h3>
+                            <label for="a-message" class="block text-sm font-display font-bold text-mja-gray mb-1.5">
+                                Que souhaites-tu savoir ? <span class="text-mja-red" aria-hidden="true">*</span>
+                            </label>
+                            <textarea id="a-message" name="message" rows="4"
+                                class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl px-4 py-3 text-sm outline-none transition-colors resize-y @error('message') border-mja-red @enderror"
+                                placeholder="Les activités, le fonctionnement de l'association, comment devenir bénévole…">{{ $pre('message') }}</textarea>
+                            @error('message')<p class="text-mja-red text-xs mt-1 font-display font-semibold">{{ $message }}</p>@enderror
+                            <p class="text-xs text-gray-400 mt-1.5">Nous te répondons par email ou par téléphone. Aucune autre information ne t'est demandée à ce stade.</p>
+                        </div>
+
                         {{-- Bloc 4 : Informations complémentaires --}}
-                        <div>
+                        <div data-mode="adhesion">
                             <h3 class="font-display font-bold text-mja-gray text-sm uppercase tracking-wider mb-4 flex items-center gap-2">
                                 <span class="w-6 h-6 bg-mja-blue text-white rounded-full flex items-center justify-center text-xs font-black">4</span>
                                 Informations complémentaires
@@ -245,7 +340,7 @@
                                         @foreach(['S', 'M', 'L', 'XL', '2XL', '3XL'] as $taille)
                                         <label class="cursor-pointer">
                                             <input type="radio" name="taille_tshirt" value="{{ $taille }}"
-                                                {{ old('taille_tshirt') === $taille ? 'checked' : '' }}
+                                                {{ $pre('taille_tshirt') === $taille ? 'checked' : '' }}
                                                 class="peer sr-only">
                                             <div class="border-2 border-gray-100 peer-checked:border-mja-blue peer-checked:bg-mja-blue peer-checked:text-white rounded-xl px-4 py-2 text-sm font-display font-bold text-gray-500 transition-all hover:border-gray-200 min-w-[3rem] text-center">
                                                 {{ $taille }}
@@ -262,7 +357,7 @@
                                         @foreach(['Oui', 'Non'] as $opt)
                                         <label class="cursor-pointer flex-1 max-w-[8rem]">
                                             <input type="radio" name="permis" value="{{ $opt }}"
-                                                {{ old('permis') === $opt ? 'checked' : '' }}
+                                                {{ $pre('permis') === $opt ? 'checked' : '' }}
                                                 class="peer sr-only">
                                             <div class="border-2 border-gray-100 peer-checked:border-mja-blue peer-checked:bg-mja-blue/5 rounded-xl p-3 text-center text-sm font-display font-bold text-gray-500 peer-checked:text-mja-blue transition-all hover:border-gray-200">
                                                 {{ $opt }}
@@ -277,12 +372,12 @@
                                     <label for="a-sante" class="block text-sm font-display font-bold text-mja-gray mb-1.5">Problèmes de santé, allergies ou intolérances <span class="text-gray-500 font-normal">(facultatif)</span></label>
                                     <textarea id="a-sante" name="problemes_sante" rows="2"
                                         class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl px-4 py-3 text-sm outline-none transition-colors resize-none"
-                                        placeholder="Précise ici si tu as des problèmes de santé, des allergies ou des intolérances...">{{ old('problemes_sante') }}</textarea>
+                                        placeholder="Précise ici si tu as des problèmes de santé, des allergies ou des intolérances...">{{ $pre('problemes_sante') }}</textarea>
                                 </div>
 
                                 <div>
                                     <label for="a-urgence" class="block text-sm font-display font-bold text-mja-gray mb-1.5">Personne à contacter en cas d'urgence <span class="text-mja-red" aria-hidden="true">*</span></label>
-                                    <input type="text" id="a-urgence" name="urgence_contact" value="{{ old('urgence_contact') }}" required
+                                    <input type="text" id="a-urgence" name="urgence_contact" value="{{ $pre('urgence_contact') }}" required
                                         class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl px-4 py-3 text-sm outline-none transition-colors @error('urgence_contact') border-mja-red @enderror"
                                         placeholder="Nom — Prénom — Numéro de téléphone">
                                     @error('urgence_contact')<p class="text-mja-red text-xs mt-1 font-display font-semibold">{{ $message }}</p>@enderror
@@ -291,7 +386,7 @@
                         </div>
 
                         {{-- Bloc 5 : Droit à l'image --}}
-                        <div>
+                        <div data-mode="adhesion">
                             <h3 class="font-display font-bold text-mja-gray text-sm uppercase tracking-wider mb-4 flex items-center gap-2">
                                 <span class="w-6 h-6 bg-mja-blue text-white rounded-full flex items-center justify-center text-xs font-black">5</span>
                                 Autorisation — Droit à l'image
@@ -324,7 +419,7 @@
                                 </h3>
 
                                 {{-- Photo --}}
-                                <label class="block text-sm font-display font-bold text-mja-gray mb-1.5">Ta photo <span class="text-mja-red">*</span></label>
+                                <label class="block text-sm font-display font-bold text-mja-gray mb-1.5">Ta photo <span class="text-gray-500 font-normal">(facultatif)</span></label>
                                 <div class="flex items-center gap-4">
                                     <div id="photo-preview" class="w-16 h-16 rounded-xl bg-gray-100 border-2 border-dashed border-gray-200 flex items-center justify-center text-gray-300 shrink-0 overflow-hidden">
                                         <i class="fas fa-user text-xl"></i>
@@ -334,7 +429,7 @@
                                             class="block w-full text-sm text-gray-500 file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-display file:font-bold file:bg-mja-blue file:text-white hover:file:bg-mja-bluedark file:cursor-pointer border-2 border-gray-100 rounded-xl @error('photo') border-mja-red @enderror">
                                     </label>
                                 </div>
-                                <p class="text-xs text-gray-400 mt-1.5">Format JPG ou PNG, 5 Mo max. Elle servira à te présenter aux autres membres (plus besoin d'envoyer par WhatsApp).</p>
+                                <p class="text-xs text-gray-400 mt-1.5">Format JPG ou PNG, 5 Mo max. Elle servira à te présenter aux autres membres. Tu peux aussi la déposer plus tard depuis ton espace adhérent.</p>
                                 @error('photo')<p class="text-mja-red text-xs mt-1 font-display font-semibold">{{ $message }}</p>@enderror
 
                                 {{-- Moyen de paiement --}}
@@ -342,11 +437,11 @@
                                     $moyens = ['cheque' => ['Chèque','fa-money-check-alt'], 'espece' => ['Espèces','fa-money-bill-wave'], 'virement' => ['Virement','fa-university']];
                                     if (!empty($stripeEnabled)) { $moyens['en_ligne'] = ['Carte bancaire','fa-credit-card']; }
                                 @endphp
-                                <label class="block text-sm font-display font-bold text-mja-gray mt-6 mb-2">Comment souhaites-tu régler la cotisation de {{ rtrim(rtrim(number_format((float)($cotisationAmount ?? 20), 2, ',', ' '), '0'), ',') }} € ? <span class="text-mja-red">*</span></label>
+                                <label class="block text-sm font-display font-bold text-mja-gray mt-6 mb-2">Comment souhaites-tu régler la cotisation de {{ \App\Support\Cotisation::formatee() }} ? <span class="text-mja-red">*</span></label>
                                 <div class="grid grid-cols-2 {{ !empty($stripeEnabled) ? 'sm:grid-cols-4' : 'sm:grid-cols-3' }} gap-3">
                                     @foreach($moyens as $val => [$label, $icon])
                                     <label class="relative cursor-pointer">
-                                        <input type="radio" name="moyen_paiement" value="{{ $val }}" {{ old('moyen_paiement') === $val ? 'checked' : '' }} class="peer sr-only">
+                                        <input type="radio" name="moyen_paiement" value="{{ $val }}" {{ $pre('moyen_paiement') === $val ? 'checked' : '' }} class="peer sr-only">
                                         <div class="border-2 border-gray-100 peer-checked:border-mja-blue peer-checked:bg-mja-blue/5 rounded-xl p-3 text-center text-sm font-display font-bold text-gray-500 peer-checked:text-mja-blue transition-all hover:border-gray-200 flex flex-col items-center gap-1.5">
                                             <i class="fas {{ $icon }} text-lg"></i> {{ $label }}
                                         </div>
@@ -354,7 +449,13 @@
                                     @endforeach
                                 </div>
                                 @if(!empty($stripeEnabled))
-                                <p class="text-xs text-gray-400 mt-2"><i class="fas fa-lock mr-1"></i> Paiement par carte 100 % sécurisé via Stripe. Les autres moyens : instructions envoyées par email.</p>
+                                <p class="text-xs text-gray-400 mt-2">
+                                    <i class="fas fa-lock mr-1"></i> Paiement par carte 100 % sécurisé via Stripe.
+                                    @if(\App\Support\Cotisation::fraisCarte() > 0)
+                                    Le règlement par carte est majoré de <strong>{{ \App\Support\Cotisation::fraisFormates() }}</strong> de frais bancaires, soit <strong>{{ \App\Support\Cotisation::carteFormatee() }}</strong> au total, afin que l'association perçoive bien l'intégralité de la cotisation.
+                                    @endif
+                                    Les autres moyens : instructions envoyées par email.
+                                </p>
                                 @else
                                 <p class="text-xs text-gray-400 mt-2"><i class="fas fa-circle-info mr-1"></i> Les instructions de règlement te seront envoyées par email.</p>
                                 @endif
@@ -365,7 +466,12 @@
                                 <div id="bloc-cb" class="hidden mt-5 border-2 border-mja-blue/20 bg-mja-blue/5 rounded-2xl p-5">
                                     <div class="flex items-center justify-between gap-3 mb-4">
                                         <div class="font-display font-bold text-mja-gray text-sm">
-                                            <i class="fas fa-credit-card text-mja-blue mr-1.5"></i> Régler {{ rtrim(rtrim(number_format((float)($cotisationAmount ?? 20), 2, ',', ' '), '0'), ',') }} € par carte
+                                            <i class="fas fa-credit-card text-mja-blue mr-1.5"></i> Régler {{ \App\Support\Cotisation::carteFormatee() }} par carte
+                                            @if(\App\Support\Cotisation::fraisCarte() > 0)
+                                            <span class="block font-normal text-xs text-gray-500 mt-0.5">
+                                                {{ \App\Support\Cotisation::formatee() }} de cotisation + {{ \App\Support\Cotisation::fraisFormates() }} de frais de transaction
+                                            </span>
+                                            @endif
                                         </div>
                                         <span id="cb-badge" class="hidden items-center gap-1.5 bg-green-100 text-green-700 font-display font-bold text-xs px-3 py-1 rounded-full">
                                             <i class="fas fa-check-circle"></i> Paiement validé
@@ -411,7 +517,8 @@
 
                         <button type="submit" id="btn-envoyer"
                             class="w-full btn-blue font-display font-bold py-4 rounded-xl transition-colors flex items-center justify-center gap-2 text-base disabled:opacity-50 disabled:cursor-not-allowed">
-                            <i class="fas fa-paper-plane"></i> Envoyer ma demande d'adhésion
+                            <i class="fas fa-paper-plane"></i>
+                            <span id="btn-envoyer-texte">{{ !empty($precedente) ? 'Envoyer mon renouvellement' : "Envoyer ma demande d'adhésion" }}</span>
                         </button>
                         <p id="btn-envoyer-aide" class="hidden text-center text-xs text-gray-500 -mt-2">
                             <i class="fas fa-lock mr-1"></i> Réglez la cotisation par carte ci-dessus pour activer l'envoi.
@@ -434,16 +541,78 @@
     var moyens  = document.querySelectorAll('input[name="moyen_paiement"]');
     if (!bloc) return;
 
+    var titre       = document.getElementById('titre-formulaire');
+    var texteBouton = document.getElementById('btn-envoyer-texte');
+    var blocInfo    = document.getElementById('bloc-readhesion');
+    var champMessage = document.getElementById('a-message');
+
+    /* Libellés par type de démarche. Sans cela, une prise d'informations
+       proposait « Envoyer ma demande d'adhésion » — ce qui n'est pas ce que
+       la personne est en train de faire. */
+    var LIBELLES = {
+        premiere:    ["Formulaire d'adhésion",    "Envoyer ma demande d'adhésion"],
+        readhesion:  ['Formulaire de réadhésion', 'Envoyer ma réadhésion'],
+        information: ["Demande d'informations",   "Envoyer ma demande d'informations"]
+    };
+
     function refresh() {
-        var val = document.querySelector('input[name="premiere_adhesion"]:checked');
-        // Affiché pour première adhésion et réadhésion, masqué pour prise d'informations.
-        var show = val && (val.value === 'premiere' || val.value === 'readhesion');
-        bloc.style.display = show ? '' : 'none';
-        if (photo) photo.required = show;
-        moyens.forEach(function (m) { m.required = show; });
+        var val  = document.querySelector('input[name="premiere_adhesion"]:checked');
+        var mode = val ? val.value : null;
+
+        // Cotisation et photo : première adhésion et réadhésion uniquement.
+        var adhesion = mode === 'premiere' || mode === 'readhesion';
+        bloc.style.display = adhesion ? '' : 'none';
+        // La photo n'est plus exigée : elle peut être déposée plus tard.
+        moyens.forEach(function (m) { m.required = adhesion; });
+
+        /* Une prise d'informations ne collecte que l'identité, les coordonnées
+           et la question posée : tout le reste est masqué, et surtout
+           dé-« required », sinon le navigateur bloquerait sur un champ caché. */
+        document.querySelectorAll('[data-mode]').forEach(function (zone) {
+            var visible = mode === null
+                ? zone.dataset.mode === 'adhesion'
+                : (zone.dataset.mode === 'info' ? !adhesion : adhesion);
+
+            zone.style.display = visible ? '' : 'none';
+            zone.querySelectorAll('input, select, textarea').forEach(function (champ) {
+                if (champ.dataset.requis === undefined) {
+                    champ.dataset.requis = champ.required ? '1' : '0';
+                }
+                champ.required = visible && champ.dataset.requis === '1';
+            });
+        });
+
+        if (champMessage) { champMessage.required = mode === 'information'; }
+
+        var libelles = LIBELLES[mode];
+        if (libelles) {
+            if (titre && !@json(!empty($precedente))) { titre.textContent = libelles[0]; }
+            if (texteBouton) { texteBouton.textContent = libelles[1]; }
+        }
+
+        // Raccourci vers l'espace adhérent : en réadhésion, le formulaire
+        // pré-rempli évite toute ressaisie.
+        if (blocInfo) { blocInfo.classList.toggle('hidden', mode !== 'readhesion'); }
     }
     radios.forEach(function (r) { r.addEventListener('change', refresh); });
     refresh();
+
+    // Réseaux sociaux : repliés par défaut, dépliés à la demande (ou si déjà saisis).
+    var btnReseaux  = document.getElementById('btn-reseaux');
+    var blocReseaux = document.getElementById('bloc-reseaux');
+    if (btnReseaux && blocReseaux) {
+        var maj = function () {
+            var ouvert = !blocReseaux.classList.contains('hidden');
+            btnReseaux.innerHTML = ouvert
+                ? '<i class="fas fa-minus-circle mr-1"></i> Masquer'
+                : '<i class="fas fa-plus-circle mr-1"></i> Ajouter mes réseaux';
+        };
+        btnReseaux.addEventListener('click', function () {
+            blocReseaux.classList.toggle('hidden');
+            maj();
+        });
+        maj();
+    }
 
     // Aperçu de la photo
     var preview = document.getElementById('photo-preview');

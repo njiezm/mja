@@ -2,12 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\AdhesionRequest;
 use App\Mail\AdhesionConfirmation;
 use App\Mail\AdhesionNotification;
 use App\Mail\AdhesionStatusUpdate;
 use App\Models\Adhesion;
+use App\Models\AdhesionPeriod;
+use App\Models\Setting;
 use App\Services\StripeService;
+use App\Support\Cotisation;
+use App\Support\Telephone;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
@@ -15,11 +21,73 @@ class AdhesionController extends Controller
 {
     public function create()
     {
-        return view('adhesion', [
-            'stripeEnabled'     => StripeService::enabled(),
-            'stripePublicKey'   => StripeService::publicKey(),
-            'cotisationAmount'  => \App\Models\Setting::get('cotisation_amount', 20),
-        ]);
+        // Un adhérent connecté n'a rien à ressaisir : on l'envoie directement
+        // sur son écran de renouvellement pré-rempli.
+        $user = Auth::user();
+
+        if ($user?->isMember() && $user->adhesion) {
+            return redirect()->route('adhesion.renouveler.espace');
+        }
+
+        return view('adhesion', $this->donneesVue());
+    }
+
+    /**
+     * Renouvellement depuis l'espace adhérent : le formulaire est pré-rempli
+     * avec la dernière adhésion, il n'y a plus qu'à vérifier et payer.
+     */
+    public function renouvelerDepuisEspace()
+    {
+        $user = Auth::user();
+        $precedente = $user?->adhesion;
+
+        // Compte sans adhésion rattachée (administrateur, ou adhérent dont la
+        // fiche n'a pas encore été liée) : il n'y a rien à pré-remplir. On
+        // l'envoie sur le formulaire vierge plutôt que sur une page 404.
+        if (! $precedente) {
+            return redirect()->route('adhesion')
+                ->with('error', "Aucune adhésion n'est rattachée à votre compte : remplissez le formulaire ci-dessous.");
+        }
+
+        return view('adhesion', $this->donneesVue($precedente));
+    }
+
+    /**
+     * Renouvellement par lien magique reçu par email : même écran, sans
+     * connexion — pour les adhérents qui n'ont jamais créé de compte.
+     */
+    public function renouvelerParLien(string $token)
+    {
+        $precedente = Adhesion::where('renouvellement_token', $token)->first();
+
+        if (! $precedente
+            || ! $precedente->renouvellement_token_expires_at
+            || $precedente->renouvellement_token_expires_at->isPast()) {
+            return redirect()->route('adhesion')
+                ->with('error', "Ce lien de renouvellement a expiré. Remplissez le formulaire ci-dessous, ou connectez-vous à votre espace adhérent.");
+        }
+
+        return view('adhesion', $this->donneesVue($precedente));
+    }
+
+    /** Variables communes aux trois façons d'ouvrir le formulaire. */
+    private function donneesVue(?Adhesion $precedente = null): array
+    {
+        $prefill = [];
+
+        if ($precedente) {
+            $prefill = $precedente->donneesReprises();
+            [$prefill['indicatif'], $prefill['telephone']] = Telephone::separer($precedente->telephone);
+            $prefill['premiere_adhesion'] = 'readhesion';
+        }
+
+        return [
+            'stripeEnabled'  => StripeService::enabled(),
+            'stripePublicKey' => StripeService::publicKey(),
+            'precedente'     => $precedente,
+            'prefill'        => $prefill,
+            'periode'        => AdhesionPeriod::current(),
+        ];
     }
 
     /**
@@ -42,83 +110,39 @@ class AdhesionController extends Controller
             'client_secret' => $intent['client_secret'],
             'public_key'    => StripeService::publicKey(),
             'amount'        => StripeService::amountCents(),
+            'cotisation'    => Cotisation::formatee(),
+            'frais'         => Cotisation::fraisFormates(),
+            'total'         => Cotisation::carteFormatee(),
         ]);
     }
 
-    public function store(Request $request)
+    public function store(AdhesionRequest $request)
     {
-        $validated = $request->validate([
-            'premiere_adhesion' => 'required|in:premiere,readhesion,information',
-            'civilite'          => 'required|in:Madame,Monsieur',
-            'nom'               => 'required|string|max:100',
-            'prenom'            => 'required|string|max:100',
-            'date_naissance'    => ['required', 'string', 'max:20', 'regex:/^\d{2}\/\d{2}\/\d{4}$/'],
-            'profession'        => 'required|string|max:150',
-            'indicatif'         => 'nullable|string|max:6',
-            'telephone'         => 'required|string|max:30',
-            'email'             => 'required|email|max:150',
-            'adresse_postale'   => 'required|string',
-            'taille_tshirt'     => 'required|in:S,M,L,XL,2XL,3XL',
-            'permis'            => 'required|in:Oui,Non',
-            'problemes_sante'   => 'nullable|string',
-            'urgence_contact'   => 'required|string|max:300',
-            'photo'             => 'required_unless:premiere_adhesion,information|nullable|image|max:5120',
-            'moyen_paiement'    => 'required_unless:premiere_adhesion,information|nullable|in:cheque,espece,virement,en_ligne',
-            'payment_intent_id' => 'nullable|string|max:255',
-            'droit_image'       => 'required|accepted',
-            'rgpd_consentement' => 'required|accepted',
-        ], [
-            'premiere_adhesion.required'  => 'Ce champ est obligatoire.',
-            'premiere_adhesion.in'        => 'Valeur invalide.',
-            'civilite.required'           => 'La civilité est obligatoire.',
-            'nom.required'                => 'Le nom est obligatoire.',
-            'prenom.required'             => 'Le prénom est obligatoire.',
-            'date_naissance.required'     => 'La date de naissance est obligatoire.',
-            'date_naissance.regex'        => 'Le format doit être JJ/MM/AAAA.',
-            'profession.required'         => 'La profession est obligatoire.',
-            'telephone.required'          => 'Le numéro de téléphone est obligatoire.',
-            'email.required'              => "L'adresse email est obligatoire.",
-            'email.email'                 => "L'adresse email n'est pas valide.",
-            'adresse_postale.required'    => "L'adresse postale est obligatoire.",
-            'taille_tshirt.required'      => 'La taille de T-shirt est obligatoire.',
-            'permis.required'             => 'Ce champ est obligatoire.',
-            'urgence_contact.required'    => "La personne à contacter en cas d'urgence est obligatoire.",
-            'photo.required_unless'       => 'La photo est obligatoire pour une adhésion.',
-            'photo.image'                 => 'Le fichier doit être une image (JPG, PNG…).',
-            'photo.max'                   => 'La photo ne doit pas dépasser 5 Mo.',
-            'moyen_paiement.required_unless' => 'Choisissez un moyen de paiement.',
-            'moyen_paiement.in'           => 'Moyen de paiement invalide.',
-            'droit_image.required'        => "L'autorisation du droit à l'image est obligatoire.",
-            'droit_image.accepted'        => "Vous devez accepter le droit à l'image pour finaliser votre adhésion.",
-            'rgpd_consentement.required'  => 'Le consentement au traitement de vos données est obligatoire.',
-            'rgpd_consentement.accepted'  => 'Vous devez consentir au traitement de vos données pour finaliser votre adhésion.',
-        ]);
+        $donnees = $request->donneesAdhesion();
 
-        $validated['droit_image'] = true;
-        $validated['rgpd_consentement'] = true;
+        $precedente = $this->adhesionPrecedente($request);
 
-        $indicatif = $validated['indicatif'] ?? null;
-        unset($validated['indicatif']);
-        $validated['telephone'] = trim(($indicatif ? $indicatif . ' ' : '') . $validated['telephone']);
+        $donnees['source_id'] = $request->session()->get('mja_source_id');
+        $donnees['period_id'] = AdhesionPeriod::current()?->id;
+        $donnees['user_id']   = Auth::id() ?: $precedente?->user_id;
 
-        $validated['source_id'] = $request->session()->get('mja_source_id');
-        $validated['period_id'] = \App\Models\AdhesionPeriod::current()?->id;
+        if ($precedente) {
+            $donnees['renouvelle_adhesion_id'] = $precedente->id;
+            // À défaut de nouvelle photo, on reprend celle de l'an dernier.
+            $donnees['photo'] = $precedente->photo;
+        }
 
         if ($request->hasFile('photo')) {
-            $validated['photo'] = $request->file('photo')->store('adhesions/photos', 'public');
-        } else {
-            unset($validated['photo']);
+            $donnees['photo'] = $request->file('photo')->store('adhesions/photos', 'public');
         }
 
         // Paiement carte : le règlement a lieu dans le formulaire, avant l'envoi.
         // On revérifie systématiquement le PaymentIntent auprès de Stripe — le
         // navigateur n'est jamais une source de vérité sur un paiement.
-        $intentId = $validated['payment_intent_id'] ?? null;
-        unset($validated['payment_intent_id']);
         $cartePayee = false;
 
-        if (($validated['moyen_paiement'] ?? null) === 'en_ligne') {
-            $cartePayee = StripeService::paiementValide($intentId);
+        if (($donnees['moyen_paiement'] ?? null) === 'en_ligne') {
+            $cartePayee = StripeService::paiementValide($request->input('payment_intent_id'));
 
             if (! $cartePayee) {
                 return back()->withInput()
@@ -126,17 +150,28 @@ class AdhesionController extends Controller
             }
         }
 
-        $validated['statut'] = match (true) {
-            $validated['premiere_adhesion'] === 'information' => 'prise_infos',
-            $cartePayee                                       => 'payee',
-            default                                           => 'nouvelle',
+        $donnees['statut'] = match (true) {
+            $donnees['premiere_adhesion'] === 'information' => 'prise_infos',
+            $cartePayee                                     => 'payee',
+            default                                         => 'nouvelle',
         };
 
-        $adhesion = Adhesion::create($validated);
+        $adhesion = Adhesion::create($donnees);
+
+        // Le renouvellement devient l'adhésion courante du compte.
+        if ($adhesion->user_id) {
+            \App\Models\User::whereKey($adhesion->user_id)->update(['adhesion_id' => $adhesion->id]);
+        }
+
+        // Le lien de renouvellement précédent ne doit plus rouvrir un formulaire.
+        $precedente?->forceFill([
+            'renouvellement_token'            => null,
+            'renouvellement_token_expires_at' => null,
+        ])->save();
 
         // Notification à l'association (toujours) — liste configurable en back-office.
         try {
-            Mail::to(\App\Models\Setting::notificationEmails())->send(new AdhesionNotification($adhesion));
+            Mail::to(Setting::notificationEmails())->send(new AdhesionNotification($adhesion));
         } catch (\Throwable $e) {
             Log::error('Mail notification adhésion échoué : ' . $e->getMessage());
         }
@@ -148,7 +183,31 @@ class AdhesionController extends Controller
             Log::error('Mail confirmation adhésion échoué : ' . $e->getMessage());
         }
 
-        return back()->with('success', true);
+        return back()->with('success', true)->with('renouvellement', $precedente !== null);
+    }
+
+    /**
+     * Adhésion que ce formulaire renouvelle, si le contexte le dit — jeton
+     * magique posté avec le formulaire, ou adhérent connecté.
+     */
+    private function adhesionPrecedente(Request $request): ?Adhesion
+    {
+        $token = $request->input('renouvellement_token');
+
+        if ($token) {
+            $precedente = Adhesion::where('renouvellement_token', $token)
+                ->whereNotNull('renouvellement_token_expires_at')
+                ->where('renouvellement_token_expires_at', '>', now())
+                ->first();
+
+            if ($precedente) {
+                return $precedente;
+            }
+        }
+
+        $user = Auth::user();
+
+        return $user?->adhesion;
     }
 
     /** Retour Stripe : paiement réussi → statut « payée » + email de bienvenue. */

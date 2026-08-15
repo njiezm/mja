@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Member;
+use App\Models\User;
 use Illuminate\Console\Command;
 
 class PurgeDeletedMembers extends Command
@@ -13,7 +13,10 @@ class PurgeDeletedMembers extends Command
 
     public function handle(): int
     {
-        $members = Member::onlyTrashed()
+        // Seuls les comptes adhérents sont concernés : un compte purement
+        // administrateur ne se supprime pas depuis l'espace adhérent.
+        $members = User::onlyTrashed()
+            ->whereNotNull('adhesion_id')
             ->where('deleted_at', '<', now()->subDays(30))
             ->get();
 

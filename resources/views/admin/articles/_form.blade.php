@@ -29,9 +29,7 @@
     </div>
     <div>
         <label class="block text-sm font-semibold text-gray-700 mb-1.5">Contenu <span class="text-red-500">*</span></label>
-        <textarea name="contenu" rows="12"
-            class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-mja-blue resize-y"
-            placeholder="Contenu complet de l'article...">{{ old('contenu', $article->contenu ?? '') }}</textarea>
+        <x-editeur-riche name="contenu" :value="$article->contenu ?? null" :rows="12" />
     </div>
     <div class="grid grid-cols-2 gap-5 items-end">
         <div>

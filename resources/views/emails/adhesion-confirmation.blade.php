@@ -43,7 +43,6 @@
             ['Profession',          $adhesion->profession],
             ['Téléphone',           $adhesion->telephone],
             ['Email',               $adhesion->email],
-            ['Adresse',             $adhesion->adresse_postale],
             ['Taille T-shirt',      $adhesion->taille_tshirt],
             ['Permis de conduire',  $adhesion->permis],
           ] as [$label, $val])
@@ -65,23 +64,30 @@
           <tr><td style="padding:16px 20px">
             <p style="margin:0 0 10px;font-weight:800;font-size:14px;color:#92400e">Prochaines étapes</p>
             @if($adhesion->moyen_paiement)
+              @if($adhesion->photo)
               <p style="margin:0 0 6px;font-size:13px;color:#555;line-height:1.6">
                 Votre photo a bien été reçue &#10004;
               </p>
+              @else
+              <p style="margin:0 0 6px;font-size:13px;color:#555;line-height:1.6">
+                Pensez à déposer votre photo depuis votre espace adhérent — elle sert à vous présenter aux autres membres.
+              </p>
+              @endif
+              @php $cotisation = \App\Support\Cotisation::formatee(); @endphp
               @switch($adhesion->moyen_paiement)
                 @case('cheque')
                   <p style="margin:0 0 6px;font-size:13px;color:#555;line-height:1.6">
-                    Réglez votre <strong>cotisation de 20 €</strong> par <strong>chèque</strong> à l'ordre de « Madin'Jeunes Ambition », à remettre ou envoyer au local : 22 passage du Cœur sur la Main, 97200 Fort-de-France.
+                    Réglez votre <strong>cotisation de {{ $cotisation }}</strong> par <strong>chèque</strong> à l'ordre de « Madin'Jeunes Ambition », à remettre à un membre du bureau lors d'une réunion ou d'un événement.
                   </p>
                   @break
                 @case('espece')
                   <p style="margin:0 0 6px;font-size:13px;color:#555;line-height:1.6">
-                    Réglez votre <strong>cotisation de 20 €</strong> en <strong>espèces</strong> directement au local de l'association.
+                    Réglez votre <strong>cotisation de {{ $cotisation }}</strong> en <strong>espèces</strong> auprès d'un membre du bureau.
                   </p>
                   @break
                 @case('virement')
                   <p style="margin:0 0 6px;font-size:13px;color:#555;line-height:1.6">
-                    Effectuez un <strong>virement de 20 €</strong> — IBAN : <strong>[À COMPLÉTER]</strong> (indiquez votre nom en référence).
+                    Effectuez un <strong>virement de {{ $cotisation }}</strong>@if(\App\Models\Setting::has('iban')) — IBAN : <strong>{{ \App\Models\Setting::get('iban') }}</strong>@if(\App\Models\Setting::has('bic')), BIC : <strong>{{ \App\Models\Setting::get('bic') }}</strong>@endif @else — les coordonnées bancaires vous seront communiquées par retour d'email @endif (indiquez vos nom et prénom en référence).
                   </p>
                   @break
               @endswitch
@@ -97,14 +103,14 @@
         </table>
 
         <p style="font-size:14px;color:#777;line-height:1.7;margin:0">
-          Pour toute question, contactez-nous à <a href="mailto:contact@njiezm.fr" style="color:#2048A4;font-weight:600">contact@njiezm.fr</a> ou sur nos réseaux sociaux.<br>
+          Pour toute question, contactez-nous à <a href="mailto:{{ config('mja.contact_email') }}" style="color:#2048A4;font-weight:600">{{ config('mja.contact_email') }}</a> ou sur nos réseaux sociaux.<br>
           À très bientôt dans l'équipe !
         </p>
       </td></tr>
 
       {{-- Footer --}}
       <tr><td style="background:#f0f5ff;padding:20px 32px;text-align:center">
-        <p style="margin:0;font-size:11px;color:#999">Madin'Jeunes Ambition — Fort-de-France, Martinique</p>
+        <p style="margin:0;font-size:11px;color:#999">Madin'Jeunes Ambition — Martinique et au-delà</p>
         <p style="margin:4px 0 0;font-size:11px;color:#bbb">Cet email vous a été envoyé automatiquement suite à votre demande d'adhésion.</p>
       </td></tr>
 

@@ -64,12 +64,12 @@
         @endswitch
 
         <p style="font-size:14px;color:#777;line-height:1.7;margin:24px 0 0">
-          Pour toute question, contactez-nous à <a href="mailto:contact@njiezm.fr" style="color:#2048A4;font-weight:600">contact@njiezm.fr</a>.
+          Pour toute question, contactez-nous à <a href="mailto:{{ config('mja.contact_email') }}" style="color:#2048A4;font-weight:600">{{ config('mja.contact_email') }}</a>.
         </p>
       </td></tr>
 
       <tr><td style="background:#f0f5ff;padding:20px 32px;text-align:center">
-        <p style="margin:0;font-size:11px;color:#999">Madin'Jeunes Ambition — Fort-de-France, Martinique</p>
+        <p style="margin:0;font-size:11px;color:#999">Madin'Jeunes Ambition — Martinique et au-delà</p>
       </td></tr>
 
     </table>

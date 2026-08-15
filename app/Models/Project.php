@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasImage;
 use App\Models\Concerns\HasUniqueSlug;
 use Illuminate\Database\Eloquent\Model;
 
 class Project extends Model
 {
-    use HasUniqueSlug;
+    use HasImage, HasUniqueSlug;
 
     protected $fillable = [
         'titre', 'slug', 'description_courte', 'description',
@@ -34,5 +35,17 @@ class Project extends Model
     public function getRouteKeyName(): string
     {
         return 'slug';
+    }
+
+    /**
+     * Le contenu vient de l'éditeur enrichi du back-office : il est assaini
+     * ici, à l'écriture, quel que soit le chemin emprunté (formulaire, seeder,
+     * import). Rien de non autorisé ne peut donc atteindre la base.
+     */
+    protected function description(): \Illuminate\Database\Eloquent\Casts\Attribute
+    {
+        return \Illuminate\Database\Eloquent\Casts\Attribute::make(
+            set: fn (?string $valeur) => \App\Support\HtmlRiche::nettoyer($valeur),
+        );
     }
 }

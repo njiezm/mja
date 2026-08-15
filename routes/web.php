@@ -39,6 +39,11 @@ Route::get('/sante-nutrition-sport', [HomeController::class, 'sns'])->name('sns'
 
 Route::get('/adhesion', [AdhesionController::class, 'create'])->name('adhesion');
 Route::post('/adhesion', [AdhesionController::class, 'store'])->name('adhesion.store')->middleware(['honeypot', 'throttle:5,1']);
+// Renouvellement : depuis l'espace adhérent, ou via le lien magique des emails
+// de relance (pour ceux qui n'ont jamais créé de compte).
+Route::get('/adhesion/renouveler/{token}', [AdhesionController::class, 'renouvelerParLien'])->name('adhesion.renouveler');
+Route::get('/espace/renouveler', [AdhesionController::class, 'renouvelerDepuisEspace'])
+    ->name('adhesion.renouveler.espace')->middleware('auth');
 // Paiement carte intégré au formulaire : création du PaymentIntent en AJAX.
 Route::post('/adhesion/paiement-intent', [AdhesionController::class, 'paymentIntent'])
     ->name('adhesion.payment-intent')->middleware('throttle:10,1');
@@ -49,6 +54,11 @@ Route::get('/adhesion/paiement/annule', [AdhesionController::class, 'paiementAnn
 // affiches, flyers, bannières, vidéos motion). Page outil, non indexée.
 Route::view('/kit-adhesion', 'kit-adhesion')->name('kit.adhesion');
 
+// Plan de communication de la campagne d'adhésion : document de travail
+// interne. Réservé aux comptes du back-office — il cite des personnes et
+// des notes de réunion qui n'ont pas à être publiques.
+Route::view('/plan-comm', 'plan-comm')->name('plan.comm')->middleware(['auth', 'content']);
+
 Route::get('/don', [DonationController::class, 'create'])->name('don');
 Route::post('/don', [DonationController::class, 'store'])->name('don.store')->middleware(['honeypot', 'throttle:10,1']);
 Route::get('/don/merci', [DonationController::class, 'merci'])->name('don.merci');
@@ -58,7 +68,9 @@ Route::get('/recherche', [SearchController::class, 'index'])->name('search');
 Route::get('/mentions-legales', [HomeController::class, 'mentionsLegales'])->name('mentions-legales');
 Route::get('/politique-de-confidentialite', [HomeController::class, 'confidentialite'])->name('confidentialite');
 
-// ─── Espace membre (adhérents) ──────────────────────────────────────────────────
+// ─── Espace adhérent ──────────────────────────────────────────────────────────
+// Depuis la fusion des comptes, l'espace adhérent et le back-office partagent
+// la même identité (guard « web ») : un email, un mot de passe.
 Route::prefix('espace')->name('member.')->group(function () {
     // Création de compte via lien reçu par email
     Route::get('creer/{token}', [MemberAccountController::class, 'showCreate'])->name('account.create');
@@ -72,14 +84,15 @@ Route::prefix('espace')->name('member.')->group(function () {
     Route::post('connexion', [MemberAuthController::class, 'login'])->name('login.post')->middleware('throttle:6,1');
     Route::post('deconnexion', [MemberAuthController::class, 'logout'])->name('logout');
 
-    // Mot de passe oublié (membre)
+    // Mot de passe oublié (adhérent)
     Route::get('mot-de-passe-oublie', [MemberPasswordResetController::class, 'showLinkRequest'])->name('password.request');
     Route::post('mot-de-passe-oublie', [MemberPasswordResetController::class, 'sendResetLink'])->name('password.email')->middleware('throttle:4,1');
     Route::get('reinitialiser/{token}', [MemberPasswordResetController::class, 'showReset'])->name('password.reset');
     Route::post('reinitialiser', [MemberPasswordResetController::class, 'reset'])->name('password.update')->middleware('throttle:6,1');
 
-    // Espace protégé
-    Route::middleware('auth:member')->group(function () {
+    // Espace protégé — les visiteurs non connectés sont renvoyés vers la
+    // connexion adhérent, pas vers celle du back-office.
+    Route::middleware('auth')->group(function () {
         Route::get('/', [MemberSpaceController::class, 'dashboard'])->name('dashboard');
         Route::get('trombinoscope', [MemberSpaceController::class, 'trombinoscope'])->name('trombinoscope');
         Route::get('carte', [MemberSpaceController::class, 'card'])->name('card');
@@ -119,6 +132,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
         Route::patch('adhesions/{adhesion}/statut', [Admin\AdhesionController::class, 'updateStatut'])->name('adhesions.statut');
         Route::delete('adhesions/{adhesion}', [Admin\AdhesionController::class, 'destroy'])->name('adhesions.destroy');
 
+        // Relances automatiques (paiement en attente, renouvellement de saison)
+        Route::get('relances', [Admin\RelanceController::class, 'index'])->name('relances.index');
+        Route::put('relances', [Admin\RelanceController::class, 'update'])->name('relances.update');
+        Route::post('relances/executer', [Admin\RelanceController::class, 'executer'])->name('relances.executer');
+        Route::post('relances/adhesion/{adhesion}', [Admin\RelanceController::class, 'relancerUne'])->name('relances.une');
+
         // Sources d'acquisition & statistiques de tracking
         Route::get('sources', [Admin\SourceController::class, 'index'])->name('sources.index');
         Route::get('sources/export', [Admin\SourceController::class, 'export'])->name('sources.export');
@@ -137,6 +156,15 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
         Route::get('periodes/{period}/edit', [Admin\PeriodController::class, 'edit'])->name('periods.edit');
         Route::put('periodes/{period}', [Admin\PeriodController::class, 'update'])->name('periods.update');
         Route::delete('periodes/{period}', [Admin\PeriodController::class, 'destroy'])->name('periods.destroy');
+
+        // Comptes adhérents. Un admin voit la liste et peut agir ; seul le super
+        // admin voit les mots de passe en clair (contrôlé dans le contrôleur).
+        Route::get('comptes-adherents', [Admin\MemberAccountController::class, 'index'])->name('members.index');
+        Route::get('comptes-adherents/export', [Admin\MemberAccountController::class, 'export'])->name('members.export');
+        Route::post('comptes-adherents', [Admin\MemberAccountController::class, 'store'])->name('members.store');
+        Route::patch('comptes-adherents/{user}/mot-de-passe', [Admin\MemberAccountController::class, 'resetPassword'])->name('members.reset-password');
+        Route::patch('comptes-adherents/{user}/trombinoscope', [Admin\MemberAccountController::class, 'toggleDirectory'])->name('members.toggle-directory');
+        Route::patch('comptes-adherents/{user}/role', [Admin\MemberAccountController::class, 'updateRole'])->name('members.role');
     });
 
     // ── Comptes ── admin (gestionnaires seulement) et super admin (tous).
@@ -147,17 +175,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
         Route::patch('users/{user}/toggle-active', [Admin\UserController::class, 'toggleActive'])->name('users.toggle-active');
     });
 
-    // ── Paramètres (clés Stripe, cotisation) ── super admin uniquement
-    Route::middleware('super_admin')->group(function () {
+    // ── Paramètres ── admin et super admin.
+    // Les secrets Stripe (clé secrète, webhook) restent réservés au super
+    // admin : la restriction est appliquée dans le contrôleur, pas ici.
+    Route::middleware('admin')->group(function () {
         Route::get('parametres', [Admin\SettingController::class, 'edit'])->name('settings.edit');
         Route::put('parametres', [Admin\SettingController::class, 'update'])->name('settings.update');
-
-        // Comptes « espace adhérent » : mots de passe visibles et regénérables.
-        Route::get('comptes-adherents', [Admin\MemberAccountController::class, 'index'])->name('members.index');
-        Route::get('comptes-adherents/export', [Admin\MemberAccountController::class, 'export'])->name('members.export');
-        Route::post('comptes-adherents', [Admin\MemberAccountController::class, 'store'])->name('members.store');
-        Route::patch('comptes-adherents/{member}/mot-de-passe', [Admin\MemberAccountController::class, 'resetPassword'])->name('members.reset-password');
-        Route::patch('comptes-adherents/{member}/trombinoscope', [Admin\MemberAccountController::class, 'toggleDirectory'])->name('members.toggle-directory');
     });
 });
 

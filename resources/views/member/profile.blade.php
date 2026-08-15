@@ -50,7 +50,7 @@
                 </div>
                 <div>
                     <label class="block text-sm font-display font-bold text-mja-gray mb-1.5">Téléphone <span class="text-mja-red">*</span></label>
-                    <input type="tel" name="telephone" value="{{ old('telephone', $adhesion->telephone) }}" required class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl px-4 py-3 text-sm outline-none">
+                    <x-phone-field :value="$numero" :indicatif="$indicatif" :required="true" />
                 </div>
                 <div>
                     <label class="block text-sm font-display font-bold text-mja-gray mb-1.5">Profession <span class="text-mja-red">*</span></label>
@@ -67,8 +67,26 @@
             </div>
 
             <div>
-                <label class="block text-sm font-display font-bold text-mja-gray mb-1.5">Adresse postale <span class="text-mja-red">*</span></label>
-                <textarea name="adresse_postale" rows="2" required class="w-full border-2 border-gray-100 focus:border-mja-blue rounded-xl px-4 py-3 text-sm outline-none resize-none">{{ old('adresse_postale', $adhesion->adresse_postale) }}</textarea>
+                <label class="block text-sm font-display font-bold text-mja-gray mb-1.5">
+                    Mes réseaux sociaux <span class="text-gray-400 font-normal">(facultatif)</span>
+                </label>
+                <p class="text-xs text-gray-400 mb-3">Visibles uniquement des autres adhérents, sur ta fiche du trombinoscope.</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    @foreach(\App\Models\Adhesion::RESEAUX as $cle => [$label, $icone, $prefixe, $exemple])
+                    <div>
+                        <label for="p-res-{{ $cle }}" class="block text-xs font-display font-bold text-gray-500 mb-1">
+                            <i class="{{ $icone }} mr-1"></i> {{ $label }}
+                        </label>
+                        <div class="flex items-stretch border-2 border-gray-100 focus-within:border-mja-blue rounded-xl overflow-hidden transition-colors">
+                            @if($prefixe)<span class="pl-3 flex items-center text-sm text-gray-400 font-display font-bold">{{ $prefixe }}</span>@endif
+                            <input type="text" id="p-res-{{ $cle }}" name="reseaux_sociaux[{{ $cle }}]" maxlength="150"
+                                value="{{ old('reseaux_sociaux.' . $cle, data_get($adhesion->reseaux_sociaux, $cle)) }}"
+                                class="flex-1 bg-transparent border-0 px-3 py-2.5 text-sm outline-none min-w-0"
+                                placeholder="{{ $exemple }}">
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
             </div>
             <div>
                 <label class="block text-sm font-display font-bold text-mja-gray mb-1.5">Problèmes de santé / allergies</label>

@@ -1,3 +1,66 @@
+@php
+    /**
+     * Photothèque du kit.
+     *
+     * Les photos « en action » déposées dans public/images/carrousel passent en
+     * premier : ce sont elles qui montrent l'association à l'œuvre. Le dossier
+     * kit/ prend le relais, mais amputé de ses doublons — equipe-01 à 06,
+     * IMG_3366 à 3369 et « Groupe Pic 2026 » sont la même soirée photographiée
+     * en rafale, et equipe-02 est une copie de « MJA Beach Party 2 ». En garder
+     * une seule évite des mosaïques où six tuiles montrent la même scène.
+     */
+    $doublonsRafale = [
+        'equipe-01.jpg', 'equipe-02.jpg', 'equipe-03.jpg', 'equipe-04.jpg',
+        'equipe-05.jpg', 'equipe-06.jpg',
+        'IMG_3366.jpg', 'IMG_3367.jpg', 'IMG_3368.jpg', 'IMG_3369.jpg',
+    ];
+
+    $lister = function (string $dossier) {
+        $chemin = public_path($dossier);
+        $fichiers = is_dir($chemin)
+            ? (glob($chemin . '/*.{jpg,JPG,jpeg,JPEG,png,PNG,webp,WEBP}', GLOB_BRACE) ?: [])
+            : [];
+        sort($fichiers);
+
+        return array_map(fn ($f) => $dossier . '/' . basename($f), $fichiers);
+    };
+
+    // Les visuels imprimés tirent d'abord sur les fichiers les plus définis :
+    // une vignette de 350 px pixellise sur un kakémono de deux mètres.
+    $parDefinition = function (array $chemins) {
+        usort($chemins, function ($a, $b) {
+            $ta = @getimagesize(public_path($a));
+            $tb = @getimagesize(public_path($b));
+
+            return (($tb[0] ?? 0) * ($tb[1] ?? 0)) <=> (($ta[0] ?? 0) * ($ta[1] ?? 0));
+        });
+
+        return $chemins;
+    };
+
+    $photosAction = $parDefinition($lister('images/carrousel'));
+    $photosKit    = $parDefinition(array_values(array_filter(
+        $lister('images/kit'),
+        fn ($p) => ! in_array(basename($p), $doublonsRafale, true),
+    )));
+
+    // Résolution la plus faible du lot : sert à alerter avant impression.
+    $definitionMini = null;
+    foreach (array_merge($photosAction, $photosKit) as $p) {
+        $t = @getimagesize(public_path($p));
+        $largeur = $t[0] ?? 0;
+        if ($largeur && ($definitionMini === null || $largeur < $definitionMini)) {
+            $definitionMini = $largeur;
+        }
+    }
+
+    // Alternance action / groupe : deux tuiles voisines ne se ressemblent pas.
+    $phototheque = [];
+    for ($i = 0; $i < max(count($photosAction), count($photosKit)); $i++) {
+        if (isset($photosAction[$i])) $phototheque[] = $photosAction[$i];
+        if (isset($photosKit[$i]))    $phototheque[] = $photosKit[$i];
+    }
+@endphp
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -95,6 +158,7 @@ section.block{padding:52px 0 8px}
 .gallery.g-tall{grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
 .gallery.g-paper{grid-template-columns:repeat(auto-fill,minmax(290px,1fr))}
 .gallery.g-wide{grid-template-columns:repeat(auto-fill,minmax(420px,1fr))}
+.gallery.g-stand{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
 
 .card{border:1px solid var(--line);border-radius:20px;overflow:hidden;background:#fff;transition:transform .2s,box-shadow .2s;display:flex;flex-direction:column}
 .card[hidden]{display:none}
@@ -161,7 +225,7 @@ footer.foot a{color:#fff;font-weight:600;text-decoration:none}
       <img src="{{ asset('images/logomjat.png') }}" alt="Logo Madin' Jeunes Ambition">
       <div>
         <b>Madin' Jeunes Ambition</b>
-        <span>Association de jeunes bénévoles · Fort-de-France, Martinique</span>
+        <span>Association de jeunes bénévoles · Martinique et au-delà</span>
       </div>
     </div>
     <h1>Kit de communication<br><em>MJ'Adhésion</em> — Saison 2026-2027</h1>
@@ -216,15 +280,26 @@ footer.foot a{color:#fff;font-weight:600;text-decoration:none}
       </div>
       <div class="field">
         <label for="opt-url">Lien du QR code &amp; des visuels</label>
-        <input type="text" id="opt-url" value="https://mja-martinique.com/adhesion">
+        <input type="text" id="opt-url" value="https://mja-martinique.com">
         <div class="hint">Utilise un lien tracké depuis l'admin (Sources) si tu veux mesurer les scans.</div>
       </div>
       <div class="field">
         <label>Photos (styles « Photo » et « Mosaïque »)</label>
-        <label class="filebtn" for="opt-photo"><i class="fas fa-images"></i> <span id="photo-name">10 photos de membres pré-chargées</span></label>
+        <label class="filebtn" for="opt-photo"><i class="fas fa-images"></i> <span id="photo-name">{{ count($phototheque) }} photo(s) pré-chargée(s)</span></label>
         <input type="file" id="opt-photo" accept="image/*" multiple style="display:none">
-        <div class="hint">Pré-rempli avec vos photos de membres récupérées sur Instagram — chaque visuel en montre des différentes.
-          Dépose tes propres fichiers pour les remplacer : conseillé pour l'impression, les photos Instagram étant compressées.</div>
+        <div class="hint">Classées de la plus définie à la plus légère : les grands formats piochent d'abord les meilleures.
+          @if($definitionMini && $definitionMini < 1200)
+          <b style="color:#B45309">La plus petite ne fait que {{ $definitionMini }} px de large</b> — suffisant pour un post,
+          juste pour un flyer A5, insuffisant pour une affiche A3 ou un kakémono.
+          @endif
+          Dépose tes propres fichiers pour les remplacer : indispensable pour l'impression, les photos issues d'Instagram étant compressées.</div>
+      </div>
+      <div class="field">
+        <label for="opt-actions">Actions mises en avant</label>
+        <textarea id="opt-actions" rows="4" spellcheck="false"
+                  style="width:100%;font:inherit;font-size:13px;line-height:1.5;padding:9px 11px;border:1px solid #d9e2f0;border-radius:9px;resize:vertical"></textarea>
+        <div class="hint">Une action par ligne, au format <b>Titre | Description</b>.
+          Apparaissent sur le gabarit « Moderne » (flyers, affiches, kakémonos). Quatre lignes au maximum.</div>
       </div>
       <div class="field">
         <label for="opt-qrcolor">Couleur du QR code</label>
@@ -237,7 +312,7 @@ footer.foot a{color:#fff;font-weight:600;text-decoration:none}
       </div>
       <div class="field">
         <label>Affichages</label>
-        <label class="switch"><input type="checkbox" id="opt-price" checked> Afficher la cotisation (20 €)</label><br>
+        <label class="switch"><input type="checkbox" id="opt-price"> Afficher la cotisation (réservé aux supports internes)</label><br>
         <label class="switch" style="margin-top:8px"><input type="checkbox" id="opt-qr" checked> Afficher le QR code</label>
         <div class="hint">Décoche le QR pour les posts si tu préfères « lien en bio ».</div>
       </div>
@@ -291,6 +366,19 @@ footer.foot a{color:#fff;font-weight:600;text-decoration:none}
     <div class="gallery g-paper" id="gal-flyer"></div>
   </section>
 
+  <section class="block" data-group="stand">
+    <div class="sechead">
+      <div>
+        <div class="k"><s></s><em>Sur le terrain</em></div>
+        <h2>Tenue de stand — kakémono, pancarte, chevalet</h2>
+        <p>Les formats verticaux d'un stand : kakémono roll-up 85 × 200 cm lisible à dix mètres,
+           pancarte A2 à brandir ou à poser, chevalet de comptoir A5 pour le QR code d'adhésion.
+           Tous en PDF à la taille exacte pour l'imprimeur.</p>
+      </div>
+    </div>
+    <div class="gallery g-tall" id="gal-stand"></div>
+  </section>
+
   <section class="block" data-group="banner">
     <div class="sechead">
       <div>
@@ -306,11 +394,15 @@ footer.foot a{color:#fff;font-weight:600;text-decoration:none}
     <div class="sechead">
       <div>
         <div class="k"><s></s><em>Motion design</em></div>
-        <h2>Vidéos animées — 5 secondes</h2>
+        <h2>Vidéos animées — 2,5 s à 12 s</h2>
         <p>Même charte, en mouvement : le logo apparaît, le titre monte ligne par ligne, le soulignement jaune se déploie,
            les pastilles éclosent puis le bouton pulse. Idéal en reel, en story ou sur un écran d'accueil.
            « Aperçu animé » joue l'animation dans la carte ; le téléchargement produit un vrai fichier vidéo
            (MP4 si le navigateur le permet, sinon WebM).</p>
+        <p>Trois durées : la <b>bande-annonce de 2,5 s</b> se colle en intro ou en outro d'un autre montage pour
+           annoncer que la campagne démarre ; le <b>format court de 5 s</b> sert de post ou de story ;
+           la <b>présentation de 12 s</b> laisse le temps de dérouler les valeurs et les projets.
+           Les reels verticaux existent en version photo et mosaïque.</p>
       </div>
     </div>
     <div class="gallery g-square" id="gal-motion"></div>
@@ -325,10 +417,10 @@ footer.foot a{color:#fff;font-weight:600;text-decoration:none}
 
 <footer class="foot">
   <div class="wrap">
-    Madin' Jeunes Ambition · 22, passage du Cœur sur la Main — 97200 Fort-de-France ·
-    <a href="mailto:contact@mja-martinique.com">contact@mja-martinique.com</a> ·
+    Madin' Jeunes Ambition — Relève tous les défis ! ·
+    <a href="mailto:{{ config('mja.contact_email') }}">{{ config('mja.contact_email') }}</a> ·
     <a href="https://www.instagram.com/madin_jeunes_ambition/" target="_blank" rel="noopener">@madin_jeunes_ambition</a> ·
-    <a href="{{ route('adhesion') }}">mja-martinique.com/adhesion</a>
+    <a href="{{ route('adhesion') }}">mja-martinique.com</a>
   </div>
 </footer>
 
@@ -361,19 +453,23 @@ var FAM_AG = "AllRound Gothic, Gill Sans, Montserrat, sans-serif";
 var FAM_GS = "Gill Sans, Open Sans, sans-serif";
 
 var ORG   = "MADIN' JEUNES AMBITION";
-var TAG   = "Association de jeunes bénévoles · Martinique";
+/* Le sous-titre dit qui est l'association ; le slogan, lui, prend la place
+   forte qu'il mérite — la pastille ronde du gabarit « Trio ». Les deux se
+   répétaient tant qu'ils partageaient le même bloc d'en-tête. */
+var TAG    = "Association de jeunes engagés en Martinique et au-delà";
+var CRI    = ['RELÈVE', 'TOUS LES', 'DÉFIS !'];
+var SLOGAN = "Madin' Jeunes Ambition relève tous les défis !";
 var INSTA = "@madin_jeunes_ambition";
-var SITE  = "mja-martinique.com/adhesion";
-var ADDR  = "22, passage du Cœur sur la Main — 97200 Fort-de-France";
-var MAIL  = "contact@mja-martinique.com";
+var SITE  = "mja-martinique.com";
+var MAIL  = @json(config('mja.contact_email'));
 var TEL   = "0696 43 88 21";
 
 /* Options globales, pilotées par le panneau du haut */
 var OPT = {
-  season:"SAISON 2026-2027", url:"https://mja-martinique.com/adhesion",
+  season:"SAISON 2026-2027", url:"https://mja-martinique.com",
   photo:null,        /* 1re photo — styles « Photo » */
   photos:[],         /* toutes les photos — style « Mosaïque » */
-  price:true, qr:true,
+  price:false, qr:true,
   qrColor:C.bordeaux /* bordeaux comme sur les visuels 2025 ; navy possible */
 };
 
@@ -385,12 +481,11 @@ var ASSETS = { logo:null, fonts:'', qr:null, photos:{} };
    Instagram de l'association (collage d'adhésion de novembre 2025 et visuels
    « Ti Déj » / « Journée de l'amitié »). Classées de la meilleure résolution
    à la plus faible. Elles servent tant que l'utilisateur n'a rien déposé. */
-var DEFAULT_PHOTOS = [
-  'images/kit/membres-01.jpg', 'images/kit/membres-06.jpg', 'images/kit/membres-02.jpg',
-  'images/kit/membres-03.jpg', 'images/kit/membres-07.jpg', 'images/kit/membres-04.jpg',
-  'images/kit/membres-08.jpg', 'images/kit/membres-05.jpg', 'images/kit/membres-09.jpg',
-  'images/kit/membres-10.jpg'
-];
+/* Ordre entrelacé : une photo « equipe-* » (haute définition, fournie par
+   l'association) puis une photo « membres-* » (extraite d'Instagram, contexte
+   différent : plage, bateau, Noël, T-shirts). Ainsi six tuiles consécutives de
+   mosaïque mélangent toujours qualité et variété de situations. */
+var DEFAULT_PHOTOS = @json(array_values($phototheque));
 
 /* Décalage dans la photothèque, propre au visuel en cours de rendu : c'est ce
    qui fait que deux mosaïques ne montrent pas les mêmes photos. */
@@ -402,12 +497,97 @@ function photoAt(i){
   if (OPT.photos.length) return OPT.photos[((i % OPT.photos.length) + OPT.photos.length) % OPT.photos.length];
   var n = DEFAULT_PHOTOS.length, path = DEFAULT_PHOTOS[((i % n) + n) % n];
   if (EMBED_PHOTOS && ASSETS.photos[path]) return 'data:image/jpeg;base64,' + ASSETS.photos[path];
-  return ASSET(path);
+  return ASSET(path.split('/').map(encodeURIComponent).join('/'));
 }
 
 /* =====================================================================
    2. Utilitaires
    ===================================================================== */
+/**
+ * Glyphe Instagram (contour + objectif + point) placé devant le pseudo.
+ * Sans lui, « @madin_jeunes_ambition » ne dit pas de quel réseau il s'agit.
+ */
+function instaGlyph(x, y, size, fill){
+  var r = size * 0.22, k = size / 24;
+  return '<g transform="translate(' + (x).toFixed(2) + ',' + (y - size * 0.82).toFixed(2) + ') scale(' + k.toFixed(4) + ')" fill="none" stroke="' + fill + '" stroke-width="2.2">'
+    + '<rect x="2.4" y="2.4" width="19.2" height="19.2" rx="5.6"/>'
+    + '<circle cx="12" cy="12" r="4.8"/>'
+    + '</g>'
+    + '<circle cx="' + (x + size * 0.735).toFixed(2) + '" cy="' + (y - size * 0.545).toFixed(2) + '" r="' + (size * 0.072).toFixed(2) + '" fill="' + fill + '"/>';
+}
+
+/** Pseudo Instagram précédé de son pictogramme. */
+function instaTag(x, y, size, fill, opts){
+  var o = opts || {}, gap = size * 1.25;
+  if (o.anchor === 'end') {
+    var w = measure(INSTA, size, o.w || 600, FAM_GS);
+    return instaGlyph(x - w - gap, y, size, fill)
+      + T(x, y, INSTA, { size:size, fill:fill, w:o.w || 600, anchor:'end' });
+  }
+  if (o.anchor === 'middle') {
+    var wm = measure(INSTA, size, o.w || 600, FAM_GS), x0 = x - (wm + gap) / 2;
+    return instaGlyph(x0, y, size, fill)
+      + T(x0 + gap, y, INSTA, { size:size, fill:fill, w:o.w || 600 });
+  }
+  return instaGlyph(x, y, size, fill) + T(x + gap, y, INSTA, { size:size, fill:fill, w:o.w || 600 });
+}
+
+/* =====================================================================
+   2 bis. Pictogrammes
+   Tracés vectoriels simples, dessinés dans une boîte de 24 × 24 puis mis à
+   l'échelle. Ils reprennent le vocabulaire des maquettes : un pictogramme
+   par bénéfice, par action et par moyen de contact.
+   ===================================================================== */
+var PICTOS = {
+  personnes: '<circle cx="8.5" cy="8" r="3.4"/><circle cx="16.5" cy="9" r="2.6"/>'
+           + '<path d="M2.5 20c0-3.6 2.7-6 6-6s6 2.4 6 6" fill="none" stroke-width="2.1"/>'
+           + '<path d="M15 14.2c3 0 6 1.8 6 5.8" fill="none" stroke-width="2.1"/>',
+  ampoule:   '<path d="M12 3a6 6 0 0 0-3.4 10.9c.6.4 1 1.1 1 1.9v.7h4.8v-.7c0-.8.4-1.5 1-1.9A6 6 0 0 0 12 3z" fill="none" stroke-width="2"/>'
+           + '<rect x="9.6" y="18" width="4.8" height="1.9" rx=".9"/><rect x="10.4" y="20.8" width="3.2" height="1.6" rx=".8"/>'
+           + '<path d="M12 .8v1.4M4.4 4.2l1 1M19.6 4.2l-1 1M1.6 11.4H3M21 11.4h1.4" fill="none" stroke-width="1.7" stroke-linecap="round"/>',
+  trophee:   '<path d="M7 3h10v5.2a5 5 0 0 1-10 0z" fill="none" stroke-width="2"/>'
+           + '<path d="M7 4.6H4.4v1.6A3.2 3.2 0 0 0 7.6 9.4M17 4.6h2.6v1.6a3.2 3.2 0 0 1-3.2 3.2" fill="none" stroke-width="1.8"/>'
+           + '<rect x="10.8" y="13.4" width="2.4" height="3.6"/><rect x="7.6" y="17" width="8.8" height="2.4" rx="1"/>'
+           + '<rect x="6" y="19.8" width="12" height="2.4" rx="1"/>',
+  fusee:     '<path d="M12 2c3.2 2.2 5 5.6 5 9.4l-2.2 3.4H9.2L7 11.4C7 7.6 8.8 4.2 12 2z" fill="none" stroke-width="2"/>'
+           + '<circle cx="12" cy="9.2" r="2"/>'
+           + '<path d="M9.2 15.2 6.6 17l.8-3.6M14.8 15.2 17.4 17l-.8-3.6" fill="none" stroke-width="1.8"/>'
+           + '<path d="M10.6 18.4 12 22l1.4-3.6" fill="none" stroke-width="1.8"/>',
+  diplome:   '<path d="M12 3.4 22 8l-10 4.6L2 8z" fill="none" stroke-width="2"/>'
+           + '<path d="M6 10.6v4.8c0 1.8 2.7 3.2 6 3.2s6-1.4 6-3.2v-4.8" fill="none" stroke-width="2"/>'
+           + '<path d="M21 8.6v5" fill="none" stroke-width="1.8" stroke-linecap="round"/>',
+  megaphone: '<path d="M4 10.4 16 5.2v13.6L4 13.6z" fill="none" stroke-width="2"/>'
+           + '<path d="M16 8.6c2.2 0 3.6 1.4 3.6 3.4S18.2 15.4 16 15.4" fill="none" stroke-width="1.9"/>'
+           + '<path d="M6.6 14.2v4a1.7 1.7 0 0 0 3.4 0v-2.6" fill="none" stroke-width="1.9"/>',
+  coche:     '<circle cx="12" cy="12" r="9.4" fill="none" stroke-width="2"/>'
+           + '<path d="m7.6 12.2 3 3 5.8-6" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>',
+  telephone: '<path d="M6.4 3.6h3l1.6 4-2 1.4a11 11 0 0 0 5 5l1.4-2 4 1.6v3c0 1-.8 1.8-1.8 1.8A15.6 15.6 0 0 1 4.6 5.4c0-1 .8-1.8 1.8-1.8z" fill="none" stroke-width="2" stroke-linejoin="round"/>',
+  enveloppe: '<rect x="2.6" y="5" width="18.8" height="14" rx="2.4" fill="none" stroke-width="2"/>'
+           + '<path d="m3.4 7 8.6 6 8.6-6" fill="none" stroke-width="2" stroke-linecap="round"/>',
+  insta:     '<rect x="2.6" y="2.6" width="18.8" height="18.8" rx="5.4" fill="none" stroke-width="2.1"/>'
+           + '<circle cx="12" cy="12" r="4.6" fill="none" stroke-width="2.1"/><circle cx="17.4" cy="6.6" r="1.3"/>',
+  cible:     '<circle cx="12" cy="12" r="9" fill="none" stroke-width="2"/><circle cx="12" cy="12" r="4.6" fill="none" stroke-width="2"/><circle cx="12" cy="12" r="1.4"/>',
+  coeur:     '<path d="M12 20.4S3.4 15.2 3.4 9.4a4.6 4.6 0 0 1 8.6-2.4 4.6 4.6 0 0 1 8.6 2.4c0 5.8-8.6 11-8.6 11z" fill="none" stroke-width="2" stroke-linejoin="round"/>',
+  ecran:     '<rect x="2.6" y="4" width="18.8" height="12.4" rx="2.2" fill="none" stroke-width="2"/>'
+           + '<path d="M8 20h8M12 16.6V20" fill="none" stroke-width="2" stroke-linecap="round"/>',
+  fleche:    '<path d="M4 12h15M13.4 6.4 19.6 12l-6.2 5.6" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>'
+};
+
+/** Pictogramme `nom` dans une boîte de côté `taille`, coin haut-gauche (x,y). */
+function picto(nom, x, y, taille, couleur){
+  var d = PICTOS[nom];
+  if (!d) return '';
+  var k = taille / 24;
+  return '<g transform="translate(' + x.toFixed(2) + ',' + y.toFixed(2) + ') scale(' + k.toFixed(4) + ')"'
+       + ' fill="' + couleur + '" stroke="' + couleur + '" stroke-width="0">' + d + '</g>';
+}
+
+/** Pictogramme centré dans une pastille ronde — motif récurrent des maquettes. */
+function pastillePicto(cx, cy, r, nom, fondPastille, couleurPicto){
+  return '<circle cx="' + cx.toFixed(2) + '" cy="' + cy.toFixed(2) + '" r="' + r.toFixed(2) + '" fill="' + fondPastille + '"/>'
+       + picto(nom, cx - r * 0.58, cy - r * 0.58, r * 1.16, couleurPicto);
+}
+
 function esc(s){
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
@@ -465,18 +645,32 @@ function T(x, y, s, o){
     qui, selon le format, dépasseraient du cadre. */
 function TFit(x, y, str, maxW, o){
   o = o || {};
-  var fam = o.f === 'ag' ? FAM_AG : FAM_GS;
-  var size = Math.min(o.size || 32, fitSize(str, maxW, o.size || 32, o.w === undefined ? 700 : o.w, fam));
   var c = {}; Object.keys(o).forEach(function(k){ c[k] = o[k]; });
-  c.size = size;
-  if (o.ls) c.ls = o.ls * size / (o.size || 32);
+  c.size = fitSizeLS(str, maxW, o.size || 32, o.w === undefined ? 700 : o.w,
+                     o.f === 'ag' ? FAM_AG : FAM_GS, o.ls || 0, o.size || 32);
+  if (o.ls) c.ls = o.ls * c.size / (o.size || 32);
   return T(x, y, str, c);
+}
+/**
+ * Taille maximale tenant dans `maxW`, interlettrage COMPRIS.
+ * L'oubli de l'interlettrage faisait déborder les accroches en majuscules
+ * espacées (« RÉADHÉSION — ON COMPTE SUR TOI »), où il représente à lui seul
+ * près d'un quart de la largeur.
+ */
+function fitSizeLS(str, maxW, maxSize, weight, fam, ls, lsRef){
+  var glyphs = measure(str, 100, weight, fam);
+  var espace = (ls || 0) * (100 / (lsRef || maxSize)) * Math.max(0, String(str).length - 1);
+  var total = glyphs + espace;
+  if (!total) return maxSize;
+  return Math.min(maxSize, Math.floor(100 * maxW / total));
 }
 /** Idem, sur plusieurs lignes : une seule taille commune à toutes. */
 function TLFit(x, y, lines, maxW, o){
   var size = o.size;
   var fam = o.f === 'ag' ? FAM_AG : FAM_GS;
-  for (var i = 0; i < lines.length; i++) size = Math.min(size, fitSize(lines[i], maxW, size, o.w === undefined ? 700 : o.w, fam));
+  for (var i = 0; i < lines.length; i++) {
+    size = Math.min(size, fitSizeLS(lines[i], maxW, size, o.w === undefined ? 700 : o.w, fam, o.ls || 0, o.size));
+  }
   var c = {}; Object.keys(o).forEach(function(k){ c[k] = o[k]; });
   c.size = size; c.lh = (o.lh || o.size * 1.28) * size / o.size;
   return TL(x, y, lines, c);
@@ -570,6 +764,61 @@ function cta(x, y, w, h, label, bg, fg, size){
   return '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="' + (h * 0.28) + '" fill="' + bg + '"/>'
     + T(x + w / 2, y + h / 2 + size * 0.35, label, { size: size, fill: fg, anchor: 'middle', f: 'ag', w: 800, ls: size * 0.03 });
 }
+/**
+ * ─── Appels à l'action ─────────────────────────────────────────────────
+ * Un rectangle arrondi avec un libellé centré, c'est un bouton d'interface :
+ * sur un post ou un flyer, le lecteur croit pouvoir cliquer. On utilise donc
+ * des codes d'imprimé, sans coin arrondi ni aspect « cliquable » :
+ *   · bandeau  : aplat pleine largeur, bord à bord, comme une manchette ;
+ *   · typo     : le libellé en très grand, flèche + filet épais, aucun cadre ;
+ *   · manuscrit: le libellé penché et la flèche dessinée (codes MJA 2025).
+ */
+function arrowGlyph(x, y, len, sw, fill){
+  var h = sw * 2.1;
+  return '<path d="M' + x + ' ' + y + ' L' + (x + len) + ' ' + y + '" stroke="' + fill
+    + '" stroke-width="' + sw + '" stroke-linecap="butt"/>'
+    + '<path d="M' + (x + len - h) + ' ' + (y - h) + ' L' + (x + len) + ' ' + y
+    + ' L' + (x + len - h) + ' ' + (y + h) + '" fill="none" stroke="' + fill
+    + '" stroke-width="' + sw + '" stroke-linecap="round" stroke-linejoin="round"/>';
+}
+
+/** Bandeau pleine largeur. Renvoie {svg, h} — hauteur totale occupée. */
+function calloutBand(W, y, label, url, bg, fg, u, urlFill){
+  var h = u * 0.115, size = u * 0.042;
+  var s = '<rect x="0" y="' + y + '" width="' + W + '" height="' + h + '" fill="' + bg + '"/>';
+  var txtW = measure(label, size, 800, FAM_AG) + size * 0.06 * (label.length - 1);
+  var fl = size * 0.9, gap = size * 0.5;
+  var x0 = (W - (txtW + gap + fl)) / 2;
+  s += T(x0, y + h / 2 + size * 0.34, label, { size: size, f: 'ag', w: 800, fill: fg, ls: size * 0.06 });
+  s += arrowGlyph(x0 + txtW + gap, y + h / 2, fl, u * 0.006, fg);
+  if (url) s += T(W / 2, y + h + u * 0.048, url, { size: u * 0.028, fill: urlFill || C.dark, anchor: 'middle', w: 700 });
+  return { svg: s, h: h + (url ? u * 0.068 : 0) };
+}
+
+/** Libellé XXL + filet, sans cadre. Renvoie {svg, h}. */
+function calloutType(x, y, maxW, label, url, accent, ink, u){
+  var size = fitSizeLS(label, maxW * 0.88, u * 0.062, 800, FAM_AG, 0, u * 0.062);
+  var txtW = measure(label, size, 800, FAM_AG);
+  var s = T(x, y + size * 0.82, label, { size: size, f: 'ag', w: 800, fill: ink });
+  s += arrowGlyph(x + txtW + size * 0.42, y + size * 0.52, size * 0.85, u * 0.0075, accent);
+  s += '<rect x="' + x + '" y="' + (y + size * 1.12) + '" width="' + (txtW + size * 1.4)
+    + '" height="' + (u * 0.011) + '" fill="' + accent + '"/>';
+  var h = size * 1.12 + u * 0.011;
+  if (url) {
+    s += T(x, y + h + u * 0.052, url, { size: u * 0.030, fill: ink, w: 700 });
+    h += u * 0.070;
+  }
+  return { svg: s, h: h, w: txtW + size * 1.4 };
+}
+
+/** Une seule ligne d'informations, séparée par des points médians :
+    remplace les pastilles arrondies, qui faisaient « étiquettes cliquables »
+    et débordaient en story. */
+function infoLine(x, y, items, maxW, size, fill, anchor){
+  var str = items.filter(Boolean).join('   ·   ').toUpperCase();
+  return TFit(x, y, str, maxW, { size: size, fill: fill, anchor: anchor, w: 700, ls: size * 0.10 });
+}
+
 /** Carte blanche + QR code, avec libellé. */
 function qrCard(x, y, size, label, labelFill){
   if (!OPT.qr || !ASSETS.qr) return '';
@@ -628,8 +877,12 @@ function bgMarkup(style, W, H, uid, embed){
   if (style === 'photo') {
     var img, src = OPT.photo || photoAt(PIDX);
     if (src) {
-      img = '<image x="0" y="0" width="' + W + '" height="' + H + '" href="' + src + '" xlink:href="' + src
-          + '" preserveAspectRatio="xMidYMid slice"/>';
+      /* photoTile applique le cadrage particulier de certaines photos ;
+         une photo déposée par l'utilisateur est dessinée telle quelle. */
+      img = OPT.photo
+        ? '<image x="0" y="0" width="' + W + '" height="' + H + '" href="' + src + '" xlink:href="' + src
+          + '" preserveAspectRatio="xMidYMid slice"/>'
+        : photoTile(0, 0, W, H, 0);
     } else {
       /* Aucune photo chargée : fond neutre + petit repère en haut à droite,
          volontairement hors des zones de texte. */
@@ -680,34 +933,88 @@ function svgWrap(W, H, uid, inner, embed){
    ===================================================================== */
 function price(txt, fallback){ return OPT.price ? txt : fallback; }
 
+/* Actions réelles de l'association, reprises telles quelles dans le gabarit
+   « moderne ». On ne liste que des projets qui existent. */
+var ACTIONS_DEFAUT = [
+  ['diplome',   "Fwi Ti Dèj",              "Des petits-déjeuners sains les jours d'examen"],
+  ['coeur',     "La Caravane de l'unité",  "Paix, respect et solidarité, à la rencontre des habitants"],
+  ['personnes', "Vie communautaire",       "Afterworks, sorties, moments conviviaux entre adhérents"]
+];
+/* Pictogrammes attribués par position : l'utilisateur saisit du texte, pas
+   des icônes. Au-delà de quatre lignes on boucle sur la même série. */
+var PICTOS_ACTIONS = ['diplome', 'coeur', 'personnes', 'fusee'];
+var ACTIONS = ACTIONS_DEFAUT.slice();
+
+/** Transforme la saisie « Titre | Description » en table d'actions. */
+function lireActions(texte){
+  var lignes = String(texte).split(String.fromCharCode(10)).map(function(l){ return l.trim(); })
+                 .filter(function(l){ return l.length; }).slice(0, 4);
+  if (!lignes.length) return ACTIONS_DEFAUT.slice();
+
+  return lignes.map(function(ligne, i){
+    var bout = ligne.split('|');
+    return [PICTOS_ACTIONS[i % PICTOS_ACTIONS.length],
+            (bout[0] || '').trim(),
+            (bout.slice(1).join('|') || '').trim()];
+  });
+}
+
+/** Texte pré-rempli du champ de saisie. */
+function actionsEnTexte(liste){
+  return liste.map(function(a){ return a[1] + ' | ' + a[2]; }).join(String.fromCharCode(10));
+}
+
+/* Badges de valeurs du pied de page des maquettes. */
+var VALEURS_BADGES = [
+  ['coeur',     'ENGAGEMENT'],
+  ['personnes', 'SOLIDARITÉ'],
+  ['cible',     'AMBITION'],
+  ['trophee',   'IMPACT']
+];
+
+/* Les trois bénéfices, avec leur pictogramme et leur couleur. */
+var BENEFICES = [
+  ['personnes', C.blue,   'Construis-toi',      'en tant que personne'],
+  ['ampoule',   C.yellow, 'Mène des actions',   "qui ont vraiment du sens"],
+  ['trophee',   C.red,    'Monte en compétences', 'avec nous']
+];
+
 function V(variant){
   var season = OPT.season || '';
   var D = {
     annonce: {
-      slogan: "Rejoins l'aventure MJA !",
+      slogan: "Relève tous les défis !",
       kicker: "CAMPAGNE D'ADHÉSION",
+      encart: ['Prêt à', "T'ENGAGER ?"],
+      garanties: ["Ouvert de 16 à 35 ans",
+                  "Adhésion en ligne en cinq minutes",
+                  "Une équipe qui t'accompagne"],
       t: ["MJ'ADHÉSION"],
       season: season,
       big: ["MJ'", "ADHÉ", "SION"],
-      sub: ["Tu as entre 16 et 35 ans et tu veux t'engager", "en Martinique ? Rejoins l'équipe MJA."],
-      subShort: ["16-35 ans, envie d'agir", "en Martinique ? Rejoins-nous."],
-      pills: ["16 – 35 ans", price("Cotisation 20 €", "Adhésion simple"), "100 % bénévole"],
+      sub: ["Rejoins une équipe qui agit pour de vrai,", "près de chez toi."],
+      subShort: ["Une équipe", "qui agit pour de vrai."],
+      pills: ["16 – 35 ans", "Des actions qui ont du sens", "Une équipe qui compte sur toi"],
       cta: "J'ADHÈRE EN LIGNE", ctaShort: "J'ADHÈRE",
-      checks: ["Ouvert à tous les jeunes de 16 à 35 ans",
-               price("Cotisation annuelle de 20 € seulement", "Une cotisation annuelle symbolique"),
-               "Adhésion 100 % en ligne, photo comprise"]
+      checks: ["Construis-toi en tant que personne",
+               "Mène des actions qui ont vraiment du sens",
+               "Monte en compétences avec nous"]
     },
     readhesion: {
       slogan: "On compte sur toi !",
       kicker: "RÉADHÉSION — ON COMPTE SUR TOI",
+      encart: ['On compte', 'SUR TOI'],
+      garanties: ["Ton dossier est déjà pré-rempli",
+                  "Tu vérifies, tu corriges, tu valides",
+                  "Carte bancaire, virement ou espèces"],
       t: ["JE RENOUVELLE", "MON ADHÉSION"],
       season: season,
       big: ["RÉ", "ADHÉ", "SION"],
-      sub: ["Déjà membre de MJA ? Réadhère en 3 minutes", "et continue l'aventure avec nous."],
-      subShort: ["Déjà membre ? Réadhère", "en 3 minutes."],
-      pills: [price("Réadhésion 20 €", "Réadhésion"), "3 minutes", "100 % en ligne"],
+      sub: ["Réadhère et continue", "l'aventure avec nous."],
+      subShort: ["Réadhère", "et continue."],
+      pills: [price("Réadhésion 20 €", "Réadhésion"), "Possible en ligne"],
       cta: "JE RÉADHÈRE", ctaShort: "JE RÉADHÈRE",
-      checks: ["Tu es déjà membre : ta réadhésion prend 3 minutes",
+      checks: ["Tout est déjà pré-rempli, rien à ressaisir",
                price("20 € pour toute la saison " + season.replace('SAISON ', ''), "Une cotisation annuelle symbolique"),
                "Carte bancaire, virement ou espèces"]
     },
@@ -717,9 +1024,9 @@ function V(variant){
       season: season,
       big: ["POUR", "QUOI", "ADHÉRER"],
       items: [
-        ["AGIR", "Des actions concrètes pour la jeunesse martiniquaise."],
-        ["RENCONTRER", "43 membres actifs et 60 sympathisants engagés."],
-        ["APPRENDRE", "Projets, événements, communication : tu montes en compétences."],
+        ["TE CONSTRUIRE", "Grandis, prends confiance, révèle ce que tu sais faire."],
+        ["T'ENGAGER", "Mène des actions qui ont vraiment du sens, près de chez toi."],
+        ["MONTER EN COMPÉTENCES", "Projets, événements, communication : tu apprends en faisant."],
         ["COMPTER", "Une voix à l'assemblée générale et dans nos décisions."]
       ],
       cta: "J'ADHÈRE EN LIGNE"
@@ -730,7 +1037,7 @@ function V(variant){
       season: season,
       big: ["3", "ÉTAPES"],
       steps: [
-        ["1", "Remplis le formulaire", "Sur " + SITE + ", avec ta photo."],
+        ["1", "Remplis le formulaire", "En ligne, rubrique Adhésion — cinq minutes."],
         ["2", "Règle ta cotisation", price("20 € par carte bancaire, virement ou espèces.", "Par carte bancaire, virement ou espèces.")],
         ["3", "Bienvenue chez MJA", "Tu reçois ton mail de bienvenue et tu rejoins l'équipe."]
       ],
@@ -741,7 +1048,7 @@ function V(variant){
       t: ["MJA EN", "CHIFFRES"],
       season: season,
       big: ["MJA", "EN", "CHIFFRES"],
-      stats: [["2011", "année de création"], ["43", "membres actifs"], ["60", "sympathisants"], ["5", "pôles d'action"]],
+      stats: [["2011", "année de création"], ["5", "pôles d'action"], ["15", "ans d'engagement"], ["20 000+", "petits-déj"]],
       cta: "JE REJOINS L'ÉQUIPE"
     },
     /* ── Variantes reprenant les slogans MJA de la saison précédente ── */
@@ -751,6 +1058,10 @@ function V(variant){
       season: season,
       big: ["RELÈVE", "LE", "DÉFI !"],
       slogan: "Relève le défi !",
+      encart: ['Prêt à', 'RELEVER LE DÉFI ?'],
+      garanties: ["Ouvert de 16 à 35 ans",
+                  "Tu choisis les actions que tu portes",
+                  "Une équipe qui t'accompagne"],
       signature: ["Madin' Jeunes Ambition", "Relève tous les défis !"],
       para: ["Envie de t'investir, de grandir et d'apprendre ?",
              "Pour les jeunes, par des jeunes ?",
@@ -758,11 +1069,11 @@ function V(variant){
              "Madin' Jeunes Ambition !"],
       sub: ["Envie de t'investir, de grandir et d'apprendre ?", "Pour les jeunes, par des jeunes ?"],
       subShort: ["Pour les jeunes,", "par des jeunes."],
-      pills: ["16 – 35 ans", price("Cotisation 20 €", "Adhésion simple"), "100 % bénévole"],
+      pills: ["16 – 35 ans", "Pour les jeunes, par des jeunes", "Des projets concrets"],
       cta: "INSCRIS-TOI !", ctaShort: "INSCRIS-TOI !",
-      checks: ["Envie de t'investir, de grandir et d'apprendre ?",
-               "Pour les jeunes, par des jeunes",
-               price("Cotisation annuelle de 20 €", "Une cotisation annuelle symbolique")]
+      checks: ["Construis-toi en tant que personne",
+               "Mène des actions qui ont vraiment du sens",
+               "Monte en compétences avec nous"]
     },
     benevole: {
       kicker: "REJOINS LA TEAM MJA",
@@ -770,6 +1081,10 @@ function V(variant){
       season: season,
       big: ["DEVENEZ", "BÉNÉ", "VOLE !"],
       slogan: "Venez comme vous êtes !",
+      encart: ['Venez comme', 'VOUS ÊTES'],
+      garanties: ["Aucune compétence exigée",
+                  "Tu choisis les actions que tu portes",
+                  "Une équipe qui t'accompagne"],
       signature: ["Madin' Jeunes Ambition", "Pour les jeunes, par des jeunes"],
       actions: ["Prévention pour la non violence",
                 "Prévention sécurité routière et addictions",
@@ -783,6 +1098,51 @@ function V(variant){
       checks: ["Prévention, solidarité, engagement, loisirs",
                "Pour les jeunes, par des jeunes",
                "Venez comme vous êtes !"]
+    },
+    teaser: {
+      kicker: "ÇA COMMENCE",
+      t: ["LA SAISON", "D'ADHÉSION"],
+      season: season,
+      big: ["ÇA", "COM", "MENCE"],
+      slogan: "Relève tous les défis !",
+      signature: ["Madin' Jeunes Ambition", "Relève tous les défis !"],
+      para: ["Quelque chose se prépare.", "La campagne d'adhésion est ouverte."],
+      sub: ["Quelque chose se prépare.", "La campagne d'adhésion est ouverte."],
+      subShort: ["Ça commence.", "Rejoins-nous."],
+      pills: ["Nouvelle saison", "Nouveaux projets", "Nouveaux visages"],
+      cta: "RESTE CONNECTÉ", ctaShort: "ÇA ARRIVE",
+      checks: ["Une nouvelle saison démarre",
+               "De nouveaux projets à mener",
+               "Une place t'attend"]
+    },
+    valeurs: {
+      kicker: "CE QUE TU VIENS CHERCHER",
+      encart: ['Viens', 'GRANDIR'],
+      garanties: ["Ouvert de 16 à 35 ans",
+                  "Des projets à porter dès l'arrivée",
+                  "Une équipe qui t'accompagne"],
+      t: ["VIENS", "GRANDIR"],
+      season: season,
+      big: ["VIENS", "GRANDIR"],
+      slogan: "Relève tous les défis !",
+      signature: ["Madin' Jeunes Ambition", "Relève tous les défis !"],
+      para: ["Construis-toi en tant que personne.",
+             "Engage-toi pour des actions qui ont du sens.",
+             "Monte en compétences avec nous.",
+             "Pour les jeunes, par des jeunes."],
+      sub: ["Une équipe, des projets,", "et une place qui t'attend."],
+      subShort: ["Une place", "t'attend."],
+      pills: ["Se construire", "S'engager", "Progresser"],
+      cta: "JE REJOINS MJA", ctaShort: "JE REJOINS",
+      checks: ["Construis-toi en tant que personne",
+               "Mène des actions qui ont vraiment du sens",
+               "Monte en compétences avec nous"],
+      items: [
+        ["SE CONSTRUIRE", "Gagne en confiance et en autonomie."],
+        ["S'ENGAGER", "Des actions concrètes, utiles, visibles."],
+        ["PROGRESSER", "Gestion de projet, prise de parole, communication."],
+        ["APPARTENIR", "Une équipe qui compte sur toi, et sur qui compter."]
+      ]
     },
     temoignage: {
       kicker: "PAROLE DE MEMBRE",
@@ -804,20 +1164,22 @@ function headerBlock(M, W, style, p, embed, k){
   var logo = k.logo, name = k.name, tag = k.tag, ruleY = k.rule;
   var s = logoImg(M, k.y, logo, embed, style === 'navy' || style === 'photo');
   s += T(M + logo + k.gap, k.y + logo * 0.44, ORG, { size: name, fill: p.fg, ls: name * 0.05 });
-  s += T(M + logo + k.gap, k.y + logo * 0.44 + tag * 1.65, TAG, { size: tag, w: 500, fill: p.fg2 });
+  s += TFit(M + logo + k.gap, k.y + logo * 0.44 + tag * 1.65, TAG, W - (M + logo + k.gap) - M, { size: tag, w: 500, fill: p.fg2 });
   if (ruleY) s += '<rect x="' + M + '" y="' + ruleY + '" width="' + (W - 2 * M) + '" height="2" fill="' + p.rule + '"/>';
   return s;
 }
 function footerBlock(M, W, y, p, size){
-  return T(M, y, INSTA, { size: size, fill: p.foot, w: 600 })
-    + T(W - M, y, SITE, { size: size, fill: p.accent, anchor: 'end', w: 700 });
+  /* Pas de SITE ici : le bandeau d'appel à l'action le porte déjà, et le
+     répéter à trois centimètres n'apporte rien. */
+  return instaTag(M, y, size, p.foot)
+    + T(W - M, y, CRI.join(' '), { size: size, fill: p.accent, anchor: 'end', w: 700 });
 }
 
 /* =====================================================================
    7. Layout — POST 1080 × 1080
    ===================================================================== */
 function renderPost(style, variant, uid, embed){
-  var W = 1080, H = 1080, M = 76, p = pal(style), v = V(variant);
+  var W = 1080, H = 1080, M = 76, p = pal(style), v = V(variant), u = W, avail = W - 2 * M;
   if (style === 'typo') return svgWrap(W, H, uid, typoBody(W, H, M, variant, uid, embed), embed);
 
   var s = bgMarkup(style, W, H, uid, embed);
@@ -825,99 +1187,129 @@ function renderPost(style, variant, uid, embed){
   s += headerBlock(M, W, style, p, embed, { y: 44, logo: 148, gap: 26, name: 30, tag: 22, rule: 224 });
 
   var y = 292;
-  s += TFit(M, y, v.kicker, W - 2 * M, { size: 25, fill: p.kicker, ls: 4.6 });
+  s += TFit(M, y, v.kicker, avail, { size: 25, fill: p.kicker, ls: 4.6 });
 
-  if (variant === 'annonce' || variant === 'readhesion' || variant === 'defi') {
-    var titles = v.t, ts = titles.length > 1 ? 96 : 104;
-    for (var t0 = 0; t0 < titles.length; t0++) ts = Math.min(ts, fitSize(titles[t0], W - 2 * M, ts, 800, FAM_AG));
-    s += TL(M, y + 108, titles, { size: ts, f: 'ag', w: 800, fill: p.fg, lh: ts * 1.02 });
-    var afterT = y + 108 + (titles.length - 1) * ts * 1.02;
-    s += T(M, afterT + 62, v.season, { size: 34, fill: p.alt, ls: 4, f: 'ag', w: 800 });
-    s += TL(M, afterT + 130, v.sub, { size: 29, w: 500, fill: p.fg2, lh: 42 });
-
-    /* Pastilles */
-    var px = M, py = afterT + 196;
-    for (var i = 0; i < v.pills.length; i++) {
-      s += pill(px, py, v.pills[i], 24, p.pillBg, p.pillFg);
-      px += pillWidth(v.pills[i], 24) + 12;
-    }
-
-    /* Appel à l'action + QR */
-    var hasQr = OPT.qr && ASSETS.qr;
-    var cw = hasQr ? 520 : W - 2 * M;
-    s += cta(M, 806, cw, 100, v.ctaShort, p.ctaBg, p.ctaFg, 38);
-    s += T(M, 946, OPT.url.replace(/^https?:\/\//, ''), { size: 26, fill: p.fg2, w: 600 });
-    if (hasQr) s += qrCard(W - M - 196, 790, 172, null, p.qrLabel);
+  /* Appel à l'action : bandeau bord à bord sur fond sombre ou photo,
+     libellé XXL souligné sinon. Jamais de bouton arrondi. */
+  var bandeau = (style === 'navy' || style === 'photo');
+  var lien = OPT.url.replace(/^https?:\/\//, '');
+  function faireCallout(yy){
+    return bandeau ? calloutBand(W, yy, v.ctaShort || v.cta, lien, p.ctaBg, p.ctaFg, u, p.fg)
+                   : calloutType(M, yy, avail, v.ctaShort || v.cta, lien, p.accent, p.fg, u);
   }
+  var co = faireCallout(0);
+  var coTop = H - 78 - co.h;
 
-  /* « DEVENEZ BÉNÉVOLE ! » : titre souligné en jaune + liste des actions,
-     comme le visuel de recrutement de bénévoles de la saison précédente. */
-  if (variant === 'benevole') {
-    var tb = 96;
-    for (var q = 0; q < v.t.length; q++) tb = Math.min(tb, fitSize(v.t[q], W - 2 * M, tb, 800, FAM_AG));
-    s += underline(M, y + 108 + (v.t.length - 1) * tb * 1.02, v.t[v.t.length - 1], tb);
-    s += TL(M, y + 108, v.t, { size: tb, f: 'ag', w: 800, fill: p.fg, lh: tb * 1.02 });
-    var ay = y + 108 + (v.t.length - 1) * tb * 1.02 + 96;
-    s += T(M, ay, 'NOS ACTIONS', { size: 28, fill: C.red, ls: 4 });
-    for (var r = 0; r < v.actions.length; r++) {
-      s += T(M, ay + 54 + r * 42, '·  ' + v.actions[r], { size: 26, w: 500, fill: p.fg2 });
+  if (variant === 'annonce' || variant === 'readhesion' || variant === 'defi' || variant === 'benevole') {
+    var lines = v.t, tsMax = lines.length > 1 ? 90 : 104, ts = tsMax;
+    for (var i = 0; i < lines.length; i++) ts = Math.min(ts, fitSize(lines[i], avail, ts, 800, FAM_AG));
+    var cur = y + 40 + ts * 0.82;
+    if (variant === 'benevole') s += underline(M, cur + (lines.length - 1) * ts * 1.02, lines[lines.length - 1], ts);
+    s += TL(M, cur, lines, { size: ts, f: 'ag', w: 800, fill: p.fg, lh: ts * 1.02 });
+    cur += (lines.length - 1) * ts * 1.02;
+
+    cur += 60;
+    s += T(M, cur, v.season, { size: 34, fill: p.alt, f: 'ag', w: 800, ls: 4 });
+    cur += 50;
+    s += TLFit(M, cur, v.sub, avail, { size: 29, w: 500, fill: p.fg2, lh: 42 });
+    cur += (v.sub.length - 1) * 42;
+
+    cur += 44;
+    s += infoLine(M, cur, v.pills, avail, 23, p.pillFg === '#FFFFFF' ? p.fg : p.pillFg);
+
+    /* Bandeau photo : prend la place disponible entre l'info et l'action. */
+    var bandBottom = coTop - 34, bandTop = cur + 34;
+    var bandH = Math.min(bandBottom - bandTop, H * 0.20);
+    if (bandH >= H * 0.095) {
+      var bandY = bandBottom - bandH;
+      s += photoStrip(0, bandY, W, bandH, 3, style === 'photo' ? 1 : 0);
+      s += triBar(0, bandY, W, 6);
+      s += triBar(0, bandY + bandH - 6, W, 6);
     }
-    s += T(M, ay + 54 + v.actions.length * 42 + 26, 'POUR LES JEUNES, PAR DES JEUNES', { size: 24, fill: p.fg, ls: 3.4 });
-    s += cta(M, 890, W - 2 * M, 96, v.ctaShort, p.ctaBg, p.ctaFg, 34);
   }
 
   if (variant === 'pourquoi') {
-    var ts2 = fitSize(v.t[0], W - 2 * M, 82, 800, FAM_AG);
+    var ts2 = fitSize(v.t[0], avail, 82, 800, FAM_AG);
     s += TL(M, y + 96, v.t, { size: ts2, f: 'ag', w: 800, fill: p.fg, lh: ts2 * 1.0 });
-    var gy = y + 96 + ts2 * 1.0 + 62, gw = (W - 2 * M - 24) / 2, gh = 162;
+    var gy = y + 96 + ts2 + 54, gw = (avail - 24) / 2;
+    var gh = Math.min(160, ((coTop - 34 - gy) - 18) / 2);
     for (var j = 0; j < 4; j++) {
       var cx = M + (j % 2) * (gw + 24), cy = gy + Math.floor(j / 2) * (gh + 18);
-      s += '<rect x="' + cx + '" y="' + cy + '" width="' + gw + '" height="' + gh + '" rx="22" fill="' + p.card + '"/>';
-      s += '<rect x="' + cx + '" y="' + cy + '" width="' + gw + '" height="6" rx="3" fill="' + [C.blue, C.yellow, C.red, C.dark][j] + '"/>';
-      s += T(cx + 26, cy + 62, v.items[j][0], { size: 27, fill: p.fg, ls: 2 });
-      s += wrapText(v.items[j][1], cx + 26, cy + 100, gw - 52, 21, 30, { w: 500, fill: p.fg2 });
+      s += '<rect x="' + cx + '" y="' + cy + '" width="' + gw + '" height="' + gh + '" fill="' + p.card + '"/>';
+      s += '<rect x="' + cx + '" y="' + cy + '" width="' + gw + '" height="6" fill="' + [C.blue, C.yellow, C.red, C.dark][j] + '"/>';
+      s += TFit(cx + 24, cy + 54, v.items[j][0], gw - 48, { size: 26, fill: p.fg, ls: 2 });
+      s += wrapFit(v.items[j][1], cx + 24, cy + 88, gw - 48, 2, 20, 27, { w: 500, fill: p.fg2 });
     }
-    s += cta(M, 896, W - 2 * M, 88, v.cta, p.ctaBg, p.ctaFg, 34);
   }
 
   if (variant === 'comment') {
-    var ts3 = fitSize(v.t[1], W - 2 * M, 76, 800, FAM_AG);
+    var ts3 = fitSize(v.t[1], avail, 76, 800, FAM_AG);
     s += TL(M, y + 92, v.t, { size: ts3, f: 'ag', w: 800, fill: p.fg, lh: ts3 * 1.0 });
-    var sy = y + 92 + ts3 + 74;
+    var sy = y + 92 + ts3 + 58;
+    var pas = Math.min(132, (coTop - 34 - sy) / 3);
     for (var k = 0; k < 3; k++) {
-      var by = sy + k * 138;
-      s += '<circle cx="' + (M + 38) + '" cy="' + (by + 8) + '" r="38" fill="' + [C.blue, C.yellow, C.red][k] + '"/>';
-      s += T(M + 38, by + 22, v.steps[k][0], { size: 40, fill: k === 1 ? C.navy : '#FFFFFF', anchor: 'middle', f: 'ag', w: 800 });
-      s += T(M + 104, by, v.steps[k][1], { size: 31, fill: p.fg });
-      s += wrapText(v.steps[k][2], M + 104, by + 40, W - 2 * M - 104, 23, 32, { w: 500, fill: p.fg2 });
+      var by = sy + k * pas;
+      s += '<rect x="' + M + '" y="' + (by - 34) + '" width="66" height="66" fill="' + [C.blue, C.yellow, C.red][k] + '"/>';
+      s += T(M + 33, by + 12, v.steps[k][0], { size: 40, fill: k === 1 ? C.navy : '#FFFFFF', anchor: 'middle', f: 'ag', w: 800 });
+      s += TFit(M + 92, by, v.steps[k][1], avail - 92, { size: 30, fill: p.fg });
+      s += wrapFit(v.steps[k][2], M + 92, by + 36, avail - 92, 2, 22, 29, { w: 500, fill: p.fg2 });
     }
-    s += cta(M, 896, W - 2 * M, 88, v.cta, p.ctaBg, p.ctaFg, 34);
   }
 
   if (variant === 'chiffres') {
-    var ts4 = fitSize(v.t[1], W - 2 * M, 84, 800, FAM_AG);
+    var ts4 = fitSize(v.t[1], avail, 84, 800, FAM_AG);
     s += TL(M, y + 96, v.t, { size: ts4, f: 'ag', w: 800, fill: p.fg, lh: ts4 * 1.0 });
-    var qy = y + 96 + ts4 + 70, qw = (W - 2 * M - 24) / 2, qh = 158;
+    var qy = y + 96 + ts4 + 58, qw = (avail - 24) / 2;
+    var qh = Math.min(150, ((coTop - 34 - qy) - 18) / 2);
     for (var m = 0; m < 4; m++) {
-      var qx = M + (m % 2) * (qw + 24), qyy = qy + Math.floor(m / 2) * (qh + 22);
-      s += '<rect x="' + qx + '" y="' + qyy + '" width="' + qw + '" height="' + qh + '" rx="22" fill="' + p.card + '"/>';
-      s += T(qx + 28, qyy + 92, v.stats[m][0], { size: 66, fill: [C.blue, C.yellow, C.red, C.dark][m], f: 'ag', w: 800 });
-      s += T(qx + 28, qyy + 130, v.stats[m][1], { size: 22, w: 500, fill: p.fg2 });
+      var qx = M + (m % 2) * (qw + 24), qyy = qy + Math.floor(m / 2) * (qh + 18);
+      s += '<rect x="' + qx + '" y="' + qyy + '" width="' + qw + '" height="' + qh + '" fill="' + p.card + '"/>';
+      s += T(qx + 26, qyy + qh * 0.60, v.stats[m][0], { size: Math.min(64, qh * 0.46), fill: [C.blue, C.yellow, C.red, C.dark][m], f: 'ag', w: 800 });
+      s += TFit(qx + 26, qyy + qh * 0.86, v.stats[m][1], qw - 52, { size: 22, w: 500, fill: p.fg2 });
     }
-    s += cta(M, 896, W - 2 * M, 88, v.cta, p.ctaBg, p.ctaFg, 32);
   }
 
   if (variant === 'temoignage') {
-    var qs = 54;
-    s += T(M, y + 92, '“', { size: 150, fill: p.accent, f: 'ag', w: 800 });
-    s += TL(M, y + 190, v.quote, { size: qs, f: 'ag', w: 800, fill: p.fg, lh: qs * 1.18 });
-    s += T(M, y + 190 + v.quote.length * qs * 1.18 + 20, v.author, { size: 25, w: 500, fill: p.fg2 });
-    s += cta(M, 872, W - 2 * M, 96, v.cta, p.ctaBg, p.ctaFg, 34);
+    /* Le guillemet ouvrant est un ornement : il se place SOUS l'accroche,
+       jamais par-dessus (chevauchement relevé par l'audit). */
+    var qs = 52;
+    s += T(M, y + 128, '“', { size: 140, fill: p.accent, f: 'ag', w: 800, op: .55 });
+    s += TL(M, y + 196, v.quote, { size: qs, f: 'ag', w: 800, fill: p.fg, lh: qs * 1.18 });
+    s += T(M, y + 196 + v.quote.length * qs * 1.18 + 8, v.author, { size: 25, w: 500, fill: p.fg2 });
   }
 
-  s += footerBlock(M, W, H - 42, p, 22);
+  s += faireCallout(coTop).svg;
+  if (OPT.qr && ASSETS.qr && !bandeau) s += qrCard(W - M - 132, coTop - 6, 116, null, p.qrLabel);
+
+  s += footerBlock(M, W, H - 40, p, 22);
   s += triBar(0, H - 11, W, 11);
   return svgWrap(W, H, uid, s, embed);
+}
+
+/**
+ * Texte replié sur au plus `maxLines` lignes : la taille est réduite jusqu'à ce
+ * que ça tienne. Sans cette contrainte, une description trop longue débordait
+ * de sa carte et se faisait recouvrir par l'aplat suivant.
+ */
+function wrapFit(text, x, y, maxW, maxLines, size, lh, o){
+  o = o || {};
+  var t = size;
+  for (var essai = 0; essai < 8; essai++) {
+    if (decoupe(text, maxW, t, o.w || 500).length <= maxLines) break;
+    t *= 0.92;
+  }
+  return wrapText(text, x, y, maxW, t, lh * (t / size), o);
+}
+/** Découpe un texte en lignes tenant dans `maxW`. */
+function decoupe(text, maxW, size, weight){
+  var mots = String(text).split(' '), lignes = [], cur = '';
+  for (var i = 0; i < mots.length; i++) {
+    var essai = cur ? cur + ' ' + mots[i] : mots[i];
+    if (measure(essai, size, weight, FAM_GS) > maxW && cur) { lignes.push(cur); cur = mots[i]; }
+    else cur = essai;
+  }
+  if (cur) lignes.push(cur);
+  return lignes;
 }
 
 /* Retour à la ligne automatique sur une largeur donnée (mesure réelle). */
@@ -949,7 +1341,7 @@ function typoBody(W, H, M, variant, uid, embed){
   var lg = H * 0.115;
   s += logoImg(M, H * 0.045, lg, embed);
   s += T(M + lg + W * 0.024, H * 0.045 + lg * 0.44, ORG, { size: H * 0.026, fill: C.navy, ls: H * 0.0013 });
-  s += T(M + lg + W * 0.024, H * 0.045 + lg * 0.44 + H * 0.032, TAG, { size: H * 0.020, w: 500, fill: '#6C7A91' });
+  s += TFit(M + lg + W * 0.024, H * 0.045 + lg * 0.44 + H * 0.032, TAG, W - (M + lg + W * 0.024) - M, { size: H * 0.020, w: 500, fill: '#6C7A91' });
 
   /* Bloc typographique : la plus grande taille qui tienne en largeur ET en hauteur. */
   var maxLineH = (H * 0.40) / lines.length, size = maxLineH / 0.86;
@@ -973,7 +1365,7 @@ function typoBody(W, H, M, variant, uid, embed){
   var footW = hasQr ? (W - 2 * M - qs - W * 0.05) : avail;
   s += TFit(M, H - H * 0.128, v.season || OPT.season, footW, { size: H * 0.030, fill: C.navy, f: 'ag', w: 800, ls: 2 });
   s += TFit(M, H - H * 0.082, OPT.url.replace(/^https?:\/\//, ''), footW, { size: H * 0.026, fill: C.dark, w: 700 });
-  s += TFit(M, H - H * 0.034, hasQr ? INSTA : INSTA + '   ·   ' + ORG, footW, { size: H * 0.019, fill: '#98A5B8', w: 600 });
+  s += instaTag(M, H - H * 0.034, H * 0.019, '#98A5B8');
   if (hasQr) {
     s += '<image x="' + (W - M - qs) + '" y="' + (H - H * 0.185) + '" width="' + qs + '" height="' + qs
       + '" href="' + ASSETS.qr + '" xlink:href="' + ASSETS.qr + '"/>';
@@ -998,9 +1390,12 @@ function renderStory(style, variant, uid, embed){
   /* Zone haute libre (nom de compte, stickers) : on démarre à 250 px. */
   s += logoImg(W / 2 - 116, 250, 232, embed, style === 'navy' || style === 'photo');
   s += T(W / 2, 546, ORG, { size: 32, fill: p.fg, anchor: 'middle', ls: 5 });
-  s += T(W / 2, 590, TAG, { size: 23, w: 500, fill: p.fg2, anchor: 'middle' });
+  s += TFit(W / 2, 590, TAG, W * 0.86, { size: 23, w: 500, fill: p.fg2, anchor: 'middle' });
 
   s += TFit(W / 2, 660, v.kicker, W - 2 * M, { size: 27, fill: p.kicker, anchor: 'middle', ls: 5 });
+
+  var bandeauStory = (style === 'navy' || style === 'photo');
+  var lienStory = OPT.url.replace(/^https?:\/\//, '');
 
   if (variant === 'annonce' || variant === 'readhesion' || variant === 'defi' || variant === 'benevole') {
     var ts = 999;
@@ -1011,36 +1406,43 @@ function renderStory(style, variant, uid, embed){
     s += T(W / 2, aft + 80, v.season, { size: 38, fill: p.alt, anchor: 'middle', f: 'ag', w: 800, ls: 4 });
     s += TL(W / 2, aft + 168, v.sub, { size: 32, w: 500, fill: p.fg2, anchor: 'middle', lh: 46 });
 
-    /* Pastilles centrées sur une ligne */
-    var tot = 0, sz = 26;
-    for (var a = 0; a < v.pills.length; a++) tot += pillWidth(v.pills[a], sz) + 14;
-    tot -= 14;
-    var px = W / 2 - tot / 2, py = aft + 236;
-    for (var b = 0; b < v.pills.length; b++) {
-      s += pill(px, py, v.pills[b], sz, p.pillBg, p.pillFg);
-      px += pillWidth(v.pills[b], sz) + 14;
+    s += infoLine(W / 2, aft + 246, v.pills, W - 2 * M, 26, p.fg2, 'middle');
+
+    /* Bandeau photo : occupe l'espace laissé libre au-dessus de l'action. */
+    var bandTop = aft + 300, bandBottom = 1290;
+    if (bandBottom - bandTop >= 150) {
+      var bandH = Math.min(bandBottom - bandTop, 330);
+      var bandY = bandBottom - bandH;
+      s += photoStrip(0, bandY, W, bandH, 2, style === 'photo' ? 1 : 0);
+      s += triBar(0, bandY, W, 7);
+      s += triBar(0, bandY + bandH - 7, W, 7);
     }
-    s += cta(M, 1330, W - 2 * M, 118, v.ctaShort, p.ctaBg, p.ctaFg, 44);
-    s += T(W / 2, 1500, OPT.url.replace(/^https?:\/\//, ''), { size: 28, fill: p.fg2, anchor: 'middle', w: 600 });
-    if (OPT.qr && ASSETS.qr) s += qrCard(W / 2 - 118, 1548, 208, 'SCANNE POUR ADHÉRER', p.qrLabel);
-    else s += T(W / 2, 1610, 'Lien en bio ↑', { size: 30, fill: p.accent, anchor: 'middle' });
+
+    var coS = bandeauStory
+      ? calloutBand(W, 1330, v.ctaShort, lienStory, p.ctaBg, p.ctaFg, W, p.fg)
+      : calloutType(M, 1330, W - 2 * M, v.ctaShort, lienStory, p.accent, p.fg, W);
+    s += coS.svg;
+    if (OPT.qr && ASSETS.qr) s += qrCard(W / 2 - 88, 1552, 156, null, p.qrLabel);
+    else s += T(W / 2, 1620, 'Lien en bio ↑', { size: 30, fill: p.accent, anchor: 'middle' });
   }
 
   if (variant === 'comment') {
     s += TL(W / 2, 780, v.t, { size: 74, f: 'ag', w: 800, fill: p.fg, anchor: 'middle', lh: 78 });
     for (var k = 0; k < 3; k++) {
       var by = 980 + k * 190;
-      s += '<rect x="' + M + '" y="' + by + '" width="' + (W - 2 * M) + '" height="160" rx="26" fill="' + p.card + '"/>';
-      s += '<circle cx="' + (M + 66) + '" cy="' + (by + 80) + '" r="40" fill="' + [C.blue, C.yellow, C.red][k] + '"/>';
-      s += T(M + 66, by + 95, v.steps[k][0], { size: 42, fill: k === 1 ? C.navy : '#FFFFFF', anchor: 'middle', f: 'ag', w: 800 });
+      s += '<rect x="' + M + '" y="' + by + '" width="' + (W - 2 * M) + '" height="160" fill="' + p.card + '"/>';
+      s += '<rect x="' + (M + 28) + '" y="' + (by + 44) + '" width="76" height="76" fill="' + [C.blue, C.yellow, C.red][k] + '"/>';
+      s += T(M + 66, by + 96, v.steps[k][0], { size: 42, fill: k === 1 ? C.navy : '#FFFFFF', anchor: 'middle', f: 'ag', w: 800 });
       s += T(M + 130, by + 66, v.steps[k][1], { size: 30, fill: p.fg });
       s += wrapText(v.steps[k][2], M + 130, by + 106, W - 2 * M - 160, 22, 30, { w: 500, fill: p.fg2 });
     }
-    s += cta(M, 1580, W - 2 * M, 112, v.cta, p.ctaBg, p.ctaFg, 40);
+    s += (bandeauStory ? calloutBand(W, 1560, v.cta, null, p.ctaBg, p.ctaFg, W)
+                       : calloutType(M, 1560, W - 2 * M, v.cta, null, p.accent, p.fg, W)).svg;
   }
 
-  s += T(W / 2, H - 190, OPT.season, { size: 24, fill: p.foot, anchor: 'middle', ls: 4 });
-  s += T(W / 2, H - 148, INSTA, { size: 26, fill: p.foot, anchor: 'middle', w: 600 });
+  /* Une seule mention en pied : la saison figure déjà sous le titre, et la
+     zone basse doit rester libre pour le lien de la story. */
+  s += instaTag(W / 2, H - 62, 26, p.foot, { anchor:'middle' });
   s += triBar(0, H - 15, W, 15);
   return svgWrap(W, H, uid, s, embed);
 }
@@ -1048,49 +1450,500 @@ function renderStory(style, variant, uid, embed){
 /* =====================================================================
    10. Layout — PAPIER (ratio A) 1240 × 1754  → A5 / A4 / A3
    ===================================================================== */
+/** Bandeau de photos jointives, plein bord. */
+function photoStrip(x, y, w, h, n, offset){
+  var tw = w / n, s = '';
+  for (var i = 0; i < n; i++) {
+    s += photoTile(x + i * tw, y, tw + 0.6, h, (offset || 0) + i);
+  }
+  return s;
+}
+/** Puce carrée tricolore + texte : plus « imprimé » qu'une pastille cochée. */
+function bulletRow(x, y, text, size, color, textFill, maxW){
+  var b = size * 0.52;
+  return '<rect x="' + x + '" y="' + (y - size * 0.62) + '" width="' + b + '" height="' + b + '" fill="' + color + '"/>'
+    + TFit(x + b + size * 0.55, y, text, maxW - b - size * 0.55, { size: size, w: 500, fill: textFill });
+}
+
 function renderPaper(style, variant, uid, embed){
   var W = 1240, H = 1754, M = 106, p = pal(style), v = V(variant);
   if (style === 'typo') return svgWrap(W, H, uid, typoBody(W, H, M, variant, uid, embed), embed);
 
+  var u = W, avail = W - 2 * M;
   var s = bgMarkup(style, W, H, uid, embed);
-  s += triBar(0, 0, W, 18);
-  s += headerBlock(M, W, style, p, embed, { y: 58, logo: 188, gap: 30, name: 33, tag: 24, rule: 282 });
+  var bar = 18;
+  s += triBar(0, 0, W, bar);
+  s += headerBlock(M, W, style, p, embed, { y: 58, logo: 170, gap: 26, name: 30, tag: 23, rule: 262 });
 
-  s += TFit(M, 364, v.kicker, W - 2 * M, { size: 27, fill: p.kicker, ls: 5.2 });
+  /* ── Bloc haut : accroche, titre, saison, sous-titre ───────────────── */
+  var cur = 336;
+  s += TFit(M, cur, v.kicker, avail, { size: 27, fill: p.kicker, ls: 5.2 });
 
-  var ts = 999;
-  for (var i = 0; i < v.t.length; i++) ts = Math.min(ts, fitSize(v.t[i], W - 2 * M, 128, 800, FAM_AG));
-  s += TL(M, 470, v.t, { size: ts, f: 'ag', w: 800, fill: p.fg, lh: ts * 1.02 });
-  var aft = 470 + (v.t.length - 1) * ts * 1.02;
+  var lines = v.t, tsMax = lines.length > 1 ? 108 : 126, ts = tsMax;
+  for (var i = 0; i < lines.length; i++) ts = Math.min(ts, fitSize(lines[i], avail, ts, 800, FAM_AG));
+  cur += 40 + ts * 0.82;
+  s += TL(M, cur, lines, { size: ts, f: 'ag', w: 800, fill: p.fg, lh: ts * 1.02 });
+  cur += (lines.length - 1) * ts * 1.02;
 
-  s += T(M, aft + 82, v.season, { size: 42, fill: p.alt, f: 'ag', w: 800, ls: 4 });
-  s += TL(M, aft + 160, v.sub, { size: 33, w: 500, fill: p.fg2, lh: 47 });
+  cur += 72;
+  s += T(M, cur, v.season, { size: 44, fill: p.alt, f: 'ag', w: 800, ls: 4 });
+  cur += 58;
+  s += TLFit(M, cur, v.sub, avail, { size: 33, w: 500, fill: p.fg2, lh: 47 });
+  cur += (v.sub.length - 1) * 47;
 
-  /* Les 3 arguments */
-  var cy = aft + 268;
-  for (var j = 0; j < v.checks.length; j++) {
-    s += checkRow(M, cy + j * 66, v.checks[j], 29, p.dot, p.fg2);
+  /* ── Bloc bas, ancré : arguments, appel à l'action, QR, contacts ───── */
+  var checks = (v.checks || []).slice(0, 3), pasCheck = 58;
+  var footTop = H - 150;
+  var qrTop   = footTop - 190;
+  var infoX   = M;
+
+  /* Appel à l'action : bandeau bord à bord sur fond sombre, sinon typographie. */
+  var bandeau = (style === 'navy' || style === 'photo');
+  /* Sans l'adresse : elle est donnée juste en dessous, à côté du QR code. */
+  var co = bandeau
+    ? calloutBand(W, 0, v.ctaShort || v.cta, null, p.ctaBg, p.ctaFg, u, p.fg)
+    : calloutType(M, 0, avail, v.ctaShort || v.cta, null, p.accent, p.fg, u);
+  var coTop = qrTop - 38 - co.h;
+  var checksTop = coTop - 34 - (checks.length - 1) * pasCheck;
+
+  /* ── Bandeau photo : occupe l'espace restant, s'il est suffisant ───── */
+  var bandTop = cur + 38;
+  var bandH = checksTop - 30 - bandTop;
+  if (bandH >= H * 0.085) {
+    bandH = Math.min(bandH, H * 0.28);
+    var bandY = checksTop - 34 - bandH;
+    s += photoStrip(0, bandY, W, bandH, 3, 0);
+    s += triBar(0, bandY, W, 7);
+    s += triBar(0, bandY + bandH - 7, W, 7);
   }
 
-  /* Appel à l'action */
-  s += cta(M, 1120, W - 2 * M, 132, v.cta, p.ctaBg, p.ctaFg, 48);
-  s += T(W / 2, 1306, OPT.url.replace(/^https?:\/\//, ''), { size: 34, fill: p.accent, anchor: 'middle', w: 700 });
+  for (var j = 0; j < checks.length; j++) {
+    s += bulletRow(M, checksTop + j * pasCheck, checks[j], 29, [C.blue, C.yellow, C.red][j % 3], p.fg2, avail);
+  }
 
-  /* QR + informations pratiques */
-  var infoX = M;
+  /* Le bandeau est repositionné en y une fois sa hauteur connue. */
+  s += bandeau
+    ? calloutBand(W, coTop, v.ctaShort || v.cta, null, p.ctaBg, p.ctaFg, u, p.fg).svg
+    : calloutType(M, coTop, avail, v.ctaShort || v.cta, null, p.accent, p.fg, u).svg;
+
   if (OPT.qr && ASSETS.qr) {
-    s += qrCard(M, 1358, 176, null, p.qrLabel);
-    infoX = M + 176 + 176 * 0.22 + 34;
+    s += qrCard(M, qrTop, 150, null, p.qrLabel);
+    infoX = M + 150 + 150 * 0.22 + 34;
   }
-  s += T(infoX, 1408, 'SCANNE OU RENDS-TOI SUR', { size: 22, fill: p.fg2, ls: 3 });
-  s += T(infoX, 1452, SITE, { size: 30, fill: p.fg, w: 700 });
-  s += T(infoX, 1500, price('16 – 35 ans  ·  Cotisation 20 €  ·  100 % bénévole', '16 – 35 ans  ·  100 % bénévole'), { size: 24, w: 500, fill: p.fg2 });
-  s += T(infoX, 1540, INSTA + '   ·   ' + MAIL, { size: 22, w: 500, fill: p.fg2 });
+  s += T(infoX, qrTop + 46, 'SCANNE OU RENDS-TOI SUR', { size: 22, fill: p.fg2, ls: 3 });
+  s += T(infoX, qrTop + 86, SITE, { size: 30, fill: p.fg, w: 700 });
+  s += instaTag(infoX, qrTop + 132, 21, p.fg2, { w:500 })
+     + T(infoX, qrTop + 168, MAIL, { size: 21, w: 500, fill: p.fg2 });
 
-  s += '<rect x="' + M + '" y="1600" width="' + (W - 2 * M) + '" height="2" fill="' + p.rule + '"/>';
-  s += T(M, 1652, ADDR, { size: 21, w: 500, fill: p.foot });
-  s += T(W - M, 1652, 'Tél. ' + TEL, { size: 21, w: 600, fill: p.foot, anchor: 'end' });
-  s += triBar(0, H - 18, W, 18);
+  s += '<rect x="' + M + '" y="' + footTop + '" width="' + avail + '" height="2" fill="' + p.rule + '"/>';
+  /* Pas d'adresse postale : on ne reçoit pas les adhésions par courrier. */
+  s += T(M, footTop + 52, SLOGAN, { size: 21, w: 600, fill: p.foot });
+  s += T(W - M, footTop + 52, 'Tél. ' + TEL, { size: 21, w: 600, fill: p.foot, anchor: 'end' });
+  s += triBar(0, H - bar, W, bar);
+  return svgWrap(W, H, uid, s, embed);
+}
+
+/**
+ * Gabarit « bulle » — flyer / affiche / kakémono au style plus contemporain.
+ *
+ * La photo occupe une forme organique asymétrique ancrée sur un bord : un
+ * demi-disque prolongé en goutte, découpé par un `clipPath`. Le texte occupe
+ * la diagonale opposée. Contrairement au bandeau photo horizontal des autres
+ * gabarits, la composition n'est jamais symétrique, ce qui la rend lisible
+ * même sans image forte.
+ */
+function renderBulle(style, variant, uid, embed, W, H){
+  var sombre = (style === 'navy');
+  var p = pal(sombre ? 'navy' : 'blanc'), v = V(variant);
+  var encre  = sombre ? '#FFFFFF' : C.ink;
+  var doux   = sombre ? '#C6D8F5' : '#5C6B82';
+  var accent = sombre ? C.yellow : C.red;
+  var M = W * 0.085, u = W;
+  var s = sombre ? bgMarkup('navy', W, H, uid, embed)
+                 : '<rect width="' + W + '" height="' + H + '" fill="#FFFFFF"/>';
+
+  /* Demi-bulle : disque débordant du bord droit, prolongé en goutte.
+     Le rayon dépend de la plus petite dimension, sinon la forme avale toute
+     la page sur un format paysage et déborde sur les textes. */
+  var R = Math.min(W * 0.56, H * 0.34);
+  var cxB = W - R * 0.42, cyB = Math.max(R * 0.92, H * 0.24);
+  s += '<defs><clipPath id="bul' + uid + '">'
+     + '<path d="M ' + (cxB - R) + ' ' + cyB
+     + ' a ' + R + ' ' + R + ' 0 1 1 ' + (2 * R) + ' 0'
+     + ' L ' + (cxB + R) + ' ' + (cyB + R * 0.70)
+     + ' q 0 ' + (R * 0.48) + ' ' + (-R * 0.52) + ' ' + (R * 0.48)
+     + ' q ' + (-R * 0.72) + ' 0 ' + (-R * 0.72) + ' ' + (-R * 0.58)
+     + ' Z"/></clipPath></defs>';
+  s += '<g clip-path="url(#bul' + uid + ')">'
+     + photoTile(cxB - R, cyB - R, 2 * R, R * 2.2, 0)
+     + '<rect x="' + (cxB - R) + '" y="' + (cyB - R) + '" width="' + (2 * R) + '" height="' + (R * 2.2) + '" fill="' + C.navy + '" opacity="' + (sombre ? 0.28 : 0.16) + '"/>'
+     + '</g>';
+
+  s += rings(W * 0.10, H * 0.84, Math.min(W * 0.32, H * 0.20), sombre ? 0.16 : 0.10);
+  var bar = Math.max(6, Math.round(Math.min(W, H) * 0.010));
+  s += triBar(0, 0, W, bar);
+
+  /* ── En-tête ─────────────────────────────────────────────────────── */
+  var lg = Math.min(W * 0.130, H * 0.075), hy = Math.max(bar + H * 0.020, H * 0.042);
+  s += logoImg(M, hy, lg, embed, sombre);
+  s += T(M + lg + W * 0.022, hy + lg * 0.44, ORG, { size: lg * 0.20, fill: encre, ls: lg * 0.010 });
+  s += TFit(M + lg + W * 0.022, hy + lg * 0.44 + lg * 0.30, TAG, W - (M + lg + W * 0.022) - M, { size: lg * 0.163, w: 600, fill: accent });
+  var hautBloc = hy + lg + Math.min(H * 0.035, W * 0.05);
+
+  /* ── Pied, construit de bas en haut : c'est lui qui fixe la place
+        restante pour le bloc de titre. ─────────────────────────────── */
+  var footY = H - Math.max(H * 0.040, bar * 3);
+  var footS = Math.min(W * 0.020, H * 0.016);
+  var colW  = Math.min(W * 0.62, W - 2 * M);
+
+  var qrTaille = OPT.qr && ASSETS.qr ? Math.min(W * 0.13, H * 0.075) : 0;
+  var co = calloutType(M, 0, colW, v.ctaShort || v.cta, null, accent, encre, u);
+  var ctaTop = footY - footS * 2.6 - co.h;
+
+  var checks = (v.checks || []).slice(0, 3);
+  var pasCheck = Math.min(H * 0.034, W * 0.048);
+  var checksTop = ctaTop - Math.min(H * 0.028, W * 0.04) - (checks.length - 1) * pasCheck;
+
+  /* ── Bloc de titre, dimensionné pour tenir dans l'espace disponible ── */
+  var dispo = checksTop - hautBloc - Math.min(H * 0.03, W * 0.04);
+  var sub = v.sub || [SLOGAN];
+
+  function mesures(k){
+    var m = { kick: W * 0.024 * k, seas: W * 0.032 * k, subS: W * 0.026 * k };
+    m.ts = W * 0.110 * k;
+    for (var i = 0; i < v.t.length; i++) m.ts = Math.min(m.ts, fitSize(v.t[i], colW, m.ts, 800, FAM_AG));
+    m.lh = m.ts * 1.04;
+    m.subLh = m.subS * 1.32;
+    /* kicker + interligne + titre + saison + sous-titre */
+    m.h = m.kick * 1.9 + m.ts + (v.t.length - 1) * m.lh
+        + m.seas * 2.1 + m.subS * 1.5 + (sub.length - 1) * m.subLh;
+    return m;
+  }
+  var m = mesures(1);
+  for (var pass = 0; pass < 6 && m.h > dispo; pass++) m = mesures(dispo / m.h * 0.99);
+
+  var cur = hautBloc + m.kick;
+  s += TFit(M, cur, v.kicker, colW, { size: m.kick, fill: accent, ls: m.kick * 0.18 });
+
+  cur += m.kick * 0.9 + m.ts * 0.82;
+  s += TL(M, cur, v.t, { size: m.ts, f: 'ag', w: 800, fill: encre, lh: m.lh });
+  cur += (v.t.length - 1) * m.lh;
+
+  cur += m.seas * 1.5;
+  s += T(M, cur, v.season, { size: m.seas, fill: accent, f: 'ag', w: 800, ls: m.seas * 0.09 });
+
+  cur += m.subS * 1.5;
+  s += TLFit(M, cur, sub, colW, { size: m.subS, w: 500, fill: doux, lh: m.subLh });
+
+  /* ── Arguments, appel à l'action, QR, pied ───────────────────────── */
+  for (var j = 0; j < checks.length; j++) {
+    s += bulletRow(M, checksTop + j * pasCheck, checks[j], Math.min(W * 0.023, H * 0.018),
+                   [C.blue, C.yellow, C.red][j % 3], doux, colW);
+  }
+
+  s += calloutType(M, ctaTop, colW, v.ctaShort || v.cta, null, accent, encre, u).svg;
+
+  if (qrTaille) {
+    s += qrCard(W - M - qrTaille, ctaTop + co.h - qrTaille, qrTaille, null, doux);
+  }
+
+  s += instaTag(M, footY, footS, doux);
+  s += T(W - M, footY, SITE, { size: footS, fill: accent, anchor: 'end', w: 700 });
+  s += triBar(0, H - bar, W, bar);
+  return svgWrap(W, H, uid, s, embed);
+}
+
+/* =====================================================================
+   10 quater. Layout « MODERNE »
+   Reprise du langage graphique des maquettes de référence : bandeau navy
+   arrondi pour le titre, pastille jaune pour la saison, photo dans un cadre
+   très arrondi, bande crème de bénéfices à pictogrammes, cartes d'actions,
+   bloc jaune d'appel à l'action, pied navy à colonnes de contact.
+   Entièrement proportionnel : tient du post carré au kakémono.
+   ===================================================================== */
+function renderModerne(style, variant, uid, embed, W, H){
+  var v = V(variant), M = W * 0.062, u = W;
+  var s = '<rect width="' + W + '" height="' + H + '" fill="#F7FAFF"/>';
+  var bar = Math.max(5, Math.round(Math.min(W, H) * 0.007));
+
+  /* Arc jaune en haut à droite, signature des maquettes. */
+  s += '<path d="M ' + (W * 0.52) + ' 0 Q ' + (W * 0.94) + ' ' + (H * 0.045) + ' ' + W + ' ' + (H * 0.16)
+     + ' L ' + W + ' 0 Z" fill="' + C.yellow + '" opacity="0.22"/>';
+  s += '<path d="M ' + (W * 0.62) + ' 0 Q ' + (W * 0.97) + ' ' + (H * 0.035) + ' ' + W + ' ' + (H * 0.11)
+     + ' L ' + W + ' 0 Z" fill="' + C.navy + '" opacity="0.10"/>';
+
+  /* En-tete */
+  var lg = Math.min(W * 0.135, H * 0.085), hy = H * 0.030;
+  s += logoImg(M, hy, lg, embed, false);
+  var hx = M + lg + W * 0.030;
+  s += T(hx, hy + lg * 0.44, ORG, { size: lg * 0.225, fill: C.navy, ls: lg * 0.012 });
+  s += TFit(hx, hy + lg * 0.44 + lg * 0.32, TAG, W - hx - M, { size: lg * 0.175, w: 600, fill: C.dark, it: true });
+
+  var y = hy + lg + H * 0.028;
+
+  /* Bandeau navy : titre en reserve blanche */
+  var titreCol = W * 0.545;
+  var lignes = v.t, ts = Math.min(W * 0.088, H * 0.055);
+  for (var i = 0; i < lignes.length; i++) ts = Math.min(ts, fitSize(lignes[i], titreCol - W * 0.075, ts, 800, FAM_AG));
+  var bandeauH = ts * (1.06 * lignes.length) + H * 0.045;
+  s += '<path d="M 0 ' + y + ' H ' + (titreCol - W * 0.05)
+     + ' q ' + (W * 0.05) + ' 0 ' + (W * 0.05) + ' ' + (W * 0.05)
+     + ' V ' + (y + bandeauH - W * 0.05)
+     + ' q 0 ' + (W * 0.05) + ' ' + (-W * 0.05) + ' ' + (W * 0.05)
+     + ' H 0 Z" fill="' + C.navy + '"/>';
+  s += TL(M, y + H * 0.030 + ts * 0.80, lignes,
+          { size: ts, f: 'ag', w: 800, fill: '#FFFFFF', lh: ts * 1.06 });
+
+  /* Pastille jaune de saison */
+  var sy = y + bandeauH + H * 0.012, ss = Math.min(W * 0.036, H * 0.024);
+  /* Largeur = marge gauche + texte + marge droite, plus le rayon du coin
+     arrondi : sinon la dernière année sortait de l'aplat jaune. */
+  var sw = M + measure(v.season, ss, 800, FAM_AG) + W * 0.055 + W * 0.028;
+  s += '<path d="M 0 ' + sy + ' H ' + (sw - W * 0.028)
+     + ' q ' + (W * 0.028) + ' 0 ' + (W * 0.028) + ' ' + (ss * 0.9)
+     + ' q 0 ' + (ss * 0.9) + ' ' + (-W * 0.028) + ' ' + (ss * 0.9)
+     + ' H 0 Z" fill="' + C.yellow + '"/>';
+  s += T(M, sy + ss * 1.28, v.season, { size: ss, f: 'ag', w: 800, fill: C.navy, ls: ss * 0.06 });
+
+  /* Sous-titre */
+  var subY = sy + ss * 2.5 + H * 0.020, subS = Math.min(W * 0.030, H * 0.020);
+  var sub = v.sub || [SLOGAN];
+  s += TLFit(M, subY, sub, titreCol - W * 0.03, { size: subS, w: 700, fill: C.navy, lh: subS * 1.35 });
+  var basTexte = subY + (sub.length - 1) * subS * 1.35;
+  s += underline(M, basTexte + subS * 0.55, sub[0], subS, C.yellow);
+
+  /* Photo dans un cadre tres arrondi, a droite */
+  var phX = titreCol + W * 0.020, phW = W - phX - M, phY = y - H * 0.010;
+  var phH = Math.min(basTexte + subS - phY, H * 0.30);
+  if (phW > W * 0.20 && phH > H * 0.10) {
+    var r = Math.min(phW, phH) * 0.22;
+    s += '<defs><clipPath id="ph' + uid + '"><rect x="' + phX + '" y="' + phY + '" width="' + phW + '" height="' + phH + '" rx="' + r + '"/></clipPath></defs>';
+    s += '<g clip-path="url(#ph' + uid + ')">' + photoTile(phX, phY, phW, phH, 0) + '</g>';
+    s += '<rect x="' + phX + '" y="' + phY + '" width="' + phW + '" height="' + phH + '" rx="' + r
+       + '" fill="none" stroke="' + C.yellow + '" stroke-width="' + (bar * 1.4) + '"/>';
+  }
+
+  /* Bande creme des trois benefices */
+  var bY = Math.max(basTexte + subS * 1.6, (phY + phH) + H * 0.022);
+  var bH = Math.min(H * 0.085, W * 0.115);
+  s += '<rect x="' + M + '" y="' + bY + '" width="' + (W - 2 * M) + '" height="' + bH + '" rx="' + (bH * 0.22) + '" fill="#FFF8E8"/>';
+  var colB = (W - 2 * M) / 3, pr = bH * 0.30, bs = Math.min(bH * 0.20, W * 0.019);
+  for (var b = 0; b < 3; b++) {
+    var bx = M + b * colB;
+    if (b) s += '<rect x="' + bx + '" y="' + (bY + bH * 0.20) + '" width="1.6" height="' + (bH * 0.60) + '" fill="#E2CFA0"/>';
+    s += pastillePicto(bx + colB * 0.145, bY + bH / 2, pr, BENEFICES[b][0], 'rgba(255,255,255,0)', BENEFICES[b][1]);
+    s += TFit(bx + colB * 0.145 + pr * 1.35, bY + bH * 0.44, BENEFICES[b][2], colB * 0.70, { size: bs, w: 800, fill: C.navy });
+    s += TFit(bx + colB * 0.145 + pr * 1.35, bY + bH * 0.72, BENEFICES[b][3], colB * 0.70, { size: bs * 0.92, w: 500, fill: '#5C6B82' });
+  }
+
+  /* Colonne « Nos actions » + bloc jaune d'adhesion */
+  var zY = bY + bH + H * 0.028;
+  var footH = Math.min(H * 0.155, W * 0.21);
+  var zH = H - footH - H * 0.020 - zY;
+  var gauche = (W - 2 * M) * 0.52, droite = (W - 2 * M) - gauche - W * 0.022;
+  var dX = M + gauche + W * 0.022;
+
+  if (zH > H * 0.10) {
+    var titA = Math.min(W * 0.032, H * 0.022);
+    s += pill(M, zY, 'Nos actions', titA, C.navy, '#FFFFFF', titA * 0.9, titA * 2.0);
+    var cardY = zY + titA * 2.5, nA = Math.min(ACTIONS.length, 4);
+    var cardH = (zH - (cardY - zY) - nA * H * 0.008) / nA;
+    for (var a = 0; a < nA; a++) {
+      var ay = cardY + a * (cardH + H * 0.008);
+      s += '<rect x="' + M + '" y="' + ay + '" width="' + gauche + '" height="' + cardH + '" rx="' + (cardH * 0.26) + '" fill="#EDF4FF"/>';
+      var apr = cardH * 0.30;
+      s += pastillePicto(M + cardH * 0.42, ay + cardH / 2, apr, ACTIONS[a][0], C.yellow, C.navy);
+      var atx = M + cardH * 0.42 + apr * 1.5, atw = gauche - (atx - M) - cardH * 0.22;
+      s += TFit(atx, ay + cardH * 0.44, ACTIONS[a][1], atw, { size: Math.min(cardH * 0.24, W * 0.021), w: 800, fill: C.navy });
+      s += TFit(atx, ay + cardH * 0.74, ACTIONS[a][2], atw, { size: Math.min(cardH * 0.20, W * 0.017), w: 500, fill: '#6C7A91' });
+    }
+
+    /* Bloc jaune : megaphone, accroche, garanties, bouton. */
+    s += '<rect x="' + dX + '" y="' + zY + '" width="' + droite + '" height="' + zH + '" rx="' + (droite * 0.07) + '" fill="' + C.yellow + '"/>';
+    var mr = Math.min(droite * 0.11, zH * 0.10);
+    s += picto('megaphone', dX + droite * 0.07, zY + zH * 0.055, mr * 2, C.navy);
+    var dtx = dX + droite * 0.07 + mr * 2.4, dtw = droite - (dtx - dX) - droite * 0.07;
+    var dts = Math.min(droite * 0.075, zH * 0.075);
+    /* Le bandeau navy porte déjà le nom de la campagne : cet encart pose une
+       question au lecteur au lieu de répéter le titre. */
+    var enc = v.encart || ['Prêt à', "T'ENGAGER ?"];
+    s += TFit(dtx, zY + zH * 0.075 + dts * 0.8, enc[0], dtw, { size: dts, w: 800, fill: C.navy });
+    s += TFit(dtx, zY + zH * 0.075 + dts * 2.0, enc[1], dtw, { size: dts, f: 'ag', w: 800, fill: '#FFFFFF' });
+
+    /* `garanties` et non `checks` : les valeurs figurent déjà dans la bande
+       crème des bénéfices, quelques centimètres plus haut. Ce bloc répond à
+       une autre question — « concrètement, ça m'engage à quoi ? ». */
+    var chk = (v.garanties || v.checks || []).slice(0, 3);
+    var boxY = zY + zH * 0.40, boxH = zH * 0.34;
+    s += '<rect x="' + (dX + droite * 0.055) + '" y="' + boxY + '" width="' + (droite * 0.89) + '" height="' + boxH + '" rx="' + (boxH * 0.18) + '" fill="#FFFBEF"/>';
+    var cs = Math.min(droite * 0.048, boxH * 0.20);
+    for (var c = 0; c < chk.length; c++) {
+      var cy2 = boxY + boxH * (0.28 + c * 0.26);
+      s += pastillePicto(dX + droite * 0.115, cy2 - cs * 0.30, cs * 0.72, 'coche', C.navy, '#FFFFFF');
+      s += TFit(dX + droite * 0.115 + cs * 1.3, cy2, chk[c], droite * 0.70, { size: cs, w: 600, fill: C.navy });
+    }
+
+    var btH = Math.min(zH * 0.14, droite * 0.16), btY = zY + zH - btH - zH * 0.055;
+    s += '<rect x="' + (dX + droite * 0.075) + '" y="' + btY + '" width="' + (droite * 0.85) + '" height="' + btH + '" rx="' + (btH / 2) + '" fill="' + C.navy + '"/>';
+    var bl = v.ctaShort || v.cta, bls = Math.min(btH * 0.42, droite * 0.085);
+    bls = fitSize(bl, droite * 0.55, bls, 800, FAM_AG);
+    s += T(dX + droite * 0.075 + droite * 0.42 - btH * 0.30, btY + btH * 0.64, bl,
+           { size: bls, f: 'ag', w: 800, fill: '#FFFFFF', anchor: 'middle' });
+    s += picto('fleche', dX + droite * 0.075 + droite * 0.72, btY + btH * 0.30, btH * 0.42, '#FFFFFF');
+    /* Pas de lien sous le bouton : le pied de page l'affiche déjà, en jaune
+       et accompagné du QR code. */
+  }
+
+  /* Pied navy : QR et colonnes de contact */
+  var fY = H - footH;
+  s += '<rect x="0" y="' + fY + '" width="' + W + '" height="' + footH + '" fill="' + C.navy + '"/>';
+  var fx = M, qz = 0;
+  if (OPT.qr && ASSETS.qr) {
+    qz = Math.min(footH * 0.62, W * 0.13);
+    s += '<rect x="' + M + '" y="' + (fY + (footH - qz) / 2) + '" width="' + qz + '" height="' + qz + '" rx="' + (qz * 0.10) + '" fill="#FFFFFF"/>';
+    s += '<image x="' + (M + qz * 0.07) + '" y="' + (fY + (footH - qz) / 2 + qz * 0.07) + '" width="' + (qz * 0.86) + '" height="' + (qz * 0.86)
+       + '" href="' + ASSETS.qr + '" xlink:href="' + ASSETS.qr + '"/>';
+    fx = M + qz + W * 0.028;
+  }
+  var fs = Math.min(footH * 0.115, W * 0.017);
+  s += T(fx, fY + footH * 0.34, 'SCANNE OU', { size: fs, fill: '#FFFFFF', w: 800, ls: fs * 0.10 });
+  s += T(fx, fY + footH * 0.52, 'RENDS-TOI SUR', { size: fs, fill: '#FFFFFF', w: 800, ls: fs * 0.10 });
+  var lw = measure(SITE, fs, 700, FAM_GS) + fs * 1.1;
+  s += '<rect x="' + fx + '" y="' + (fY + footH * 0.62) + '" width="' + lw + '" height="' + (fs * 1.7) + '" rx="' + (fs * 0.5) + '" fill="' + C.yellow + '"/>';
+  s += T(fx + fs * 0.55, fY + footH * 0.62 + fs * 1.22, SITE, { size: fs, fill: C.navy, w: 700 });
+
+  var cX = fx + Math.max(lw, W * 0.20) + W * 0.035, cW = W - cX - M;
+  if (cW > W * 0.18) {
+    var contacts = [['telephone', 'Tel. ' + TEL], ['enveloppe', MAIL], ['insta', INSTA]];
+    for (var q = 0; q < contacts.length; q++) {
+      var qy2 = fY + footH * (0.30 + q * 0.22);
+      s += pastillePicto(cX + fs * 0.9, qy2 - fs * 0.30, fs * 0.86, contacts[q][0], C.yellow, C.navy);
+      s += TFit(cX + fs * 2.4, qy2, contacts[q][1], cW - fs * 2.6, { size: fs, w: 600, fill: '#FFFFFF' });
+    }
+  }
+  s += triBar(0, H - bar, W, bar);
+  return svgWrap(W, H, uid, s, embed);
+}
+
+/* =====================================================================
+   10 quinquies. Layout « TRIO »
+   Triptyque de photos, trois bénéfices en pastilles colorées, appel à
+   l'action typographique et badges de valeurs — d'après les maquettes.
+   ===================================================================== */
+function renderTrio(style, variant, uid, embed, W, H){
+  var v = V(variant), M = W * 0.065, u = W;
+  var s = '<rect width="' + W + '" height="' + H + '" fill="#F7FAFF"/>';
+  var bar = Math.max(5, Math.round(Math.min(W, H) * 0.008));
+  s += triBar(0, 0, W, bar);
+  s += rings(W * 0.90, H * 0.055, Math.min(W * 0.30, H * 0.16), 0.20);
+
+  /* En-tete */
+  var lg = Math.min(W * 0.130, H * 0.080), hy = H * 0.032;
+  s += logoImg(M, hy, lg, embed, false);
+  s += '<rect x="' + (M + lg + W * 0.024) + '" y="' + (hy + lg * 0.12) + '" width="2" height="' + (lg * 0.72) + '" fill="#D8E2F2"/>';
+  var hx = M + lg + W * 0.045;
+  s += T(hx, hy + lg * 0.44, ORG, { size: lg * 0.225, fill: C.navy, ls: lg * 0.012 });
+  s += TFit(hx, hy + lg * 0.44 + lg * 0.32, TAG, W - hx - M - Math.min(W * 0.24, H * 0.16), { size: lg * 0.175, w: 600, fill: '#5C6B82', it: true });
+
+  /* Titre */
+  var y = hy + lg + H * 0.045, colW = W * 0.66;
+  var ks = Math.min(W * 0.025, H * 0.017);
+  s += TFit(M, y, v.kicker, colW, { size: ks, fill: C.bluedark, ls: ks * 0.20 });
+
+  var lignes = v.t, ts = Math.min(W * 0.105, H * 0.068);
+  for (var i = 0; i < lignes.length; i++) ts = Math.min(ts, fitSize(lignes[i], colW, ts, 800, FAM_AG));
+  y += ks * 1.1 + ts * 0.82;
+  s += TL(M, y, lignes, { size: ts, f: 'ag', w: 800, fill: C.navy, lh: ts * 1.04 });
+  y += (lignes.length - 1) * ts * 1.04;
+
+  var seas = Math.min(W * 0.042, H * 0.028);
+  y += seas * 1.5;
+  s += T(M, y, v.season, { size: seas, fill: C.bluedark, f: 'ag', w: 800, ls: seas * 0.05 });
+
+  var subS = Math.min(W * 0.028, H * 0.019), sub = v.sub || [SLOGAN];
+  y += subS * 1.7;
+  s += TLFit(M, y, sub, colW, { size: subS, w: 700, fill: '#3A4A63', lh: subS * 1.42 });
+  y += (sub.length - 1) * subS * 1.42;
+
+  /* Pastille ronde : le slogan de l'association, à sa vraie place. */
+  var pr = Math.min(W * 0.115, H * 0.075), pcx = W - M - pr, pcy = hy + lg + H * 0.10 + pr;
+  if (W - colW - 2 * M > pr) {
+    s += '<circle cx="' + pcx + '" cy="' + pcy + '" r="' + pr + '" fill="none" stroke="' + C.blue + '" stroke-width="' + (pr * 0.035) + '"/>';
+    var mots = CRI, mc = [C.navy, C.yellow, C.red];
+    var msz = Math.min(pr * 0.27, W * 0.024);
+    for (var w2 = 0; w2 < 3; w2++) {
+      s += T(pcx, pcy - pr * 0.22 + w2 * msz * 1.5, mots[w2],
+             { size: msz, w: 800, fill: mc[w2], anchor: 'middle', it: true });
+    }
+  }
+
+  /* Triptyque de photos */
+  var tY = y + subS * 1.9, tH = Math.min(H * 0.22, W * 0.30);
+  var gap = W * 0.012, tW = (W - 2 * M - 2 * gap) / 3;
+  var teintes = [C.blue, C.yellow, C.red];
+  for (var t2 = 0; t2 < 3; t2++) {
+    var tx = M + t2 * (tW + gap), rr = tW * 0.06;
+    s += '<defs><clipPath id="tp' + uid + t2 + '"><rect x="' + tx + '" y="' + tY + '" width="' + tW + '" height="' + tH + '" rx="' + rr + '"/></clipPath></defs>';
+    s += '<g clip-path="url(#tp' + uid + t2 + ')">' + photoTile(tx, tY, tW, tH, t2) + '</g>';
+    s += '<rect x="' + tx + '" y="' + tY + '" width="' + tW + '" height="' + (bar * 0.9) + '" fill="' + teintes[t2] + '"/>';
+    s += '<rect x="' + tx + '" y="' + (tY + tH - bar * 0.9) + '" width="' + tW + '" height="' + (bar * 0.9) + '" fill="' + teintes[t2] + '"/>';
+  }
+
+  /* Benefices a gauche, appel a l'action a droite */
+  var zY = tY + tH + H * 0.035;
+  var footH = Math.min(H * 0.20, W * 0.26);
+  var zH = H - footH - H * 0.018 - zY;
+  var gW = (W - 2 * M) * 0.46, dX2 = M + gW + W * 0.045;
+
+  if (zH > H * 0.08) {
+    var br = Math.min(zH * 0.13, W * 0.030), bsz = Math.min(zH * 0.115, W * 0.024);
+    for (var k2 = 0; k2 < 3; k2++) {
+      var ky = zY + zH * (0.16 + k2 * 0.33);
+      s += pastillePicto(M + br, ky, br, BENEFICES[k2][0], BENEFICES[k2][1], '#FFFFFF');
+      s += TFit(M + br * 2.5, ky - bsz * 0.15, BENEFICES[k2][2], gW - br * 2.7, { size: bsz, w: 800, fill: BENEFICES[k2][1] });
+      s += TFit(M + br * 2.5, ky + bsz * 1.05, BENEFICES[k2][3], gW - br * 2.7, { size: bsz * 0.92, w: 500, fill: '#5C6B82' });
+    }
+
+    var dW = W - dX2 - M;
+    var cl = (v.ctaShort || v.cta), cls = fitSize(cl, dW * 0.92, Math.min(zH * 0.30, dW * 0.20), 800, FAM_AG);
+    s += T(dX2, zY + zH * 0.36, cl, { size: cls, f: 'ag', w: 800, fill: C.navy, it: true });
+    s += '<path d="M ' + dX2 + ' ' + (zY + zH * 0.46) + ' Q ' + (dX2 + dW * 0.5) + ' ' + (zY + zH * 0.40) + ' ' + (dX2 + dW * 0.94) + ' ' + (zY + zH * 0.45)
+       + '" fill="none" stroke="' + C.blue + '" stroke-width="' + (cls * 0.10) + '" stroke-linecap="round"/>';
+    var us = Math.min(zH * 0.14, dW * 0.075);
+    var uw = measure(SITE, us, 700, FAM_GS) + us * 2.0;
+    s += '<rect x="' + dX2 + '" y="' + (zY + zH * 0.62) + '" width="' + Math.min(uw, dW) + '" height="' + (us * 2.0) + '" rx="' + (us * 0.35) + '" fill="' + C.bluedark + '"/>';
+    s += T(dX2 + Math.min(uw, dW) / 2, zY + zH * 0.62 + us * 1.36, SITE, { size: us, fill: '#FFFFFF', w: 700, anchor: 'middle' });
+  }
+
+  /* Pied : QR, contacts, badges de valeurs */
+  var fY = H - footH;
+  s += '<rect x="' + M + '" y="' + fY + '" width="' + (W - 2 * M) + '" height="' + (footH - H * 0.030) + '" rx="' + (W * 0.022) + '" fill="#FFFFFF" stroke="#E4EAF4" stroke-width="2"/>';
+  var qz = Math.min((footH - H * 0.030) * 0.72, W * 0.115), qx = M + W * 0.022, qy3 = fY + ((footH - H * 0.030) - qz) / 2;
+  if (OPT.qr && ASSETS.qr) {
+    s += '<rect x="' + qx + '" y="' + qy3 + '" width="' + qz + '" height="' + qz + '" rx="' + (qz * 0.10) + '" fill="#FFFFFF" stroke="' + C.blue + '" stroke-width="2"/>';
+    s += '<image x="' + (qx + qz * 0.08) + '" y="' + (qy3 + qz * 0.08) + '" width="' + (qz * 0.84) + '" height="' + (qz * 0.84)
+       + '" href="' + ASSETS.qr + '" xlink:href="' + ASSETS.qr + '"/>';
+  } else { qz = 0; }
+  var ix = qx + (qz ? qz + W * 0.024 : 0), isz = Math.min(footH * 0.095, W * 0.016);
+  s += T(ix, qy3 + isz * 1.3, 'SCANNE OU RENDS-TOI SUR', { size: isz, fill: '#6C7A91', ls: isz * 0.10, w: 700 });
+  s += T(ix, qy3 + isz * 2.9, '16 – 35 ans', { size: isz * 1.15, fill: C.navy, w: 800 });
+  s += T(ix, qy3 + isz * 4.3, 'Adhésion en ligne', { size: isz, fill: '#6C7A91', w: 600 });
+  s += instaTag(ix, qy3 + isz * 5.7, isz, '#6C7A91');
+
+  var bX = ix + W * 0.24, bW2 = W - bX - M - W * 0.022;
+  if (bW2 > W * 0.20) {
+    var nb = VALEURS_BADGES.length, cb = bW2 / nb, vr = Math.min(cb * 0.22, (footH - H * 0.030) * 0.16);
+    for (var vB = 0; vB < nb; vB++) {
+      var vx = bX + cb * (vB + 0.5);
+      if (vB) s += '<rect x="' + (bX + cb * vB) + '" y="' + (qy3 + vr * 0.2) + '" width="1.6" height="' + (vr * 3.4) + '" fill="#E9EFF9"/>';
+      s += pastillePicto(vx, qy3 + vr * 1.3, vr, VALEURS_BADGES[vB][0], 'rgba(255,255,255,0)', [C.blue, C.yellow, C.red, C.navy][vB]);
+      s += TFit(vx, qy3 + vr * 3.0, VALEURS_BADGES[vB][1], cb * 0.94, { size: Math.min(vr * 0.58, W * 0.015), w: 800, fill: C.navy, anchor: 'middle' });
+    }
+  }
+
+  s += T(M, H - H * 0.012, SLOGAN, { size: Math.min(W * 0.018, H * 0.013), w: 700, fill: C.navy });
+  s += T(W - M, H - H * 0.012, 'Tel. ' + TEL, { size: Math.min(W * 0.018, H * 0.013), w: 700, fill: C.navy, anchor: 'end' });
+  s += triBar(0, H - bar, W, bar);
   return svgWrap(W, H, uid, s, embed);
 }
 
@@ -1106,7 +1959,7 @@ function renderVerso(style, variant, uid, embed){
 
   s += logoImg(M, 60, 120, embed);
   s += T(M + 146, 118, ORG, { size: 29, fill: C.navy, ls: 1.4 });
-  s += T(M + 146, 156, TAG, { size: 21, w: 500, fill: '#6C7A91' });
+  s += TFit(M + 146, 156, TAG, W - (M + 146) - M - 180, { size: 21, w: 500, fill: '#6C7A91' });
   s += T(W - M, 132, OPT.season, { size: 26, fill: C.blue, anchor: 'end', f: 'ag', w: 800, ls: 3 });
   s += '<rect x="' + M + '" y="220" width="' + (W - 2 * M) + '" height="2" fill="#E4EAF4"/>';
 
@@ -1134,14 +1987,15 @@ function renderVerso(style, variant, uid, embed){
   }
 
   /* Infos pratiques */
-  s += '<rect x="' + M + '" y="1266" width="' + (W - 2 * M) + '" height="286" rx="26" fill="' + C.navy + '"/>';
+  s += '<rect x="' + M + '" y="1266" width="' + (W - 2 * M) + '" height="300" rx="26" fill="' + C.navy + '"/>';
   s += triBar(M, 1266, W - 2 * M, 8);
   s += T(M + 40, 1338, 'INFOS PRATIQUES', { size: 24, fill: C.yellow, ls: 5 });
   var infos = [
     ['Qui ?', 'Tous les jeunes de 16 à 35 ans, en Martinique.'],
     ['Combien ?', OPT.price ? 'Cotisation annuelle de 20 € (première adhésion et réadhésion).' : 'Une cotisation annuelle symbolique.'],
     ['Comment payer ?', 'Carte bancaire en ligne, virement ou espèces.'],
-    ['Où ?', SITE + '  ·  ' + MAIL + '  ·  Tél. ' + TEL]
+    ['Où ?', "En ligne, depuis le site — scanne le QR code ci-dessous."],
+    ['Contact', MAIL + '  ·  Tél. ' + TEL]
   ];
   for (var n = 0; n < infos.length; n++) {
     var iy = 1394 + n * 44;
@@ -1155,8 +2009,8 @@ function renderVerso(style, variant, uid, embed){
     s += T(W - M - 176, 1620, 'Scanne et adhère', { size: 24, fill: C.navy, anchor: 'end' });
     s += T(W - M - 176, 1656, SITE, { size: 22, fill: C.blue, anchor: 'end', w: 700 });
   }
-  s += T(M, 1616, ADDR, { size: 22, w: 500, fill: '#98A5B8' });
-  s += T(M, 1652, INSTA + '   ·   ' + MAIL, { size: 22, w: 600, fill: '#98A5B8' });
+  s += T(M, 1624, SLOGAN, { size: 22, w: 600, fill: '#98A5B8' });
+  s += instaTag(M, 1660, 22, '#98A5B8');
   s += wordmark(M, 1716, 44);
   s += triBar(0, H - 18, W, 18);
   return svgWrap(W, H, uid, s, embed);
@@ -1169,10 +2023,43 @@ function renderVerso(style, variant, uid, embed){
    slogan en italique bleu, « INSCRIS-TOI ! » bordeaux + flèche vers le QR,
    signature jaune et bordeaux.
    ===================================================================== */
+/**
+ * Cadrage particulier de certaines photos.
+ *
+ * `preserveAspectRatio="slice"` remplit toujours le cadre, mais il centre la
+ * photo : celles dont le sujet est decentre laissent apparaitre leur fond
+ * clair sur un bord. On les rapproche donc avec un zoom et un point de
+ * visee, exprimes en fraction de l'image (0 = gauche/haut, 1 = droite/bas).
+ */
+var CADRAGE = {
+  'images/kit/membres-06.jpg': { zoom: 1.45, cx: 0.50, cy: 0.56 }
+};
+
+var _uidTile = 0;
+
 function photoTile(x, y, w, h, idx){
-  var src = photoAt(PIDX + idx);
-  return '<image x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" href="' + src
-    + '" xlink:href="' + src + '" preserveAspectRatio="xMidYMid slice"/>';
+  var i = PIDX + idx;
+  var src = photoAt(i);
+  var chemin = OPT.photos.length ? null
+    : DEFAULT_PHOTOS[((i % DEFAULT_PHOTOS.length) + DEFAULT_PHOTOS.length) % DEFAULT_PHOTOS.length];
+  var cad = chemin ? CADRAGE[chemin] : null;
+
+  if (!cad) {
+    return '<image x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" href="' + src
+      + '" xlink:href="' + src + '" preserveAspectRatio="xMidYMid slice"/>';
+  }
+
+  /* Image agrandie puis recadree sur le point de visee, le tout coupe aux
+     dimensions exactes de la tuile. */
+  var id = 'pt' + (++_uidTile);
+  var zw = w * cad.zoom, zh = h * cad.zoom;
+  var zx = x - (zw - w) * cad.cx, zy = y - (zh - h) * cad.cy;
+
+  return '<defs><clipPath id="' + id + '"><rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '"/></clipPath></defs>'
+    + '<g clip-path="url(#' + id + ')">'
+    + '<image x="' + zx + '" y="' + zy + '" width="' + zw + '" height="' + zh + '" href="' + src
+    + '" xlink:href="' + src + '" preserveAspectRatio="xMidYMid slice"/>'
+    + '</g>';
 }
 
 function renderMosaic(style, variant, uid, embed, W, H){
@@ -1198,15 +2085,15 @@ function renderMosaic(style, variant, uid, embed, W, H){
   s += logoImg(W / 2 - lg / 2, cTop + H * 0.025, lg, embed);
 
   /* Slogan en italique (Gill Sans Italic, comme le « Relève le défi ! » 2025) */
-  var slogan = v.slogan || v.t.join(' ');
+  var slogan = v.slogan || v.t.join(String.fromCharCode(10));
   var ss = fitSize(slogan, W * 0.80, H * 0.115, 700, FAM_GS);
   s += T(W / 2, cTop + H * 0.235, slogan, { size: ss, fill: C.blue, anchor: 'middle', it: true, w: 700 });
 
   /* « INSCRIS-TOI ! » + flèche + QR */
   var isz = H * 0.040, ibase = cTop + H * 0.325;
   s += T(M, ibase, 'INSCRIS-TOI !', { size: isz, fill: C.bordeaux, w: 800, ls: isz * 0.02 });
-  var qs = H * 0.175, qy = cTop + H * 0.345;
-  if (OPT.qr && ASSETS.qr) {
+  var qs = H * 0.175, qy = cTop + H * 0.345, avecQr = OPT.qr && ASSETS.qr;
+  if (avecQr) {
     s += '<image x="' + M + '" y="' + qy + '" width="' + qs + '" height="' + qs
       + '" href="' + ASSETS.qr + '" xlink:href="' + ASSETS.qr + '"/>';
     var tx = M + measure('INSCRIS-TOI !', isz, 800, FAM_GS);
@@ -1215,9 +2102,12 @@ function renderMosaic(style, variant, uid, embed, W, H){
     s += T(M, qy + qs * 0.3, OPT.url.replace(/^https?:\/\//, ''), { size: H * 0.026, fill: C.dark, w: 700 });
   }
 
-  /* Paragraphe d'accroche */
-  var para = v.para || v.sub || [TAG];
-  s += TL(M + qs + W * 0.05, cTop + H * 0.40, para, { size: H * 0.024, w: 500, fill: '#2B2B2B', lh: H * 0.033 });
+  /* Paragraphe d'accroche. TLFit et non TL : les phrases de valeur sont plus
+     longues que l'ancien texte et débordaient hors de la page. */
+  var para = v.para || v.sub || [SLOGAN];
+  var paraX = avecQr ? M + qs + W * 0.05 : M;
+  var paraY = avecQr ? cTop + H * 0.40 : qy + qs * 0.3 + H * 0.055;
+  s += TLFit(paraX, paraY, para, W - paraX - M, { size: H * 0.024, w: 500, fill: '#2B2B2B', lh: H * 0.033 });
 
   /* Signature */
   var sig = v.signature || ["Madin' Jeunes Ambition", OPT.season];
@@ -1251,9 +2141,11 @@ function renderBlocs(style, variant, uid, embed, W, H){
   s += '<rect x="' + aw + '" y="0" width="' + bw + '" height="' + bh + '" fill="' + C.yellow + '"/>';
   var sz = fitSize(OPT.season, bw - pad * 0.7, bh * 0.34, 800, FAM_AG);
   s += T(aw + bw / 2, bh / 2 + sz * 0.36, OPT.season, { size: sz, f: 'ag', w: 800, fill: C.navy, anchor: 'middle' });
-  s += '<rect x="' + aw + '" y="' + bh + '" width="' + bw + '" height="' + bh + '" fill="' + C.blue + '"/>';
-  var lg = Math.min(bw, bh) * 0.60;
-  s += logoImg(aw + bw / 2 - lg / 2, bh + bh / 2 - lg / 2, lg, embed, true);
+  /* L'aplat inférieur droit accueille une photo : sans elle, la composition
+     restait très « institutionnelle » (que des aplats et du texte). */
+  s += photoStrip(aw, bh, bw, bh, 1, 0);
+  var lg = Math.min(bw, bh) * 0.46;
+  s += logoImg(aw + bw - lg - bw * 0.08, bh + bh - lg - bw * 0.08, lg, embed, true);
 
   /* Filet rouge de séparation */
   var rule = W * 0.012;
@@ -1264,7 +2156,7 @@ function renderBlocs(style, variant, uid, embed, W, H){
      au-dessus, et le texte est centré dans l'espace qui reste.          */
   var qs = W * 0.155, gap = W * 0.045, textW = W - 2 * M - qs - gap;
   var kick = W * 0.024, subS = W * 0.030, chkS = W * 0.022;
-  var ctaH = W * 0.085, ctaS = W * 0.036;
+  var ctaH = W * 0.115;   /* hauteur du bandeau calloutBand */
 
   var ctaTop = H - M - ctaH - W * 0.115;
   var urlY   = ctaTop + ctaH + W * 0.052;
@@ -1273,9 +2165,13 @@ function renderBlocs(style, variant, uid, embed, W, H){
   var subLines = v.sub || [TAG];
   var checks = (v.checks || v.pills || []).slice(0, 3);
   var subLH = subS * 1.42, chkStep = chkS * 2.0;
-  var groupH = kick * 1.7 + subLines.length * subLH + W * 0.022 + checks.length * chkStep;
   var top = ah + rule;
-  var gy = top + Math.max(W * 0.06, (ctaTop - top - groupH) / 2);
+  /* On retire des arguments tant que le bloc bas ne tient pas au-dessus du
+     bandeau d'action : mieux vaut deux arguments lisibles que trois écrasés. */
+  function hauteurGroupe(n){ return kick * 1.7 + subLines.length * subLH + W * 0.022 + n * chkStep; }
+  while (checks.length > 0 && (ctaTop - top - hauteurGroupe(checks.length)) < W * 0.035) checks.pop();
+  var groupH = hauteurGroupe(checks.length);
+  var gy = top + Math.max(W * 0.05, (ctaTop - top - groupH) / 2);
 
   s += TFit(M, gy, v.kicker, W - 2 * M, { size: kick, fill: C.blue, ls: kick * 0.18 });
   var cur = gy + kick * 1.7;
@@ -1291,12 +2187,13 @@ function renderBlocs(style, variant, uid, embed, W, H){
     var qy = chkTop + (checks.length * chkStep) / 2 - qs / 2 - chkS;
     s += '<image x="' + (W - M - qs) + '" y="' + qy + '" width="' + qs + '" height="' + qs
       + '" href="' + ASSETS.qr + '" xlink:href="' + ASSETS.qr + '"/>';
-    s += T(W - M - qs / 2, qy + qs + chkS * 1.1, 'SCANNE-MOI', { size: chkS * 0.8, fill: C.navy, anchor: 'middle', ls: 1 });
+    /* Pas de libellé sous le QR : le bandeau d'action juste dessous le disait
+       déjà, et il finissait recouvert. */
   }
 
-  s += cta(M, ctaTop, W - 2 * M, ctaH, v.ctaShort || v.cta, C.navy, '#FFFFFF', ctaS);
+  s += calloutBand(W, ctaTop, v.ctaShort || v.cta, null, C.navy, '#FFFFFF', W).svg;
   s += T(M, urlY, OPT.url.replace(/^https?:\/\//, ''), { size: W * 0.026, fill: C.dark, w: 700 });
-  s += T(W - M, instaY, INSTA, { size: W * 0.022, fill: '#98A5B8', anchor: 'end', w: 600 });
+  s += instaTag(W - M, instaY, W * 0.022, '#98A5B8', { anchor:'end' });
   s += T(M, instaY, ORG, { size: W * 0.022, fill: '#98A5B8', w: 600, ls: 1 });
   return svgWrap(W, H, uid, s, embed);
 }
@@ -1314,13 +2211,13 @@ function renderWide(style, variant, uid, embed, W, H){
   var qs = H * 0.42, pad = H * 0.03, box = qs + pad * 2;
   var rightX = W - M - box, qrY = H * 0.13;
   var hasQr = OPT.qr && ASSETS.qr;
-  var colW = (hasQr ? rightX : W - M) - M - M * 0.6;
+  var colW = (hasQr ? rightX : W - M - H * 0.62) - M - M * 0.6;
 
   /* Bloc de gauche : identité */
   var lg = H * 0.25;
   s += logoImg(M, H * 0.09, lg, embed, style === 'navy' || style === 'photo');
   s += T(M + lg + H * 0.05, H * 0.09 + H * 0.105, ORG, { size: H * 0.046, fill: p.fg, ls: H * 0.004 });
-  s += T(M + lg + H * 0.05, H * 0.09 + H * 0.16, TAG, { size: H * 0.036, w: 500, fill: p.fg2 });
+  s += TFit(M + lg + H * 0.05, H * 0.09 + H * 0.16, TAG, colW, { size: H * 0.036, w: 500, fill: p.fg2 });
 
   /* Titre + saison */
   var title = (variant === 'readhesion') ? 'JE RENOUVELLE' : "MJ'ADHÉSION";
@@ -1328,22 +2225,22 @@ function renderWide(style, variant, uid, embed, W, H){
   s += T(M, H * 0.55, title, { size: ts, f: 'ag', w: 800, fill: p.fg });
   s += T(M, H * 0.685, OPT.season, { size: H * 0.058, fill: p.alt, f: 'ag', w: 800, ls: 3 });
 
-  /* Appel à l'action + lien */
-  var label = v.ctaShort || v.cta, cs = H * 0.055;
-  var cw = measure(label, cs, 800, FAM_AG) + cs * 1.6, ch = H * 0.145;
-  s += cta(M, H * 0.775, cw, ch, label, p.ctaBg, p.ctaFg, cs);
-  s += T(M + cw + H * 0.05, H * 0.775 + ch * 0.62, OPT.url.replace(/^https?:\/\//, ''),
-         { size: H * 0.05, fill: p.accent, w: 700 });
+  /* Appel à l'action : libellé XXL + flèche + filet, jamais de bouton. */
+  var label = v.ctaShort || v.cta;
+  var cob = calloutType(M, H * 0.70, colW, label, null, p.accent, p.fg, H * 0.86);
+  s += cob.svg;
+  s += T(M + cob.w + H * 0.06, H * 0.70 + cob.h * 0.62, OPT.url.replace(/^https?:\/\//, ''),
+         { size: H * 0.048, fill: p.accent, w: 700 });
 
   /* QR + mentions */
   if (hasQr) {
     s += '<rect x="' + rightX + '" y="' + qrY + '" width="' + box + '" height="' + box + '" rx="' + (box * 0.11) + '" fill="#FFFFFF"/>';
     s += '<image x="' + (rightX + pad) + '" y="' + (qrY + pad) + '" width="' + qs + '" height="' + qs + '" href="' + ASSETS.qr + '" xlink:href="' + ASSETS.qr + '"/>';
     s += T(rightX + box / 2, qrY + box + H * 0.10, 'SCANNE ET ADHÈRE', { size: H * 0.042, fill: p.qrLabel, anchor: 'middle', ls: 2 });
-    s += T(rightX + box / 2, qrY + box + H * 0.175, INSTA, { size: H * 0.040, fill: p.foot, anchor: 'middle', w: 600 });
+    s += instaTag(rightX + box / 2, qrY + box + H * 0.175, H * 0.040, p.foot, { anchor:'middle' });
   } else {
     s += wordmark(W - M, H * 0.42, H * 0.26, 'end');
-    s += T(W - M, H * 0.62, INSTA, { size: H * 0.042, fill: p.foot, anchor: 'end', w: 600 });
+    s += instaTag(W - M, H * 0.62, H * 0.042, p.foot, { anchor:'end' });
   }
   s += triBar(0, H - bar, W, bar);
   return svgWrap(W, H, uid, s, embed);
@@ -1353,6 +2250,11 @@ function renderWide(style, variant, uid, embed, W, H){
    13. Catalogue des visuels
    ===================================================================== */
 var POST = { w:1080, h:1080 }, STORY = { w:1080, h:1920 }, PAP = { w:1240, h:1754 };
+/* Supports de stand, au ratio exact du format imprimé :
+   kakémono roll-up 85 × 200 cm, pancarte A2 (42 × 59,4), chevalet A5 paysage. */
+var KAKEMONO = { w:1020, h:2400 };   /* 85 × 200 cm, ratio 1:2,353 */
+var PANCARTE = { w:1240, h:1754 };   /* A2 au même ratio que A4 */
+var CHEVALET = { w:1754, h:1240 };   /* A5 paysage, posé sur comptoir */
 
 var NAMES = {
   annonce:    "Annonce de campagne",
@@ -1363,11 +2265,13 @@ var NAMES = {
   comment:    "Les 3 étapes de l'adhésion",
   chiffres:   "MJA en chiffres",
   temoignage: "Parole de membre",
+  valeurs:    "Viens grandir — les valeurs",
+  teaser:     "Bande-annonce — ça commence",
   verso:      "Flyer verso — infos complètes"
 };
 
 var CARDS = [];
-var _nMosaic = 0, _nPhoto = 0;
+var _nMosaic = 0, _nPhoto = 0, _nBulle = 0, _nModerne = 0, _nTrio = 0;
 /** Enregistre une série de visuels.
     Chaque visuel « Mosaïque » démarre 6 photos plus loin que le précédent
     (donc un jeu de photos différent) ; chaque visuel « Photo » prend la
@@ -1376,8 +2280,12 @@ function add(group, dim, style, variants, extra){
   variants.forEach(function(variant){
     var c = { group:group, style:style, variant:variant, w:dim.w, h:dim.h,
               name: NAMES[variant] || variant, id:'c' + (CARDS.length + 1) };
-    if (style === 'mosaic')     { c.pidx = _nMosaic * 6; _nMosaic++; }
-    else if (style === 'photo') { c.pidx = _nPhoto;      _nPhoto++;  }
+    if (style === 'mosaic')      { c.pidx = _nMosaic * 6; _nMosaic++; }
+    else if (style === 'photo')  { c.pidx = _nPhoto;      _nPhoto++;  }
+    // Sans compteur propre, tous les visuels « bulle » afficheraient la même photo.
+    else if (style === 'bulle')  { c.pidx = _nBulle;      _nBulle++;  }
+    else if (style === 'moderne'){ c.pidx = _nModerne;    _nModerne++; }
+    else if (style === 'trio')   { c.pidx = _nTrio * 3;   _nTrio++;    }
     if (extra) Object.keys(extra).forEach(function(k){ c[k] = extra[k]; });
     CARDS.push(c);
   });
@@ -1391,6 +2299,11 @@ add('post', POST, 'typo',   ['annonce','readhesion','defi']);
 add('post', POST, 'blocs',  ['annonce','readhesion','defi']);
 add('post', POST, 'mosaic', ['defi','annonce']);
 add('post', POST, 'photo',  ['annonce','readhesion','temoignage']);
+add('post', POST, 'bulle',  ['annonce','valeurs']);
+add('post', POST, 'moderne',['annonce','valeurs']);
+add('post', POST, 'trio',   ['annonce','defi']);
+add('post', POST, 'blanc',  ['valeurs']);
+add('post', POST, 'navy',   ['valeurs']);
 
 /* ── Stories ────────────────────────────────────────────────────── */
 add('story', STORY, 'navy',   ['annonce','readhesion','defi','comment']);
@@ -1399,6 +2312,10 @@ add('story', STORY, 'pastel', ['annonce','benevole']);
 add('story', STORY, 'typo',   ['annonce','readhesion','defi']);
 add('story', STORY, 'blocs',  ['annonce','defi']);
 add('story', STORY, 'photo',  ['annonce','readhesion']);
+add('story', STORY, 'bulle',  ['annonce','valeurs']);
+add('story', STORY, 'moderne',['annonce','valeurs']);
+add('story', STORY, 'trio',   ['annonce','readhesion']);
+add('story', STORY, 'navy',   ['valeurs']);
 
 /* ── Affiches (ratio A → A5 / A4 / A3) ──────────────────────────── */
 add('affiche', PAP, 'blanc',  ['annonce','readhesion','defi','benevole'], { paper:true });
@@ -1408,6 +2325,10 @@ add('affiche', PAP, 'typo',   ['annonce','readhesion','defi'],            { pape
 add('affiche', PAP, 'blocs',  ['annonce','defi'],                         { paper:true });
 add('affiche', PAP, 'mosaic', ['defi'],                                   { paper:true });
 add('affiche', PAP, 'photo',  ['annonce','readhesion'],                   { paper:true });
+add('affiche', PAP, 'bulle',  ['annonce','valeurs','defi'],               { paper:true });
+add('affiche', PAP, 'moderne',['annonce','valeurs','defi'],               { paper:true });
+add('affiche', PAP, 'trio',   ['annonce','valeurs','readhesion'],         { paper:true });
+add('affiche', PAP, 'blanc',  ['valeurs'],                                { paper:true });
 
 /* ── Flyers A5 ──────────────────────────────────────────────────── */
 add('flyer', PAP, 'blanc',  ['annonce'], { paper:true, suffix:'recto' });
@@ -1416,6 +2337,13 @@ add('flyer', PAP, 'pastel', ['benevole'],{ paper:true, suffix:'recto' });
 add('flyer', PAP, 'mosaic', ['defi'],    { paper:true, suffix:'recto' });
 add('flyer', PAP, 'blocs',  ['annonce'], { paper:true, suffix:'recto' });
 add('flyer', PAP, 'photo',  ['annonce'], { paper:true, suffix:'recto' });
+add('flyer', PAP, 'moderne',['annonce'], { paper:true, suffix:'recto' });
+add('flyer', PAP, 'moderne',['valeurs'], { paper:true, suffix:'recto' });
+add('flyer', PAP, 'trio',   ['annonce'], { paper:true, suffix:'recto' });
+add('flyer', PAP, 'trio',   ['readhesion'], { paper:true, suffix:'recto' });
+add('flyer', PAP, 'bulle',  ['annonce'], { paper:true, suffix:'recto' });
+add('flyer', PAP, 'bulle',  ['valeurs'], { paper:true, suffix:'recto' });
+add('flyer', PAP, 'blanc',  ['valeurs'], { paper:true, suffix:'recto' });
 add('flyer', PAP, 'blanc',  ['verso'],   { paper:true, verso:true });
 
 /* ── Bannières ──────────────────────────────────────────────────── */
@@ -1423,22 +2351,50 @@ add('banner', { w:1640, h:624 }, 'navy',   ['annonce','defi'],  { wide:true, lab
 add('banner', { w:1640, h:624 }, 'blanc',  ['annonce'],         { wide:true, label:'Couverture Facebook' });
 add('banner', { w:1640, h:624 }, 'pastel', ['benevole'],        { wide:true, label:'Couverture Facebook' });
 add('banner', { w:1640, h:624 }, 'photo',  ['annonce'],         { wide:true, label:'Couverture Facebook' });
+add('banner', { w:1640, h:624 }, 'trio',   ['annonce'],         { label:'Couverture Facebook' });
 add('banner', { w:1200, h:630 }, 'navy',   ['annonce'],         { wide:true, label:'Image de partage' });
 add('banner', { w:1200, h:630 }, 'blanc',  ['readhesion'],      { wide:true, label:'Image de partage' });
 
+/* ── Tenue de stand ─────────────────────────────────────────────── */
+/* stand:true → gabarit « bulle », entièrement proportionnel : c'est le seul
+   qui tienne aussi bien un kakémono 1:2,35 qu'un chevalet paysage. */
+add('stand', KAKEMONO, 'navy',   ['annonce','defi'],    { paper:true, stand:true, label:'Kakémono 85 × 200 cm' });
+add('stand', KAKEMONO, 'bulle',  ['valeurs','annonce'], { paper:true, stand:true, label:'Kakémono 85 × 200 cm' });
+add('stand', KAKEMONO, 'blanc',  ['benevole'],          { paper:true, stand:true, label:'Kakémono 85 × 200 cm' });
+add('stand', PANCARTE, 'blanc',  ['annonce','valeurs'], { paper:true, stand:true, label:'Pancarte A2' });
+add('stand', PANCARTE, 'navy',   ['defi'],              { paper:true, stand:true, label:'Pancarte A2' });
+add('stand', KAKEMONO, 'moderne',['annonce','valeurs'],  { paper:true, label:'Kakémono 85 × 200 cm' });
+add('stand', PANCARTE, 'trio',   ['annonce'],            { paper:true, label:'Pancarte A2' });
+add('stand', CHEVALET, 'blanc',  ['annonce'],           { paper:true, stand:true, label:'Chevalet de comptoir A5' });
+add('stand', CHEVALET, 'navy',   ['readhesion'],        { paper:true, stand:true, label:'Chevalet de comptoir A5' });
+
 /* ── Vidéos motion design ───────────────────────────────────────── */
-add('motion', POST,               'navy',   ['annonce','defi'],   { motion:true, label:'Vidéo carrée' });
-add('motion', POST,               'blanc',  ['readhesion'],       { motion:true, label:'Vidéo carrée' });
-add('motion', POST,               'pastel', ['benevole'],         { motion:true, label:'Vidéo carrée' });
-add('motion', STORY,              'navy',   ['annonce','defi'],   { motion:true, label:'Vidéo story / reel' });
-add('motion', STORY,              'blanc',  ['readhesion'],       { motion:true, label:'Vidéo story / reel' });
-add('motion', { w:1920, h:1080 }, 'navy',   ['annonce'],          { motion:true, label:'Vidéo 16:9 (écran, YouTube)' });
+add('motion', POST,               'navy',   ['annonce','defi'],       { motion:true, label:'Vidéo carrée' });
+add('motion', POST,               'blanc',  ['readhesion','valeurs'], { motion:true, label:'Vidéo carrée' });
+add('motion', POST,               'pastel', ['benevole'],             { motion:true, label:'Vidéo carrée' });
+
+/* Reels Instagram : format vertical, photos à l'appui. */
+add('motion', STORY,              'navy',   ['annonce','defi'],       { motion:true, label:'Reel Instagram' });
+add('motion', STORY,              'blanc',  ['readhesion'],           { motion:true, label:'Reel Instagram' });
+add('motion', STORY,              'photo',  ['annonce','valeurs'],    { motion:true, label:'Reel Instagram — photos' });
+add('motion', STORY,              'mosaic', ['defi'],                 { motion:true, label:'Reel Instagram — mosaïque' });
+
+/* Bande-annonce : 2,5 s, à coller en intro ou en outro d'une autre vidéo. */
+add('motion', STORY,              'navy',   ['teaser'],               { motion:true, teaser:true, label:'Bande-annonce (intro / outro)' });
+add('motion', POST,               'navy',   ['teaser'],               { motion:true, teaser:true, label:'Bande-annonce (intro / outro)' });
+add('motion', { w:1920, h:1080 }, 'navy',   ['teaser'],               { motion:true, teaser:true, label:'Bande-annonce 16:9' });
+
+/* Format long : présentation posée de l'association et de ses valeurs. */
+add('motion', STORY,              'navy',   ['valeurs'],              { motion:true, long:true, label:'Présentation longue (12 s)' });
+add('motion', { w:1920, h:1080 }, 'navy',   ['annonce','valeurs'],    { motion:true, long:true, label:'Présentation longue 16:9 (12 s)' });
+add('motion', { w:1920, h:1080 }, 'blanc',  ['pourquoi'],             { motion:true, long:true, label:'Présentation longue 16:9 (12 s)' });
 
 var STYLE_LABEL = {
   blanc:'Fond blanc', navy:'Fond navy', typo:'Typo XXL', photo:'Photo',
-  pastel:'Pastel', mosaic:'Mosaïque', blocs:'Blocs'
+  pastel:'Pastel', mosaic:'Mosaïque', blocs:'Blocs', bulle:'Bulle photo',
+  moderne:'Moderne — bandeau & actions', trio:'Trio — triptyque photo'
 };
-var GROUP_LABEL = { post:'Post', story:'Story', affiche:'Affiche', flyer:'Flyer', banner:'Bannière', motion:'Vidéo' };
+var GROUP_LABEL = { post:'Post', story:'Story', affiche:'Affiche', flyer:'Flyer', banner:'Bannière', motion:'Vidéo', stand:'Stand' };
 
 /** Compose le SVG d'un visuel. `embed` = ressources en base64 (export). */
 function buildSvg(card, embed){
@@ -1446,6 +2402,9 @@ function buildSvg(card, embed){
   PIDX = card.pidx || 0;
   EMBED_PHOTOS = !!embed;
   if (card.verso)  return renderVerso(card.style, card.variant, uid, embed);
+  if (card.style === 'moderne') return renderModerne(card.style, card.variant, uid, embed, card.w, card.h);
+  if (card.style === 'trio')    return renderTrio(card.style, card.variant, uid, embed, card.w, card.h);
+  if (card.style === 'bulle' || card.stand) return renderBulle(card.style, card.variant, uid, embed, card.w, card.h);
   if (card.style === 'mosaic') return renderMosaic(card.style, card.variant, uid, embed, card.w, card.h);
   if (card.style === 'blocs' && !card.wide) return renderBlocs(card.style, card.variant, uid, embed, card.w, card.h);
   if (card.wide)   return renderWide(card.style, card.variant, uid, embed, card.w, card.h);
@@ -1460,7 +2419,17 @@ function buildSvg(card, embed){
    l'image à l'instant t ∈ [0,1]. Le même code sert à l'aperçu animé dans
    la page et à l'encodage de la vidéo, image par image.
    ===================================================================== */
-var MOTION_DUR = 5.0;   /* secondes d'animation */
+var MOTION_DUR = 5.0;   /* secondes d'animation, par défaut */
+/**
+ * Durée d'une vidéo donnée. Une bande-annonce doit tenir en intro ou en outro
+ * d'un autre montage : elle est courte. Une présentation, à l'inverse, doit
+ * laisser le temps de lire.
+ */
+function motionDur(card){
+  if (card && card.teaser) return 2.5;
+  if (card && card.long)   return 12.0;
+  return MOTION_DUR;
+}
 var MOTION_HOLD = 0.7;  /* maintien de la dernière image */
 var MOTION_FPS = 25;
 
@@ -1488,38 +2457,34 @@ function motionFrame(card, t, embed){
   var style = card.style, p = pal(style), v = V(card.variant);
   PIDX = card.pidx || 0;
   EMBED_PHOTOS = !!embed;
-  /* Unité typographique commune : la plus petite dimension. La composition
-     garde ainsi les mêmes proportions en carré, en 9:16 et en 16:9. */
-  var U = Math.min(W, H), cx = W / 2, M = W * 0.07;
+  var cx = W / 2, M = W * 0.07;
+  var lien = OPT.url.replace(/^https?:\/\//, '');
   var s = bgMarkup(style, W, H, uid, embed);
 
-  /* ── Mesures du bloc de contenu, pour le centrer verticalement ── */
-  var lg = U * 0.155;
-  var orgS = U * 0.030, tagS = U * 0.022, kickS = U * 0.026;
-  var lines = v.t, tmax = U * 0.135, tsz = tmax;
-  for (var i = 0; i < lines.length; i++) tsz = Math.min(tsz, fitSize(lines[i], W * 0.84, tsz, 800, FAM_AG));
-  var lh = tsz * 1.06;
-  var seasS = U * 0.034;
-
-  /* Pastilles : on réduit la taille jusqu'à ce que la rangée tienne. */
-  var pills = v.pills || [], psz = U * 0.024, gapP = W * 0.014, totP = 0;
-  for (var g = 0; g < 8; g++) {
-    totP = 0;
-    for (var a = 0; a < pills.length; a++) totP += pillWidth(pills[a], psz) + gapP;
-    totP -= gapP;
-    if (totP <= W * 0.90 || psz < U * 0.012) break;
-    psz *= 0.93;
+  /**
+   * Mesures dérivées d'une unité U. On les recalcule en réduisant U jusqu'à ce
+   * que la pile tienne dans la hauteur : sans cette boucle, les formats les
+   * plus courts (carré, 16:9) poussaient le lien et le compte hors du cadre.
+   */
+  function metrics(U){
+    var m = { U:U, lg:U * 0.150, orgS:U * 0.030, tagS:U * 0.022, kickS:U * 0.026, seasS:U * 0.034 };
+    m.tsz = U * 0.132;
+    for (var i = 0; i < v.t.length; i++) m.tsz = Math.min(m.tsz, fitSize(v.t[i], W * 0.84, m.tsz, 800, FAM_AG));
+    m.lh = m.tsz * 1.06;
+    m.infoS = U * 0.023;
+    m.ctaS  = U * 0.058;
+    m.urlS  = U * 0.028;
+    m.instaS = U * 0.024;
+    m.co = calloutType(0, 0, W - 2 * M, v.ctaShort || v.cta, null, p.accent, p.fg, U);
+    m.total = m.lg + U * 0.060 + m.tagS * 1.5 + U * 0.072
+            + U * 0.108 + (v.t.length - 1) * m.lh + U * 0.082
+            + U * 0.040 + U * 0.060 + m.co.h + U * 0.058 + U * 0.046;
+    return m;
   }
-  var pillH = pills.length ? psz * 2.3 : 0;
-
-  var label = v.ctaShort || v.cta, ctaS = U * 0.036, ctaH = U * 0.088;
-  var ctaW = Math.min(W - 2 * M, measure(label, ctaS, 800, FAM_AG) + ctaS * 2.6);
-  var urlS = U * 0.026, instaS = U * 0.024;
-
-  var total = lg + U * 0.062 + tagS * 1.5 + U * 0.075
-            + U * 0.11 + (lines.length - 1) * lh + U * 0.085
-            + U * 0.035 + pillH + U * 0.075 + ctaH + U * 0.055 + U * 0.048;
-  var y = Math.max(H * 0.05, (H - total) * 0.46);
+  var m = metrics(Math.min(W, H));
+  for (var pass = 0; pass < 5 && m.total > H * 0.90; pass++) m = metrics(m.U * (H * 0.90) / m.total);
+  var U = m.U;
+  var y = Math.max(H * 0.045, (H - m.total) * 0.45);
 
   /* Filet tricolore : essuyage depuis la gauche (haut) et la droite (bas). */
   var bar = U * 0.013, wipe = seg(t, 0, 0.32);
@@ -1530,76 +2495,68 @@ function motionFrame(card, t, embed){
 
   /* 1. Logo — zoom léger + fondu */
   var a1 = seg(t, 0.00, 0.20);
-  s += anim(logoImg(cx - lg / 2, y, lg, embed, style === 'navy' || style === 'photo'),
-            { op:a1, k:0.72 + 0.28 * pop(a1), cx:cx, cy:y + lg / 2 });
-  y += lg;
+  s += anim(logoImg(cx - m.lg / 2, y, m.lg, embed, style === 'navy' || style === 'photo'),
+            { op:a1, k:0.72 + 0.28 * pop(a1), cx:cx, cy:y + m.lg / 2 });
+  y += m.lg;
 
   /* 2. Identité */
   var a2 = seg(t, 0.10, 0.28);
-  y += U * 0.062;
-  s += anim(TFit(cx, y, ORG, W * 0.86, { size:orgS, fill:p.fg, anchor:'middle', ls:orgS * 0.055 }), { op:a2, dy:(1 - a2) * U * 0.03 });
-  y += tagS * 1.5;
-  s += anim(TFit(cx, y, TAG, W * 0.86, { size:tagS, w:500, fill:p.fg2, anchor:'middle' }), { op:a2, dy:(1 - a2) * U * 0.03 });
+  y += U * 0.060;
+  s += anim(TFit(cx, y, ORG, W * 0.86, { size:m.orgS, fill:p.fg, anchor:'middle', ls:m.orgS * 0.055 }), { op:a2, dy:(1 - a2) * U * 0.03 });
+  y += m.tagS * 1.5;
+  s += anim(TFit(cx, y, TAG, W * 0.86, { size:m.tagS, w:500, fill:p.fg2, anchor:'middle' }), { op:a2, dy:(1 - a2) * U * 0.03 });
 
   /* 3. Accroche */
   var a3 = seg(t, 0.20, 0.36);
-  y += U * 0.075;
-  s += anim(TFit(cx, y, v.kicker, W * 0.86, { size:kickS, fill:p.kicker, anchor:'middle', ls:kickS * 0.17 }),
+  y += U * 0.072;
+  s += anim(TFit(cx, y, v.kicker, W * 0.86, { size:m.kickS, fill:p.kicker, anchor:'middle', ls:m.kickS * 0.17 }),
             { op:a3, dy:(1 - a3) * U * 0.025 });
 
   /* 4. Titre en cascade + soulignement jaune qui se déploie */
-  y += U * 0.11;
-  var lastY = y + (lines.length - 1) * lh;
-  var uw = measure(lines[lines.length - 1], tsz, 800, FAM_AG), au = seg(t, 0.50, 0.66);
-  s += '<rect x="' + (cx - uw / 2) + '" y="' + (lastY + tsz * 0.14) + '" width="' + (uw * au)
-     + '" height="' + (tsz * 0.13) + '" rx="' + (tsz * 0.05) + '" fill="' + C.yellow + '"/>';
-  for (var j = 0; j < lines.length; j++) {
+  y += U * 0.108;
+  var lastY = y + (v.t.length - 1) * m.lh;
+  var uw = measure(v.t[v.t.length - 1], m.tsz, 800, FAM_AG), au = seg(t, 0.50, 0.66);
+  s += '<rect x="' + (cx - uw / 2) + '" y="' + (lastY + m.tsz * 0.14) + '" width="' + (uw * au)
+     + '" height="' + (m.tsz * 0.13) + '" fill="' + C.yellow + '"/>';
+  for (var j = 0; j < v.t.length; j++) {
     var aj = seg(t, 0.28 + j * 0.08, 0.46 + j * 0.08);
-    s += anim(T(cx, y + j * lh, lines[j], { size:tsz, f:'ag', w:800, fill:p.fg, anchor:'middle' }),
+    s += anim(T(cx, y + j * m.lh, v.t[j], { size:m.tsz, f:'ag', w:800, fill:p.fg, anchor:'middle' }),
               { op:aj, dy:(1 - aj) * U * 0.045 });
   }
   y = lastY;
 
   /* 5. Saison */
   var a5 = seg(t, 0.46, 0.60);
-  y += U * 0.085;
-  s += anim(T(cx, y, OPT.season, { size:seasS, fill:p.alt, anchor:'middle', f:'ag', w:800, ls:2 }),
+  y += U * 0.082;
+  s += anim(T(cx, y, OPT.season, { size:m.seasS, fill:p.alt, anchor:'middle', f:'ag', w:800, ls:2 }),
             { op:a5, k:0.86 + 0.14 * pop(a5), cx:cx, cy:y });
 
-  /* 6. Pastilles, une par une */
-  y += U * 0.035;
-  var px = cx - totP / 2;
-  for (var b = 0; b < pills.length; b++) {
-    var ab = seg(t, 0.54 + b * 0.05, 0.66 + b * 0.05), pw = pillWidth(pills[b], psz);
-    s += anim(pill(px, y, pills[b], psz, p.pillBg, p.pillFg),
-              { op:ab, k:0.72 + 0.28 * pop(ab), cx:px + pw / 2, cy:y + psz * 1.15 });
-    px += pw + gapP;
-  }
-  y += pillH;
+  /* 6. Ligne d'informations (une seule ligne : plus d'étiquettes arrondies) */
+  y += U * 0.040;
+  s += anim(infoLine(cx, y, v.pills || [], W * 0.88, m.infoS, p.fg2, 'middle'), { op:seg(t, 0.56, 0.70) });
 
-  /* 7. Appel à l'action (pulsation discrète en fin d'animation) */
-  var a7 = seg(t, 0.68, 0.82), puls = t > 0.86 ? 1 + 0.018 * Math.sin((t - 0.86) * 26) : 1;
-  y += U * 0.075;
-  s += anim(cta(cx - ctaW / 2, y, ctaW, ctaH, label, p.ctaBg, p.ctaFg, ctaS),
-            { op:a7, k:(0.86 + 0.14 * pop(a7)) * puls, cx:cx, cy:y + ctaH / 2 });
+  /* 7. Appel à l'action typographique, centré, avec pulsation discrète */
+  var a7 = seg(t, 0.68, 0.82), puls = t > 0.86 ? 1 + 0.014 * Math.sin((t - 0.86) * 26) : 1;
+  y += U * 0.060;
+  var co = calloutType(cx - m.co.w / 2, y, W - 2 * M, v.ctaShort || v.cta, null, p.accent, p.fg, U);
+  s += anim(co.svg, { op:a7, k:(0.9 + 0.1 * pop(a7)) * puls, cx:cx, cy:y + co.h / 2 });
 
-  /* 8. QR, aligné sur le bouton */
+  /* 8. QR, aligné sur l'appel à l'action */
   if (OPT.qr && ASSETS.qr) {
-    var qs = U * 0.115, qx = W - M - qs, qy = y + ctaH / 2 - qs / 2, aq = seg(t, 0.84, 0.96);
+    var qs = U * 0.115, qx = W - M - qs, qy = y + co.h / 2 - qs / 2, aq = seg(t, 0.84, 0.96);
     s += anim('<rect x="' + (qx - qs * 0.1) + '" y="' + (qy - qs * 0.1) + '" width="' + (qs * 1.2) + '" height="' + (qs * 1.2)
-            + '" rx="' + (qs * 0.14) + '" fill="#FFFFFF"/>'
+            + '" fill="#FFFFFF"/>'
             + '<image x="' + qx + '" y="' + qy + '" width="' + qs + '" height="' + qs
             + '" href="' + ASSETS.qr + '" xlink:href="' + ASSETS.qr + '"/>',
               { op:aq, k:0.7 + 0.3 * pop(aq), cx:qx + qs / 2, cy:qy + qs / 2 });
   }
-  y += ctaH;
+  y += co.h;
 
   /* 9. Lien + réseau */
-  y += U * 0.055;
-  s += anim(TFit(cx, y, OPT.url.replace(/^https?:\/\//, ''), W * 0.8, { size:urlS, fill:p.accent, anchor:'middle', w:700 }),
-            { op:seg(t, 0.78, 0.92) });
-  y += U * 0.048;
-  s += anim(T(cx, y, INSTA, { size:instaS, fill:p.foot, anchor:'middle', w:600 }), { op:seg(t, 0.88, 1.0) });
+  y += U * 0.058;
+  s += anim(TFit(cx, y, lien, W * 0.8, { size:m.urlS, fill:p.accent, anchor:'middle', w:700 }), { op:seg(t, 0.78, 0.92) });
+  y += U * 0.046;
+  s += anim(instaTag(cx, y, m.instaS, p.foot, { anchor:'middle' }), { op:seg(t, 0.88, 1.0) });
 
   return svgWrap(W, H, uid, s, embed);
 }
@@ -1764,7 +2721,7 @@ async function exportVideo(card, onProgress){
   var mime = pickVideoMime();
   if (!mime) throw new Error("Ce navigateur ne sait pas enregistrer de vidéo (essaie Chrome ou Edge).");
 
-  var W = card.w, H = card.h, n = Math.round(MOTION_FPS * MOTION_DUR), frames = [];
+  var W = card.w, H = card.h, n = Math.round(MOTION_FPS * motionDur(card)), frames = [];
   var work = document.createElement('canvas');
   for (var i = 0; i < n; i++) {
     var cv = await rasterize(motionFrame(card, i / (n - 1), true), W, H, work);
@@ -1919,7 +2876,7 @@ function playPreview(card, el){
   var t0 = performance.now(), last = -1;
   playing = { id:card.id, raf:0 };
   (function step(now){
-    var t = Math.min(1, (now - t0) / (MOTION_DUR * 1000));
+    var t = Math.min(1, (now - t0) / (motionDur(card) * 1000));
     if (t - last > 0.028 || t === 1) { el.innerHTML = motionFrame(card, t, false); last = t; }
     if (t < 1) playing.raf = requestAnimationFrame(step);
     else playing = null;
@@ -2016,6 +2973,14 @@ document.getElementById('opt-season').addEventListener('input', function(){ OPT.
 document.getElementById('opt-url').addEventListener('input', function(){ OPT.url = this.value.trim(); onOptChange(true); });
 document.getElementById('opt-price').addEventListener('change', function(){ OPT.price = this.checked; refreshArt(); });
 document.getElementById('opt-qr').addEventListener('change', function(){ OPT.qr = this.checked; refreshArt(); });
+var champActions = document.getElementById('opt-actions');
+if (champActions) {
+  champActions.value = actionsEnTexte(ACTIONS_DEFAUT);
+  champActions.addEventListener('input', function(){
+    ACTIONS = lireActions(this.value);
+    refreshArt();
+  });
+}
 document.getElementById('opt-qrcolor').addEventListener('change', function(){
   OPT.qrColor = this.value; makeQr(); refreshArt();
 });
@@ -2057,6 +3022,138 @@ function makeQr(){
     console.warn('QR indisponible', e);
     ASSETS.qr = null;
   }
+}
+
+/** ===================================================================
+    AUDIT DE MISE EN PAGE
+    Passe chaque visuel au crible pour détecter, sans œil humain :
+      · les éléments qui sortent du cadre (donc coupés à l'export) ;
+      · les textes qui se chevauchent.
+    Les cercles décoratifs (anneaux du logo, halos) débordent volontairement :
+    ils sont ignorés, comme tout ce qui vit dans un <defs>.
+    Accessible via ?audit=1.
+    =================================================================== */
+function textBox(el){
+  var size = parseFloat(el.getAttribute('font-size')) || 0;
+  var str  = el.textContent || '';
+  if (!size || !str.trim()) return null;
+  var weight = parseFloat(el.getAttribute('font-weight')) || 400;
+  var fam    = (el.getAttribute('font-family') || '').indexOf('AllRound') === 0 ? FAM_AG : FAM_GS;
+  var ls     = parseFloat(el.getAttribute('letter-spacing')) || 0;
+  var w = measure(str, size, weight, fam) + ls * Math.max(0, str.length - 1);
+  var x = parseFloat(el.getAttribute('x')) || 0;
+  var y = parseFloat(el.getAttribute('y')) || 0;
+  var a = el.getAttribute('text-anchor');
+  var x0 = a === 'middle' ? x - w / 2 : (a === 'end' ? x - w : x);
+  /* Hauteur utile approchée : hampes hautes et basses de la police. */
+  return { x0:x0, x1:x0 + w, y0:y - size * 0.78, y1:y + size * 0.24, s:str, size:size };
+}
+
+function auditCard(card){
+  var svg = svgFor(card, false);
+  var doc = new DOMParser().parseFromString(svg, 'image/svg+xml');
+  if (doc.querySelector('parsererror')) return ['SVG invalide'];
+  var W = card.w, H = card.h, pb = [], texts = [];
+  var TOL = 2;
+
+  function inDefs(el){
+    for (var n = el.parentNode; n && n.nodeType === 1; n = n.parentNode) {
+      var t = (n.tagName || '').toLowerCase();
+      if (t === 'defs' || t === 'pattern' || t === 'clippath') return true;
+    }
+    return false;
+  }
+
+  Array.prototype.forEach.call(doc.querySelectorAll('text'), function(el){
+    if (inDefs(el)) return;
+    var b = textBox(el);
+    if (!b) return;
+    texts.push(b);
+    var d = [];
+    if (b.x0 < -TOL) d.push('sort à gauche de ' + Math.round(-b.x0) + 'px');
+    if (b.x1 > W + TOL) d.push('dépasse à droite de ' + Math.round(b.x1 - W) + 'px');
+    if (b.y0 < -TOL) d.push('sort en haut');
+    if (b.y1 > H + TOL) d.push('dépasse en bas de ' + Math.round(b.y1 - H) + 'px');
+    if (d.length) pb.push('TEXTE « ' + b.s.slice(0, 34) + ' » ' + d.join(', '));
+  });
+
+  /* Rectangles et images : un fond peut faire exactement W×H, pas plus. */
+  Array.prototype.forEach.call(doc.querySelectorAll('rect,image'), function(el){
+    if (inDefs(el)) return;
+    var x = parseFloat(el.getAttribute('x')) || 0, y = parseFloat(el.getAttribute('y')) || 0;
+    var w = parseFloat(el.getAttribute('width')) || 0, h = parseFloat(el.getAttribute('height')) || 0;
+    if (!w || !h) return;
+    var d = [];
+    if (x < -TOL) d.push('x=' + Math.round(x));
+    if (y < -TOL) d.push('y=' + Math.round(y));
+    if (x + w > W + TOL) d.push('droite +' + Math.round(x + w - W));
+    if (y + h > H + TOL) d.push('bas +' + Math.round(y + h - H));
+    if (d.length) pb.push(el.tagName.toUpperCase() + ' hors cadre (' + d.join(', ') + ')');
+  });
+
+  /* Masquage : un rectangle ou une image opaque peint APRÈS un texte le
+     recouvre. Les fonds sont dessinés en premier, ils ne remontent donc pas. */
+  var flux = doc.querySelectorAll('text,rect,image'), vus = [];
+  Array.prototype.forEach.call(flux, function(el){
+    if (inDefs(el)) return;
+    var tag = el.tagName.toLowerCase();
+    if (tag === 'text') {
+      var b = textBox(el);
+      if (b) vus.push(b);
+      return;
+    }
+    var op = parseFloat(el.getAttribute('opacity'));
+    if (!isNaN(op) && op < 0.85) return;                 /* voile translucide : normal */
+    var fill = (el.getAttribute('fill') || '').toLowerCase();
+    if (fill === 'none' || fill.indexOf('rgba') === 0) return;
+    var x = parseFloat(el.getAttribute('x')) || 0, y = parseFloat(el.getAttribute('y')) || 0;
+    var w = parseFloat(el.getAttribute('width')) || 0, h = parseFloat(el.getAttribute('height')) || 0;
+    if (w >= W - 2 && h >= H - 2) return;                /* fond plein cadre */
+    vus.forEach(function(b){
+      var ox = Math.min(b.x1, x + w) - Math.max(b.x0, x);
+      var oy = Math.min(b.y1, y + h) - Math.max(b.y0, y);
+      if (ox <= 1 || oy <= 1) return;
+      var aire = (b.x1 - b.x0) * (b.y1 - b.y0);
+      if (aire > 0 && (ox * oy) / aire > 0.35) {
+        pb.push('MASQUÉ : « ' + b.s.slice(0, 26) + ' » recouvert par un ' + tag.toUpperCase());
+      }
+    });
+  });
+
+  /* Chevauchements texte / texte : on ne signale qu'un recouvrement net. */
+  for (var i = 0; i < texts.length; i++) {
+    for (var j = i + 1; j < texts.length; j++) {
+      var a = texts[i], b = texts[j];
+      var ox = Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0);
+      var oy = Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0);
+      if (ox <= 1 || oy <= 1) continue;
+      var aire = ox * oy;
+      var mini = Math.min((a.x1 - a.x0) * (a.y1 - a.y0), (b.x1 - b.x0) * (b.y1 - b.y0));
+      if (mini > 0 && aire / mini > 0.22) {
+        pb.push('CHEVAUCHEMENT « ' + a.s.slice(0, 22) + ' » / « ' + b.s.slice(0, 22) + ' »');
+      }
+    }
+  }
+  return pb;
+}
+
+async function auditAll(){
+  var box = document.createElement('pre');
+  box.id = 'selftest';
+  box.style.cssText = 'padding:16px;font-size:12px;white-space:pre-wrap;background:#111;color:#0f0;margin:0';
+  box.textContent = 'AUDIT en cours…';
+  document.body.insertBefore(box, document.body.firstChild);
+  var NL = String.fromCharCode(10), lines = [], nb = 0;
+  for (var i = 0; i < CARDS.length; i++) {
+    var c = CARDS[i], pb = auditCard(c);
+    if (pb.length) {
+      nb += pb.length;
+      lines.push('── ' + c.id + ' ' + c.group + '/' + c.style + '/' + c.variant);
+      pb.forEach(function(m){ lines.push('   ' + m); });
+    }
+  }
+  box.textContent = 'AUDIT ' + nb + ' probleme(s) sur ' + CARDS.length + ' visuels' + NL + lines.join(NL);
+  return lines;
 }
 
 /** Auto-test : tente de rasteriser chaque visuel et rapporte les échecs.
@@ -2116,6 +3213,7 @@ async function boot(){
   setupLazy();
 
   if (qs.get('selftest')) { window.__selftest = selfTest(); }
+  if (qs.get('audit')) { window.__audit = auditAll(); }
   /* Ressources base64 pour l'export : un SVG rasterisé dans un canvas n'a
      accès à aucune ressource externe, il faut donc tout embarquer. */
   try {

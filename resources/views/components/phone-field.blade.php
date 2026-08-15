@@ -39,8 +39,8 @@
         @endforeach
     </select>
     <span class="w-px bg-gray-200 my-2"></span>
-    <input type="tel" name="{{ $name }}" value="{{ old($name, $value) }}" @if($required) required @endif
-        aria-label="Numéro de téléphone" autocomplete="tel-national"
+    <input type="tel" name="{{ $name }}" value="{{ \App\Support\Telephone::formater(old($name, $value)) }}" @if($required) required @endif
+        aria-label="Numéro de téléphone" autocomplete="tel-national" inputmode="numeric" maxlength="14"
         class="pf-number flex-1 bg-transparent border-0 px-3 py-3 text-sm outline-none min-w-0"
         placeholder="{{ $placeholder }}">
 </div>
@@ -48,16 +48,73 @@
 @once
 @push('scripts')
 <script>
-document.querySelectorAll('.phone-field').forEach(function (root) {
-    var select = root.querySelector('.pf-code');
-    var flag   = root.querySelector('.pf-flag');
-    function sync() {
-        var opt = select.options[select.selectedIndex];
-        flag.innerHTML = opt ? '<img src="' + opt.dataset.flag + '" alt="" style="width:20px;height:14px;object-fit:cover;border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,.06)">' : '';
+(function () {
+    /**
+     * Met le numéro au format « 696 43 88 21 » : trois chiffres, puis des paires.
+     * Le regroupement est appliqué pendant la saisie — sans quoi le champ se lit
+     * comme un bloc de chiffres collés alors que le placeholder montre l'inverse.
+     */
+    function grouper(chiffres) {
+        chiffres = chiffres.slice(0, 10);
+        if (chiffres.length <= 3) { return chiffres; }
+
+        var morceaux = [chiffres.slice(0, 3)];
+        for (var i = 3; i < chiffres.length; i += 2) {
+            morceaux.push(chiffres.slice(i, i + 2));
+        }
+        return morceaux.join(' ');
     }
-    select.addEventListener('change', sync);
-    sync();
-});
+
+    function chiffresAvant(texte, position) {
+        return (texte.slice(0, position).match(/\d/g) || []).length;
+    }
+
+    /** Position du caret juste après le n-ième chiffre du texte formaté. */
+    function positionApres(texte, nbChiffres) {
+        if (nbChiffres <= 0) { return 0; }
+
+        var vus = 0;
+        for (var i = 0; i < texte.length; i++) {
+            if (/\d/.test(texte[i])) {
+                vus++;
+                if (vus === nbChiffres) { return i + 1; }
+            }
+        }
+        return texte.length;
+    }
+
+    function formater(champ) {
+        var avant = chiffresAvant(champ.value, champ.selectionStart === null ? champ.value.length : champ.selectionStart);
+        var formate = grouper((champ.value.match(/\d/g) || []).join(''));
+
+        if (formate === champ.value) { return; }
+
+        champ.value = formate;
+
+        // Le caret suit le chiffre qu'il précédait, pas la position brute :
+        // sinon toute correction en milieu de numéro renvoie le curseur à la fin.
+        try { champ.setSelectionRange(positionApres(formate, avant), positionApres(formate, avant)); } catch (e) {}
+    }
+
+    document.querySelectorAll('.phone-field').forEach(function (root) {
+        var select = root.querySelector('.pf-code');
+        var flag   = root.querySelector('.pf-flag');
+        var numero = root.querySelector('.pf-number');
+
+        function sync() {
+            var opt = select.options[select.selectedIndex];
+            flag.innerHTML = opt ? '<img src="' + opt.dataset.flag + '" alt="" style="width:20px;height:14px;object-fit:cover;border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,.06)">' : '';
+        }
+        select.addEventListener('change', sync);
+        sync();
+
+        if (numero) {
+            numero.addEventListener('input', function () { formater(this); });
+            numero.addEventListener('blur',  function () { formater(this); });
+            formater(numero);
+        }
+    });
+})();
 </script>
 @endpush
 @endonce

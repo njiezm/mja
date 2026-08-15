@@ -28,7 +28,7 @@
                 </label>
                 <input type="text" name="nom" value="{{ old('nom', $partenaire->nom ?? '') }}" required
                     class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-mja-blue"
-                    placeholder="Région Martinique, Ville de Fort-de-France…">
+                    placeholder="Collectivité Territoriale de Martinique, ville, entreprise…">
             </div>
 
             {{-- URL --}}

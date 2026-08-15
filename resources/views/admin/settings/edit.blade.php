@@ -8,7 +8,9 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
 
-        {{-- Paiement en ligne / Stripe --}}
+        {{-- Colonne gauche : Stripe + coordonnées bancaires --}}
+        <div class="space-y-6">
+
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div class="flex h-1"><div class="flex-1 bg-mja-blue"></div><div class="flex-1 bg-mja-yellow"></div><div class="flex-1 bg-mja-red"></div></div>
             <div class="p-6 space-y-5">
@@ -31,6 +33,7 @@
                     <input type="text" name="stripe_public_key" value="{{ old('stripe_public_key', $settings['stripe_public_key']) }}" placeholder="pk_live_… ou pk_test_…"
                         class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-mja-blue">
                 </div>
+                @if($settings['peut_modifier_secrets'])
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-1.5">
                         Clé secrète (Secret key)
@@ -48,8 +51,40 @@
                     <input type="password" name="stripe_webhook_secret" autocomplete="new-password" placeholder="{{ $settings['stripe_webhook_set'] ? '•••••••••••• (inchangé)' : 'whsec_…' }}"
                         class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-mja-blue">
                 </div>
+                @else
+                {{-- Les clés secrètes engagent les encaissements : seul le super
+                     admin peut les modifier. Le reste de la page est ouvert. --}}
+                <div class="bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-xs text-gray-500 flex gap-2">
+                    <i class="fas fa-lock mt-0.5 shrink-0"></i>
+                    <span>
+                        Clé secrète {{ $settings['stripe_secret_set'] ? 'définie ✔' : 'non définie' }},
+                        webhook {{ $settings['stripe_webhook_set'] ? 'défini ✔' : 'non défini' }}.
+                        Leur modification est réservée au super administrateur.
+                    </span>
+                </div>
+                @endif
             </div>
         </div>
+
+            {{-- Coordonnées bancaires --}}
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-4">
+                <h2 class="font-display font-bold text-gray-900"><i class="fas fa-building-columns text-mja-blue mr-1"></i> Coordonnées bancaires</h2>
+                <p class="text-[11px] text-gray-400 -mt-2">Reprises automatiquement dans les emails de confirmation et de relance pour les règlements par virement.</p>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="sm:col-span-2">
+                        <label for="s-iban" class="block text-sm font-semibold text-gray-700 mb-1.5">IBAN</label>
+                        <input type="text" id="s-iban" name="iban" value="{{ old('iban', $settings['iban']) }}" placeholder="FR76 …"
+                            class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-mja-blue">
+                    </div>
+                    <div>
+                        <label for="s-bic" class="block text-sm font-semibold text-gray-700 mb-1.5">BIC</label>
+                        <input type="text" id="s-bic" name="bic" value="{{ old('bic', $settings['bic']) }}" placeholder="XXXXFRPP"
+                            class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-mja-blue">
+                    </div>
+                </div>
+            </div>
+
+        </div>{{-- /colonne gauche --}}
 
         {{-- Colonne droite : Cotisation + Notifications --}}
         <div class="space-y-6">
@@ -60,6 +95,51 @@
                     <label class="block text-sm font-semibold text-gray-700 mb-1.5">Montant de la cotisation (€) <span class="text-red-500">*</span></label>
                     <input type="number" step="0.01" min="0" name="cotisation_amount" value="{{ old('cotisation_amount', $settings['cotisation_amount']) }}" required
                         class="w-40 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-mja-blue">
+                    <p class="text-[11px] text-gray-400 mt-1.5">Montant que l'association doit percevoir, net de frais.</p>
+                </div>
+
+                <div class="border-t border-gray-50 pt-4">
+                    <label class="flex items-start gap-3 cursor-pointer">
+                        <input type="hidden" name="stripe_fee_passthrough" value="0">
+                        <input type="checkbox" name="stripe_fee_passthrough" value="1"
+                               {{ $settings['stripe_fee_passthrough'] ? 'checked' : '' }}
+                               class="mt-0.5 w-5 h-5 rounded text-mja-blue shrink-0">
+                        <span>
+                            <span class="block text-sm font-semibold text-gray-700">Frais de transaction à la charge du payeur</span>
+                            <span class="block text-[11px] text-gray-400 mt-0.5">
+                                Le règlement par carte est majoré de la commission Stripe, pour que l'association
+                                encaisse bien la cotisation entière. Sans cela, la commission est prélevée dessus.
+                            </span>
+                        </span>
+                    </label>
+
+                    <div class="grid grid-cols-3 gap-3 mt-4 ml-8">
+                        @foreach([
+                            ['stripe_fee_percent', 'Commission (%)', '0.01', '1.5'],
+                            ['stripe_fee_fixed', 'Part fixe (€)', '0.01', '0.25'],
+                            ['stripe_fee_round_to', 'Arrondi (€)', '0.01', '0.05'],
+                        ] as [$champ, $label, $pas, $exemple])
+                        <div>
+                            <label for="s-{{ $champ }}" class="block text-xs font-semibold text-gray-600 mb-1">{{ $label }}</label>
+                            <input type="number" id="s-{{ $champ }}" name="{{ $champ }}" step="{{ $pas }}" min="0" required
+                                   value="{{ old($champ, $settings[$champ]) }}" placeholder="{{ $exemple }}"
+                                   class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-mja-blue">
+                        </div>
+                        @endforeach
+                    </div>
+
+                    <div class="mt-4 ml-8 bg-mja-blue/5 border border-mja-blue/15 rounded-xl px-4 py-3 text-sm">
+                        <span class="text-gray-600">Débité par carte aujourd'hui :</span>
+                        <strong class="text-mja-dark">{{ \App\Support\Cotisation::carteFormatee() }}</strong>
+                        <span class="text-gray-500">
+                            ({{ \App\Support\Cotisation::formatee() }} de cotisation
+                            + {{ \App\Support\Cotisation::fraisFormates() }} de frais)
+                        </span>
+                    </div>
+                    <p class="text-[11px] text-gray-400 mt-2 ml-8">
+                        Valeurs par défaut : tarification Stripe cartes européennes (1,5 % + 0,25 €).
+                        Les cartes hors zone euro coûtent davantage — l'arrondi absorbe une partie de cet écart.
+                    </p>
                 </div>
             </div>
 
@@ -68,7 +148,7 @@
                 <h2 class="font-display font-bold text-gray-900"><i class="fas fa-bell text-mja-red mr-1"></i> Emails de notification</h2>
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-1.5">Destinataires des notifications admin</label>
-                    <textarea name="notification_emails" rows="4" placeholder="contact@mja-martinique.com&#10;secretariat@mja-martinique.com"
+                    <textarea name="notification_emails" rows="4" placeholder="{{ config('mja.contact_email') }}&#10;secretariat@exemple.com"
                         class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-mja-blue">{{ old('notification_emails', $settings['notification_emails']) }}</textarea>
                     <p class="text-[11px] text-gray-400 mt-1.5">Une adresse par ligne (ou séparées par des virgules). Ces adresses reçoivent les notifications : nouvelle adhésion, nouveau message de contact, etc. Si vide, l'adresse par défaut est utilisée.</p>
                 </div>

@@ -37,7 +37,7 @@
             <a href="{{ route('articles.show', $article) }}" class="group bg-white rounded-2xl shadow-sm card-hover overflow-hidden border border-gray-100 {{ $accents[$i % 3] }}">
                 @if($article->image)
                 <div class="aspect-video bg-gray-100 overflow-hidden">
-                    <img src="{{ asset("storage/{$article->image}") }}" alt="{{ $article->titre }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                    <img src="{{ $article->imageUrl() }}" alt="{{ $article->titre }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                 </div>
                 @else
                 <div class="aspect-video bg-gradient-to-br from-mja-dark to-mja-blue/80 flex items-center justify-center">

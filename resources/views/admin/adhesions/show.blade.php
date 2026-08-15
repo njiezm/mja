@@ -72,10 +72,21 @@
                         <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Période</div>
                         <div class="font-semibold text-gray-900">{{ $adhesion->period?->label ?? '—' }}</div>
                     </div>
+                    @if($adhesion->reseaux_sociaux)
                     <div class="col-span-2 sm:col-span-3">
-                        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Adresse postale</div>
-                        <div class="font-semibold text-gray-900 whitespace-pre-line">{{ $adhesion->adresse_postale }}</div>
+                        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Réseaux sociaux</div>
+                        <div class="flex flex-wrap gap-2">
+                            @foreach($adhesion->reseaux_sociaux as $cle => $valeur)
+                            @php $meta = \App\Models\Adhesion::RESEAUX[$cle] ?? null; @endphp
+                            @if($meta)
+                            <span class="inline-flex items-center gap-1.5 bg-gray-50 border border-gray-100 rounded-lg px-2.5 py-1 text-xs font-semibold text-gray-700">
+                                <i class="{{ $meta[1] }}"></i> {{ $meta[2] }}{{ $valeur }}
+                            </span>
+                            @endif
+                            @endforeach
+                        </div>
                     </div>
+                    @endif
                 </div>
             </div>
         </div>

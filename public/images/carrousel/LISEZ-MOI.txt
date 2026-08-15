@@ -1,0 +1,18 @@
+Carrousel de la page d'accueil
+==============================
+
+Déposez ici les photos à faire défiler dans l'encadré de la page d'accueil
+(à droite de la phrase d'accroche).
+
+- Formats acceptés : .jpg, .jpeg, .png, .webp
+- Elles défilent dans l'ordre alphabétique du nom de fichier.
+  Nommez-les 01-..., 02-..., 03-... pour maîtriser l'ordre.
+- Cadrage : format 4/3 (par exemple 1600 x 1200 px). Les photos sont
+  recadrées automatiquement, l'essentiel doit être au centre.
+- Poids conseillé : moins de 400 Ko par photo, sinon la page devient lente.
+- Aucune photo ici ? Le site reprend automatiquement quelques visuels de
+  public/images/kit/, et à défaut affiche le logo.
+
+Privilégiez des photos « en action » (distributions Ti Dèj, projets,
+événements) plutôt que des photos de groupe posées : c'est ce qui montre le
+mieux ce que fait l'association.

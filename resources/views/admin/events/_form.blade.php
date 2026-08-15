@@ -34,7 +34,7 @@
     </div>
     <div>
         <label class="block text-sm font-semibold text-gray-700 mb-1.5">Description complète</label>
-        <textarea name="description" rows="8" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-mja-blue resize-y">{{ old('description', $event->description ?? '') }}</textarea>
+        <x-editeur-riche name="description" :value="$event->description ?? null" :rows="8" />
     </div>
     <div class="grid grid-cols-2 gap-5">
         <div>

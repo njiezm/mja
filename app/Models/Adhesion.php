@@ -4,34 +4,66 @@ namespace App\Models;
 
 use App\Support\Token;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Adhesion extends Model
 {
     protected $fillable = [
-        'premiere_adhesion', 'civilite', 'nom', 'prenom', 'date_naissance',
-        'profession', 'telephone', 'email', 'adresse_postale', 'taille_tshirt',
-        'permis', 'problemes_sante', 'urgence_contact', 'photo', 'moyen_paiement',
-        'droit_image', 'rgpd_consentement', 'statut', 'lu', 'source_id', 'period_id',
-        'account_token', 'account_token_expires_at',
+        'user_id', 'premiere_adhesion', 'civilite', 'nom', 'prenom', 'date_naissance',
+        'profession', 'telephone', 'email', 'reseaux_sociaux', 'adresse_postale',
+        'taille_tshirt', 'permis', 'problemes_sante', 'urgence_contact', 'message', 'photo',
+        'moyen_paiement', 'droit_image', 'rgpd_consentement', 'statut', 'lu',
+        'source_id', 'period_id', 'account_token', 'account_token_expires_at',
+        'renouvellement_token', 'renouvellement_token_expires_at', 'renouvelle_adhesion_id',
     ];
 
     protected $casts = [
-        'droit_image' => 'boolean',
-        'rgpd_consentement' => 'boolean',
-        'lu' => 'boolean',
-        'account_token_expires_at' => 'datetime',
+        'droit_image'                     => 'boolean',
+        'rgpd_consentement'               => 'boolean',
+        'lu'                              => 'boolean',
+        'reseaux_sociaux'                 => 'array',
+        'account_token_expires_at'        => 'datetime',
+        'renouvellement_token_expires_at' => 'datetime',
     ];
 
-    public function member(): HasOne
+    /**
+     * Réseaux sociaux proposés (facultatifs) dans le formulaire d'adhésion.
+     * clé => [libellé, icône Font Awesome, préfixe affiché, exemple].
+     */
+    public const RESEAUX = [
+        'instagram' => ['Instagram', 'fab fa-instagram', '@', 'ton_pseudo'],
+        'facebook'  => ['Facebook',  'fab fa-facebook',  '',  'Prénom Nom ou lien du profil'],
+        'tiktok'    => ['TikTok',    'fab fa-tiktok',    '@', 'ton_pseudo'],
+        'snapchat'  => ['Snapchat',  'fab fa-snapchat',  '@', 'ton_pseudo'],
+        'linkedin'  => ['LinkedIn',  'fab fa-linkedin',  '',  'lien de ton profil'],
+        'x'         => ['X',         'fab fa-x-twitter', '@', 'ton_pseudo'],
+    ];
+
+    // ─── Relations ────────────────────────────────────────────────────────────
+
+    public function user(): BelongsTo
     {
-        return $this->hasOne(Member::class);
+        return $this->belongsTo(User::class);
     }
 
-    public function period(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function period(): BelongsTo
     {
         return $this->belongsTo(AdhesionPeriod::class, 'period_id');
     }
+
+    /** Adhésion de la saison précédente dont celle-ci est le renouvellement. */
+    public function precedente(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'renouvelle_adhesion_id');
+    }
+
+    public function relances(): HasMany
+    {
+        return $this->hasMany(AdhesionRelance::class)->orderByDesc('envoyee_le');
+    }
+
+    // ─── Compte adhérent ──────────────────────────────────────────────────────
 
     /**
      * Génère (si nécessaire) un jeton de création de compte et renvoie
@@ -39,7 +71,7 @@ class Adhesion extends Model
      */
     public function ensureAccountToken(): ?string
     {
-        if ($this->member()->exists()) {
+        if ($this->user_id !== null) {
             return null;
         }
 
@@ -58,6 +90,49 @@ class Adhesion extends Model
     {
         return $this->account_token ? route('member.account.create', $this->account_token) : null;
     }
+
+    // ─── Renouvellement ───────────────────────────────────────────────────────
+
+    /**
+     * Jeton de renouvellement : ouvre le formulaire pré-rempli sans connexion.
+     * Utilisé dans les emails de relance, y compris pour les adhérents qui
+     * n'ont jamais créé de compte.
+     */
+    public function ensureRenouvellementToken(): string
+    {
+        $expire = $this->renouvellement_token_expires_at
+            && $this->renouvellement_token_expires_at->isPast();
+
+        if (! $this->renouvellement_token || $expire) {
+            $this->renouvellement_token = Token::uniqueFor(self::class, 'renouvellement_token');
+            $this->renouvellement_token_expires_at = now()->addDays(90);
+            $this->save();
+        }
+
+        return route('adhesion.renouveler', $this->renouvellement_token);
+    }
+
+    /** Champs repris tels quels d'une saison à l'autre. */
+    public function donneesReprises(): array
+    {
+        return [
+            'civilite'        => $this->civilite,
+            'nom'             => $this->nom,
+            'prenom'          => $this->prenom,
+            'date_naissance'  => $this->date_naissance,
+            'profession'      => $this->profession,
+            'telephone'       => $this->telephone,
+            'email'           => $this->email,
+            'reseaux_sociaux' => $this->reseaux_sociaux,
+            'taille_tshirt'   => $this->taille_tshirt,
+            'permis'          => $this->permis,
+            'problemes_sante' => $this->problemes_sante,
+            'urgence_contact' => $this->urgence_contact,
+            'photo'           => $this->photo,
+        ];
+    }
+
+    // ─── Libellés ─────────────────────────────────────────────────────────────
 
     public function getNomCompletAttribute(): string
     {
@@ -105,6 +180,13 @@ class Adhesion extends Model
     public function isAdherent(): bool
     {
         return $this->statut === 'payee';
+    }
+
+    /** Cotisation due mais pas encore encaissée (cible des relances de paiement). */
+    public function attendPaiement(): bool
+    {
+        return in_array($this->statut, ['nouvelle', 'en_attente_paiement'], true)
+            && in_array($this->moyen_paiement, ['cheque', 'espece', 'virement'], true);
     }
 
     /** Statuts sélectionnables dans le back-office. */

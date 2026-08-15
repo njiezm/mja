@@ -39,7 +39,7 @@
       </td></tr>
 
       <tr><td style="background:#f0f5ff;padding:20px 32px;text-align:center">
-        <p style="margin:0;font-size:11px;color:#999">Madin'Jeunes Ambition — Fort-de-France, Martinique</p>
+        <p style="margin:0;font-size:11px;color:#999">Madin'Jeunes Ambition — Martinique et au-delà</p>
       </td></tr>
 
     </table>

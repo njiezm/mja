@@ -54,12 +54,12 @@
         {{-- Attestation --}}
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-gray-700 text-sm leading-relaxed">
             <h1 class="font-display font-black text-xl text-mja-gray mb-5 text-center">Attestation d'adhésion</h1>
-            <p class="mb-4">L'association <strong>Madin'Jeunes Ambition</strong>, sise 22 passage du Cœur sur la Main, 97200 Fort-de-France (Martinique), atteste que&nbsp;:</p>
+            <p class="mb-4">L'association <strong>Madin'Jeunes Ambition</strong>, association déclarée régie par la loi du 1<sup>er</sup> juillet 1901, atteste que&nbsp;:</p>
             <p class="mb-4 text-center font-display font-bold text-lg text-mja-gray">{{ $adhesion->civilite }} {{ $adhesion->prenom }} {{ $adhesion->nom }}</p>
             <p class="mb-4">
                 est <strong>adhérent(e)</strong> de l'association @if($adhesion->period)pour la <strong>{{ $adhesion->period->label }}</strong>@endif et à jour de sa cotisation.
             </p>
-            <p class="text-gray-500">Fait à Fort-de-France, le {{ now()->locale('fr')->isoFormat('D MMMM Y') }}.</p>
+            <p class="text-gray-500">Fait en Martinique, le {{ now()->locale('fr')->isoFormat('D MMMM Y') }}.</p>
             <div class="mt-8 flex items-center gap-3 justify-end text-gray-400">
                 <img src="{{ asset('images/logomjat.png') }}" alt="MJA" class="h-12 w-auto object-contain opacity-80">
                 <span class="text-xs font-display">Madin'Jeunes Ambition</span>

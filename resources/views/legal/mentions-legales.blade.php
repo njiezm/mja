@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('title', "Mentions légales — Madin'Jeunes Ambition")
-@section('meta_description', "Mentions légales du site de l'association Madin'Jeunes Ambition, Fort-de-France, Martinique.")
+@section('meta_description', "Mentions légales du site de l'association Madin'Jeunes Ambition.")
 @section('og_type', 'website')
 
 @section('content')
@@ -31,7 +31,7 @@
             <p>Le présent site est édité par l'association <strong>Madin'Jeunes Ambition (MJA)</strong>, association régie par la loi du 1<sup>er</sup> juillet 1901.</p>
             <ul class="mt-3 space-y-1.5">
                 <li><strong>Siège social :</strong> 22, passage du Cœur sur la Main, 97200 Fort-de-France, Martinique</li>
-                <li><strong>Adresse email :</strong> <a href="mailto:contact@mja-martinique.com" class="text-mja-blue hover:underline">contact@mja-martinique.com</a></li>
+                <li><strong>Adresse email :</strong> <a href="mailto:{{ config('mja.contact_email') }}" class="text-mja-blue hover:underline">{{ config('mja.contact_email') }}</a></li>
                 <li><strong>Numéro RNA (déclaration en préfecture) :</strong> <span class="text-gray-400">[À COMPLÉTER]</span></li>
                 <li><strong>Numéro SIRET (le cas échéant) :</strong> <span class="text-gray-400">[À COMPLÉTER]</span></li>
                 <li><strong>Directeur / Directrice de la publication :</strong> le/la Président·e de l'association <span class="text-gray-400">[À COMPLÉTER : nom]</span></li>
@@ -72,7 +72,7 @@
         <div>
             <h2 class="font-display font-bold text-xl text-mja-gray mb-3">7. Contact</h2>
             <p>Pour toute question relative aux présentes mentions légales, vous pouvez nous écrire à
-                <a href="mailto:contact@mja-martinique.com" class="text-mja-blue hover:underline">contact@mja-martinique.com</a>
+                <a href="mailto:{{ config('mja.contact_email') }}" class="text-mja-blue hover:underline">{{ config('mja.contact_email') }}</a>
                 ou via notre <a href="{{ route('contact') }}" class="text-mja-blue hover:underline">formulaire de contact</a>.</p>
         </div>
 

@@ -1,9 +1,103 @@
 @extends('layouts.app')
 @section('title', "Madin'Jeunes Ambition – Les jeunes de la Martinique se mobilisent !")
-@section('meta_description', "Association de jeunes bénévoles à Fort-de-France, Martinique. Sport, santé, culture et engagement — MJA mobilise la jeunesse depuis 2011.")
+@section('meta_description', "Association de jeunes bénévoles en Martinique et au-delà. Sport, santé, culture et engagement — MJA mobilise la jeunesse depuis 2011.")
 @section('og_image', asset('images/logomjat.png'))
 
 @section('content')
+
+@push('head')
+<style>
+/* Carrousel du hero.
+   La feuille Tailwind du site est précompilée : les classes arbitraires
+   (aspect-[4/3], w-[26rem], bg-black/35…) n'y existent pas. Tout ce qui est
+   spécifique au carrousel est donc écrit ici.
+   Largeur volontairement contenue : le bloc partage la ligne avec la phrase
+   d'accroche, qui doit rester la première chose que l'on lit. */
+.hc-wrap {
+    /* Largeur définie sur le conteneur : les photos du carrousel sont en
+       position absolue, le bloc n'a donc aucune largeur intrinsèque. Sans
+       cette valeur, « width: 100% » se résoudrait à zéro et le carrousel
+       resterait invisible. */
+    width: 22rem;
+    max-width: 100%;
+}
+@media (min-width: 1280px) { .hc-wrap { width: 26rem; } }
+
+.hc {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    /* Filet de sécurité si aspect-ratio n'est pas appliqué. */
+    min-height: 15rem;
+    background: #fff;
+    border-radius: 1.5rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, .35);
+    overflow: hidden;
+}
+
+.hc-slide {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity .7s ease;
+}
+.hc-slide.is-active { opacity: 1; }
+
+.hc-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 2.25rem;
+    height: 2.25rem;
+    border: 0;
+    border-radius: 9999px;
+    background: rgba(0, 0, 0, .35);
+    color: #fff;
+    font-size: .875rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color .15s;
+}
+.hc-nav:hover { background: rgba(0, 0, 0, .6); }
+.hc-prev { left: .5rem; }
+.hc-next { right: .5rem; }
+
+.hc-points {
+    position: absolute;
+    left: 0; right: 0; bottom: .75rem;
+    display: flex;
+    justify-content: center;
+    gap: .375rem;
+}
+.hc-point {
+    width: .5rem;
+    height: .5rem;
+    padding: 0;
+    border: 0;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, .45);
+    cursor: pointer;
+    transition: background-color .15s;
+}
+.hc-point.is-active { background: #fff; }
+
+/* Repli sans photo : le logo, dans un cadre carré. */
+.hc--logo {
+    aspect-ratio: 1 / 1;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+}
+.hc--logo img { width: 100%; height: 100%; object-fit: contain; }
+</style>
+@endpush
 
 <!-- ═══ HERO ═══ -->
 <section class="hero-gradient text-white py-24 relative overflow-hidden">
@@ -21,7 +115,7 @@
             <div class="flex-1 text-center lg:text-left">
                 <div class="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-sm font-display font-semibold px-4 py-1.5 rounded-full mb-6 text-white">
                     <span class="w-2 h-2 bg-mja-yellow rounded-full animate-pulse"></span>
-                    Fort-de-France, Martinique — Depuis 2011
+                    Martinique et au-delà — Depuis 2011
                 </div>
                 <h1 class="font-display font-black text-4xl sm:text-5xl lg:text-6xl mb-6 leading-tight text-white">
                     Les jeunes de la<br>Martinique
@@ -44,7 +138,6 @@
                         ['fab fa-facebook','https://www.facebook.com/MadinJeunesAmbition/','Facebook'],
                         ['fab fa-instagram','https://www.instagram.com/madin_jeunes_ambition/','Instagram'],
                         ['fab fa-tiktok','https://www.tiktok.com/@fwi_ti_dej','TikTok'],
-                        ['fab fa-snapchat','https://www.snapchat.com/','Snapchat'],
                         ['fab fa-youtube','https://www.youtube.com/channel/UCX6nyVEv_QyFuLREyVvOMLw','YouTube'],
                     ] as [$icon,$url,$reseau])
                     <a href="{{ $url }}" target="_blank" rel="noopener" aria-label="MJA sur {{ $reseau }}"
@@ -55,15 +148,43 @@
                 </div>
             </div>
 
-            <!-- Logo -->
+            <!-- Carrousel : MJA en action. Repli sur le logo si aucune photo.
+                 Styles dans le bloc <style> ci-dessous : la feuille Tailwind du
+                 site est précompilée, les classes arbitraires n'y figurent pas. -->
             <div class="shrink-0 flex justify-center">
-                <div class="relative">
-                    <div class="w-56 h-56 lg:w-72 lg:h-72 bg-white rounded-3xl shadow-2xl flex items-center justify-center p-6">
-                        <img src="/images/logo.jpg" alt="Madin'Jeunes Ambition" class="w-full h-full object-contain">
+                <div class="relative hc-wrap">
+                    @if(!empty($carrousel))
+                    <div id="hero-carrousel" class="hc"
+                         role="region" aria-roledescription="carrousel" aria-label="Photos de Madin'Jeunes Ambition en action">
+                        @foreach($carrousel as $i => $photo)
+                        <img src="{{ $photo }}" alt="Madin'Jeunes Ambition en action"
+                             class="hc-slide{{ $i === 0 ? ' is-active' : '' }}"
+                             loading="{{ $i === 0 ? 'eager' : 'lazy' }}"
+                             @if($i > 0) aria-hidden="true" @endif>
+                        @endforeach
+
+                        @if(count($carrousel) > 1)
+                        <button type="button" class="hc-nav hc-prev" aria-label="Photo précédente">
+                            <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                        </button>
+                        <button type="button" class="hc-nav hc-next" aria-label="Photo suivante">
+                            <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                        </button>
+
+                        <div class="hc-points">
+                            @foreach($carrousel as $i => $photo)
+                            <button type="button" class="hc-point{{ $i === 0 ? ' is-active' : '' }}"
+                                    aria-label="Aller à la photo {{ $i + 1 }}"></button>
+                            @endforeach
+                        </div>
+                        @endif
                     </div>
-                    <div class="absolute -top-4 -right-4 bg-mja-yellow text-[#14264D] font-display font-black text-xs px-3 py-1.5 rounded-full shadow-lg">
-                        43 membres
+                    @else
+                    <div class="hc hc--logo">
+                        <img src="/images/logo.jpg" alt="Madin'Jeunes Ambition">
                     </div>
+                    @endif
+
                     <div class="absolute -bottom-4 -left-4 bg-mja-red text-white font-display font-bold text-xs px-3 py-1.5 rounded-full shadow-lg">
                         Depuis 2011
                     </div>
@@ -76,22 +197,24 @@
 <!-- ═══ STATS ═══ -->
 <section class="bg-mja-dark py-10 relative z-10" id="stats-section">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {{-- Aucun effectif affiché : le nombre d'adhérents varie d'une saison à
+             l'autre et n'a pas à figurer sur le site public. --}}
         <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center text-white">
-            <div>
-                <div class="font-display font-black text-4xl text-mja-blue">
-                    <span class="stat-counter" data-target="43">0</span>
-                </div>
-                <div class="text-sm mt-1 text-gray-300 font-display font-semibold">Membres actifs</div>
-            </div>
             <div>
                 <div class="font-display font-black text-4xl text-mja-yellow">2011</div>
                 <div class="text-sm mt-1 text-gray-300 font-display font-semibold">Année de création</div>
             </div>
             <div>
-                <div class="font-display font-black text-4xl text-mja-red">
-                    <span class="stat-counter" data-target="60">0</span>+
+                <div class="font-display font-black text-4xl text-mja-blue">
+                    <span class="stat-counter" data-target="{{ max(1, now()->year - 2011) }}">0</span>
                 </div>
-                <div class="text-sm mt-1 text-gray-300 font-display font-semibold">Sympathisants</div>
+                <div class="text-sm mt-1 text-gray-300 font-display font-semibold">Années d'engagement</div>
+            </div>
+            <div>
+                <div class="font-display font-black text-4xl text-mja-red">
+                    <span class="stat-counter" data-target="5">0</span>
+                </div>
+                <div class="text-sm mt-1 text-gray-300 font-display font-semibold">Pôles d'action</div>
             </div>
             <div>
                 <div class="font-display font-black text-4xl text-mja-blue">
@@ -131,6 +254,64 @@
         });
     }, { threshold: 0.6 });
     counters.forEach(function(el) { observer.observe(el); });
+})();
+
+// ── Carrousel du hero ────────────────────────────────────────────────────────
+(function () {
+    var carrousel = document.getElementById('hero-carrousel');
+    if (!carrousel) return;
+
+    var slides = carrousel.querySelectorAll('.hc-slide');
+    var points = carrousel.querySelectorAll('.hc-point');
+    if (slides.length < 2) return;
+
+    var index = 0;
+    var minuteur = null;
+
+    // Le défilement automatique a lieu dans tous les cas ; seule la transition
+    // en fondu est supprimée pour qui a demandé moins d'animations.
+    var animationsReduites = window.matchMedia
+        && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (animationsReduites) {
+        slides.forEach(function (slide) { slide.style.transition = 'none'; });
+    }
+
+    function afficher(n) {
+        index = (n + slides.length) % slides.length;
+
+        slides.forEach(function (slide, i) {
+            var actif = i === index;
+            // `is-active` et non les classes Tailwind d'opacité : la feuille du
+            // site est précompilée et ne les contient pas.
+            slide.classList.toggle('is-active', actif);
+            actif ? slide.removeAttribute('aria-hidden') : slide.setAttribute('aria-hidden', 'true');
+        });
+
+        points.forEach(function (point, i) {
+            point.classList.toggle('is-active', i === index);
+        });
+    }
+
+    function relancer() {
+        clearInterval(minuteur);
+        minuteur = setInterval(function () { afficher(index + 1); }, 5000);
+    }
+
+    carrousel.querySelector('.hc-prev').addEventListener('click', function () { afficher(index - 1); relancer(); });
+    carrousel.querySelector('.hc-next').addEventListener('click', function () { afficher(index + 1); relancer(); });
+    points.forEach(function (point, i) {
+        point.addEventListener('click', function () { afficher(i); relancer(); });
+    });
+
+    // Le défilement s'arrête au survol et au focus clavier : on ne fait pas
+    // disparaître une photo que quelqu'un est en train de regarder.
+    carrousel.addEventListener('mouseenter', function () { clearInterval(minuteur); });
+    carrousel.addEventListener('mouseleave', relancer);
+    carrousel.addEventListener('focusin', function () { clearInterval(minuteur); });
+    carrousel.addEventListener('focusout', relancer);
+
+    relancer();
 })();
 </script>
 @endpush
@@ -204,7 +385,7 @@
             <a href="{{ route('projects.show', $project) }}" class="group bg-white rounded-2xl shadow-sm card-hover overflow-hidden border border-gray-100 {{ $accents[$i % 3] }}">
                 @if($project->image)
                 <div class="aspect-video bg-gray-100 overflow-hidden">
-                    <img src="{{ asset("storage/{$project->image}") }}" alt="{{ $project->titre }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                    <img src="{{ $project->imageUrl() }}" alt="{{ $project->titre }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                 </div>
                 @else
                 <div class="aspect-video bg-gradient-to-br from-mja-dark to-mja-blue/80 flex items-center justify-center">
@@ -332,7 +513,7 @@
             <a href="{{ route('articles.show', $article) }}" class="group bg-white rounded-2xl shadow-sm card-hover overflow-hidden border border-gray-100 {{ $accents[$i % 3] }}">
                 @if($article->image)
                 <div class="aspect-video bg-gray-100 overflow-hidden">
-                    <img src="{{ asset("storage/{$article->image}") }}" alt="{{ $article->titre }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                    <img src="{{ $article->imageUrl() }}" alt="{{ $article->titre }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                 </div>
                 @else
                 <div class="aspect-video bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
@@ -381,7 +562,7 @@
             <!-- Cartes territoires -->
             <div class="flex-1 grid grid-cols-2 gap-4">
                 @foreach([
-                    ['Martinique','Madin\' Ti Dèj','Fort-de-France','fa-globe-americas','bg-mja-blue','text-white','Territoire fondateur — depuis 2016.'],
+                    ['Martinique','Madin\' Ti Dèj','Toute la Martinique','fa-globe-americas','bg-mja-blue','text-white','Territoire fondateur — depuis 2016.'],
                     ['Guadeloupe','Karu\' Ti Dèj','Pointe-à-Pitre','fa-globe-americas','bg-mja-yellow','text-mja-dark','Karukéra — déclinaison guadeloupéenne.'],
                     ['Guyane','Guia\' Ti Dèj','Cayenne','fa-globe-americas','bg-mja-red','text-white','Déclinaison guyanaise du réseau.'],
                     ['France hex.','Réseau diaspora','Paris & métropole','fa-landmark','bg-mja-dark','text-white','Jeunes ultramarins engagés en métropole.'],

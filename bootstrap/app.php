@@ -13,8 +13,11 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         // Capture des visites UTM sur tout le site public.
+        // DeclencheurRelances remplace la tâche planifiée absente sur cet
+        // hébergement : il travaille après l'envoi de la réponse.
         $middleware->web(append: [
             \App\Http\Middleware\TrackVisit::class,
+            \App\Http\Middleware\DeclencheurRelances::class,
         ]);
 
         $middleware->alias([
