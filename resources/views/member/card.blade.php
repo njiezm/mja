@@ -104,7 +104,10 @@ body{margin:0;padding:26px 20px;background:#EEF2F8;color:#333;
 .attestation{background:#fff;border:1px solid var(--bord);border-radius:16px;padding:30px 34px;
              color:#4A5A73;font-size:14.5px;line-height:1.7}
 .attestation h1{margin:0 0 22px;text-align:center;font-size:20px;font-weight:800;color:var(--ink)}
-.attestation .nom{text-align:center;font-size:18px;font-weight:800;color:var(--navy);margin:18px 0}
+.attestation .nom{text-align:center;font-size:18px;font-weight:800;color:var(--navy);margin:18px 0;
+                  background:#F2F7FF;border:1px solid #DCE8FA;border-radius:12px;padding:14px 18px}
+.attestation .nom .saison-att{display:block;font-size:13px;font-weight:700;color:var(--gris);
+                              text-transform:uppercase;letter-spacing:.8px;margin-top:5px}
 .attestation .fin{color:var(--gris);font-size:13.5px}
 .attestation .cachet{margin-top:26px;display:flex;align-items:center;gap:12px;justify-content:flex-end;color:var(--gris)}
 .attestation .cachet img{height:44px;width:auto;opacity:.85}
@@ -154,9 +157,12 @@ body{margin:0;padding:26px 20px;background:#EEF2F8;color:#333;
         <h1>Attestation d'adhésion</h1>
         <p>L'association <strong>Madin'Jeunes Ambition</strong>, association déclarée régie par la loi
            du 1<sup>er</sup> juillet 1901, atteste que&nbsp;:</p>
-        <div class="nom">{{ $adhesion->civilite }} {{ $adhesion->prenom }} {{ $adhesion->nom }}</div>
-        <p>est <strong>adhérent(e)</strong> de l'association
-           @if($adhesion->period)pour la <strong>{{ $adhesion->period->label }}</strong>@endif
+        <div class="nom">
+            {{ $adhesion->civilite }} {{ $adhesion->prenom }} {{ $adhesion->nom }}
+            <span class="saison-att">{{ $adhesion->period?->label ?? 'Saison en cours' }}</span>
+        </div>
+        <p>est <strong>adhérent(e)</strong> de l'association pour la
+           <strong>{{ $adhesion->period?->label ?? 'saison en cours' }}</strong>
            et à jour de sa cotisation.</p>
         <p class="fin">Fait en Martinique, le {{ now()->locale('fr')->isoFormat('D MMMM Y') }}.</p>
         <div class="cachet">
@@ -419,10 +425,12 @@ function composer(logo, photo) {
     10.5, L, { c: C.texte, lh: 15 });
 
   y += 14;
-  doc.rectArrondi(MARGE, y, L, 34, 8, C.bleuPale);
+  doc.rectArrondi(MARGE, y, L, 50, 8, C.bleuPale);
   doc.texte(A4.w / 2, y + 22, D.civilite + ' ' + D.prenom + ' ' + D.nom,
             { size: 14, gras: true, c: C.navy, align: 'center' });
-  y += 50;
+  doc.texte(A4.w / 2, y + 38, D.saison.toUpperCase(),
+            { size: 9, gras: true, c: C.gris, align: 'center', ls: 0.8 });
+  y += 66;
 
   y += doc.paragraphe(MARGE, y,
     "est adhérent(e) de l'association pour la " + D.saison + " et à jour de sa cotisation.",
