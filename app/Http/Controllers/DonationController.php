@@ -9,14 +9,43 @@ use Illuminate\Http\Request;
 
 class DonationController extends Controller
 {
-    public function create()
-    {
-        return view('don.create', [
-            'stripeEnabled' => StripeService::enabled(),
-            'helloassoUrl'  => Setting::get('helloasso_url'),
-            'presets'       => [5, 10, 20, 50, 100],
-        ]);
-    }
+    /**
+      * Moyen de don retenu, et son remplaçant.
+      *
+      * Le formulaire par carte est la voie normale : le don se termine sans
+      * quitter le site, et l'association garde la main sur le reçu. Un lien
+      * renseigné en back-office prend le relais quand le paiement en ligne
+      * n'est pas disponible — ou passe devant si l'association le décide,
+      * par exemple pour confier les reçus fiscaux à une plateforme.
+      *
+      * @return array{principal: string, secondaire: ?string, lien: ?string}
+      */
+     private function moyens(bool $carteDemandee = false): array
+     {
+         $lien = Setting::get('helloasso_url');
+         $carte = StripeService::enabled();
+         // « ?carte=1 » : le visiteur a cliqué sur le second moyen proposé.
+         $prefereLien = Setting::get('don_priorite') === 'lien' && ! $carteDemandee;
+
+         // Une préférence ne vaut que si le moyen demandé existe réellement.
+         if ($lien && ($prefereLien || ! $carte)) {
+             return ['principal' => 'lien', 'secondaire' => $carte ? 'carte' : null, 'lien' => $lien];
+         }
+
+         if ($carte) {
+             return ['principal' => 'carte', 'secondaire' => $lien ? 'lien' : null, 'lien' => $lien];
+         }
+
+         return ['principal' => 'aucun', 'secondaire' => null, 'lien' => null];
+     }
+
+     public function create(Request $request)
+     {
+         return view('don.create', $this->moyens($request->boolean('carte')) + [
+             'stripeEnabled' => StripeService::enabled(),
+             'presets'       => [5, 10, 20, 50, 100],
+         ]);
+     }
 
     public function store(Request $request)
     {
@@ -32,8 +61,14 @@ class DonationController extends Controller
             'email.required'   => 'Votre email est requis pour le reçu.',
         ]);
 
+        // Le formulaire n'est affiché que si la carte est active ; on revérifie
+        // tout de même, un réglage ayant pu changer entre l'affichage et l'envoi.
         if (! StripeService::enabled()) {
-            return back()->withInput()->with('error', "Le paiement par carte n'est pas disponible pour le moment.");
+            $moyens = $this->moyens();
+
+            return $moyens['lien']
+                ? redirect()->away($moyens['lien'])
+                : back()->withInput()->with('error', "Le don en ligne n'est pas disponible pour le moment.");
         }
 
         $don = Donation::create($validated + ['statut' => 'en_attente']);

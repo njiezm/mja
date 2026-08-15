@@ -24,6 +24,7 @@ class SettingController extends Controller
             'bic'                  => Setting::get('bic'),
             'notification_emails'  => Setting::get('notification_emails'),
             'helloasso_url'        => Setting::get('helloasso_url'),
+            'don_priorite'         => Setting::get('don_priorite') ?: 'stripe',
             // Les clés secrètes Stripe engagent les encaissements : leur
             // modification reste au super admin, même si la page est ouverte
             // à tous les administrateurs.
@@ -47,9 +48,11 @@ class SettingController extends Controller
             'bic'                => 'nullable|string|max:20',
             'notification_emails' => 'nullable|string|max:2000',
             'helloasso_url'      => 'nullable|url|max:255',
+            'don_priorite'       => 'nullable|in:stripe,lien',
         ]);
 
         Setting::set('helloasso_url', $validated['helloasso_url']);
+        Setting::set('don_priorite', $validated['don_priorite'] ?? 'stripe');
 
         // Normalise la liste d'emails : découpe, valide, dédoublonne.
         $emails = preg_split('/[\s,;]+/', (string) $validated['notification_emails'], -1, PREG_SPLIT_NO_EMPTY) ?: [];

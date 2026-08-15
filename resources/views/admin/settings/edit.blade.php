@@ -158,10 +158,24 @@
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-4">
                 <h2 class="font-display font-bold text-gray-900"><i class="fas fa-heart text-mja-red mr-1"></i> Dons</h2>
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Lien HelloAsso <span class="text-gray-400 font-normal">(optionnel)</span></label>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Lien de don externe <span class="text-gray-400 font-normal">(optionnel)</span></label>
                     <input type="url" name="helloasso_url" value="{{ old('helloasso_url', $settings['helloasso_url']) }}" placeholder="https://www.helloasso.com/associations/…/formulaires/…"
                         class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-mja-blue">
-                    <p class="text-[11px] text-gray-400 mt-1.5">Si renseigné, un bouton « Faire un don via HelloAsso » apparaît sur la page de dons (reçus fiscaux gérés par HelloAsso). Le don par carte (Stripe) reste disponible si le paiement en ligne est activé.</p>
+                    <p class="text-[11px] text-gray-400 mt-1.5">HelloAsso ou toute autre plateforme. Laissé vide, seul le don par carte est proposé.</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Moyen mis en avant</label>
+                    @php $prio = old('don_priorite', $settings['don_priorite']); @endphp
+                    <select name="don_priorite" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-mja-blue">
+                        <option value="stripe" @selected($prio !== 'lien')>Le don par carte, sur le site (recommandé)</option>
+                        <option value="lien" @selected($prio === 'lien')>Le lien externe ci-dessus</option>
+                    </select>
+                    <p class="text-[11px] text-gray-400 mt-1.5">
+                        Le moyen choisi occupe la page ; l'autre est proposé en dessous. Si le moyen
+                        mis en avant n'est pas disponible — paiement en ligne désactivé, ou lien vide —
+                        l'autre prend automatiquement le relais.
+                    </p>
                 </div>
             </div>
         </div>

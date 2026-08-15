@@ -22,7 +22,10 @@
         <div class="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-4 mb-6 text-sm"><i class="fas fa-circle-info mr-1"></i> Paiement annulé — vous pouvez réessayer quand vous voulez.</div>
         @endif
 
-        @if($stripeEnabled)
+        {{-- Moyen principal : formulaire par carte, ou renvoi vers le lien
+             configuré en back-office. Le second moyen, s'il existe, est
+             proposé en dessous. --}}
+        @if($principal === 'carte')
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
             <form method="POST" action="{{ route('don.store') }}" class="space-y-5" id="don-form">
                 @csrf
@@ -61,20 +64,45 @@
         </div>
         @endif
 
-        @if($helloassoUrl)
-        <div class="mt-6 bg-white rounded-2xl shadow-sm border border-gray-100 p-6 text-center">
-            @unless($stripeEnabled)<p class="text-sm text-gray-500 mb-4">Soutenez-nous en quelques clics via notre partenaire HelloAsso :</p>@else<p class="text-sm text-gray-500 mb-4">Vous préférez HelloAsso (reçu fiscal automatique) ?</p>@endunless
-            <a href="{{ $helloassoUrl }}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 bg-mja-dark hover:bg-mja-navy text-white font-display font-bold px-6 py-3 rounded-xl transition-colors">
-                <i class="fas fa-heart"></i> Faire un don via HelloAsso
+        @if($principal === 'lien')
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
+            <div class="w-14 h-14 rounded-2xl bg-mja-red/10 text-mja-red flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-heart text-2xl"></i>
+            </div>
+            <h2 class="font-display font-bold text-xl text-mja-gray mb-2">Faire un don</h2>
+            <p class="text-sm text-gray-500 mb-5 max-w-md mx-auto">
+                Le don se fait sur notre plateforme partenaire, qui délivre le reçu automatiquement.
+            </p>
+            <a href="{{ $lien }}" target="_blank" rel="noopener"
+               class="inline-flex items-center gap-2 bg-mja-blue hover:bg-mja-bluedark text-white font-display font-bold px-7 py-3.5 rounded-xl transition-colors">
+                <i class="fas fa-heart"></i> Donner maintenant
             </a>
         </div>
         @endif
 
-        @unless($stripeEnabled || $helloassoUrl)
+        @if($secondaire === 'lien')
+        <div class="mt-6 bg-white rounded-2xl shadow-sm border border-gray-100 p-6 text-center">
+            <p class="text-sm text-gray-500 mb-4">Vous préférez passer par notre plateforme partenaire ?</p>
+            <a href="{{ $lien }}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 bg-mja-dark hover:bg-mja-navy text-white font-display font-bold px-6 py-3 rounded-xl transition-colors">
+                <i class="fas fa-heart"></i> Faire un don en ligne
+            </a>
+        </div>
+        @endif
+
+        @if($secondaire === 'carte')
+        <div class="mt-6 bg-white rounded-2xl shadow-sm border border-gray-100 p-6 text-center">
+            <p class="text-sm text-gray-500 mb-4">Vous préférez régler directement par carte, sans quitter le site ?</p>
+            <a href="{{ route('don') }}?carte=1" class="inline-flex items-center gap-2 bg-mja-dark hover:bg-mja-navy text-white font-display font-bold px-6 py-3 rounded-xl transition-colors">
+                <i class="fas fa-credit-card"></i> Donner par carte bancaire
+            </a>
+        </div>
+        @endif
+
+        @if($principal === 'aucun')
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center text-gray-500">
             Le don en ligne sera bientôt disponible. En attendant, <a href="{{ route('contact') }}" class="text-mja-blue font-semibold hover:underline">contactez-nous</a> pour faire un don.
         </div>
-        @endunless
+        @endif
     </div>
 </section>
 
