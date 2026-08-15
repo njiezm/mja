@@ -34,9 +34,18 @@ var COUL = {
 /* Millimètres → points typographiques. */
 var MM = 72 / 25.4;
 
+/** « #14306E » → [0.078, 0.188, 0.431] : reprendre les couleurs du CSS tel quel. */
+function hex(h) {
+  var n = parseInt(String(h).replace('#', ''), 16);
+  return [(n >> 16 & 255) / 255, (n >> 8 & 255) / 255, (n & 255) / 255];
+}
+
 /* ── Mesure : Arial est métriquement compatible avec Helvetica ───────── */
 var mc = document.createElement('canvas').getContext('2d');
-function larg(txt, taille, gras, ital) {
+function larg(txt, taille, gras, ital, mono) {
+  /* Courier est une chasse fixe : 0,6 em par caractere, exactement. Le mesurer
+     au canvas donnerait la police du navigateur, pas celle du PDF. */
+  if (mono) return String(txt).length * taille * 0.6;
   mc.font = (ital ? 'italic ' : '') + (gras ? 'bold ' : '') + taille + 'px Helvetica, Arial, sans-serif';
   return mc.measureText(txt).width;
 }
@@ -80,6 +89,8 @@ function Doc(options) {
   this.pages = [];
   this.flux = null;
   this.images = [];
+  this.degrades = [];   /* nuanciers axiaux, déclarés en ressources de page */
+  this.etats = [];      /* états graphiques : opacité */
   this.y = 0;
 }
 
@@ -126,12 +137,106 @@ Doc.prototype.rectArrondi = function (x, y, w, h, r, c) {
   this.flux.push('f');
 };
 
+/** Contour plein d'un rectangle arrondi. */
+Doc.prototype.contourArrondi = function (x, y, w, h, r, c, epaisseur) {
+  this.couleur(c, true);
+  this.flux.push((epaisseur || 1).toFixed(2) + ' w');
+  this.cheminArrondi(x, y, w, h, r);
+  this.flux.push('s');
+};
+
+/** Ligne brisée — les liaisons d'un schéma. Bouts et angles arrondis. */
+Doc.prototype.ligne = function (points, c, epaisseur) {
+  this.couleur(c, true);
+  this.flux.push((epaisseur || 1).toFixed(2) + ' w', '1 J', '1 j');
+  this.flux.push(points.map(function (p, i) {
+    return p[0].toFixed(2) + ' ' + pdfY(p[1]).toFixed(2) + (i ? ' l' : ' m');
+  }).join(' '), 'S', '0 J', '0 j');
+};
+
 /** Contour en pointillés — trait de découpe. */
 Doc.prototype.rectPointille = function (x, y, w, h, r, c, epaisseur, motif) {
   this.couleur(c, true);
   this.flux.push((epaisseur || 1).toFixed(2) + ' w', '[' + (motif || '4 3') + '] 0 d');
   this.cheminArrondi(x, y, w, h, r);
   this.flux.push('s', '[] 0 d');
+};
+
+/* ── Dégradés ────────────────────────────────────────────────────────
+   Un aplat découpé en deux ou trois rectangles laisse une arête franche —
+   une « barre » au milieu de la carte. On passe donc par un vrai nuancier
+   axial (ShadingType 2), le même dégradé continu que le CSS.
+   ------------------------------------------------------------------- */
+function f3(v) { return v.toFixed(3); }
+
+function fonctionExp(c0, c1) {
+  return '<< /FunctionType 2 /Domain [0 1] /C0 [' + c0.map(f3).join(' ')
+       + '] /C1 [' + c1.map(f3).join(' ') + '] /N 1 >>';
+}
+
+/** Enchaîne les segments entre chaque paire d'arrêts (FunctionType 3). */
+function fonctionArrets(arrets) {
+  if (arrets.length === 2) return fonctionExp(arrets[0][1], arrets[1][1]);
+  var fns = [], bornes = [], encode = [];
+  for (var i = 0; i < arrets.length - 1; i++) {
+    fns.push(fonctionExp(arrets[i][1], arrets[i + 1][1]));
+    encode.push('0 1');
+    if (i > 0) bornes.push(arrets[i][0].toFixed(4));
+  }
+  return '<< /FunctionType 3 /Domain [0 1] /Functions [' + fns.join(' ') + ']'
+       + ' /Bounds [' + bornes.join(' ') + '] /Encode [' + encode.join(' ') + '] >>';
+}
+
+/**
+ * Remplit un rectangle d'un dégradé.
+ *
+ * `arrets` : [[position 0→1, couleur], …]. `sens` vaut 'diagonale' (comme un
+ * linear-gradient 135deg), 'horizontale' ou 'verticale'. Le nuancier déborde
+ * volontairement (Extend) : appelé dans une découpe arrondie, il en épouse
+ * exactement la forme.
+ */
+Doc.prototype.degrade = function (x, y, w, h, arrets, sens) {
+  var x0, y0, x1, y1;
+  if (sens === 'horizontale')    { x0 = x;       y0 = pdfY(y + h / 2); x1 = x + w; y1 = y0; }
+  else if (sens === 'verticale') { x0 = x + w / 2; y0 = pdfY(y);       x1 = x0;    y1 = pdfY(y + h); }
+  else                           { x0 = x;       y0 = pdfY(y);         x1 = x + w; y1 = pdfY(y + h); }
+
+  var nom = 'Sh' + this.degrades.length;
+  this.degrades.push({
+    nom: nom,
+    dict: '<< /ShadingType 2 /ColorSpace /DeviceRGB /Coords ['
+        + x0.toFixed(2) + ' ' + y0.toFixed(2) + ' ' + x1.toFixed(2) + ' ' + y1.toFixed(2)
+        + '] /Function ' + fonctionArrets(arrets) + ' /Extend [true true] >>'
+  });
+
+  this.flux.push('q', x.toFixed(2) + ' ' + pdfY(y + h).toFixed(2) + ' '
+    + w.toFixed(2) + ' ' + h.toFixed(2) + ' re W n', '/' + nom + ' sh', 'Q');
+};
+
+/** Cercle (quatre courbes de Bézier), plein ou en contour. */
+Doc.prototype.cercle = function (cx, cy, r, o) {
+  o = o || {};
+  var k = r * 0.5523, y = pdfY(cy);
+  this.flux.push(
+    (cx + r).toFixed(2) + ' ' + y.toFixed(2) + ' m',
+    (cx + r).toFixed(2) + ' ' + (y + k).toFixed(2) + ' ' + (cx + k).toFixed(2) + ' ' + (y + r).toFixed(2) + ' ' + cx.toFixed(2) + ' ' + (y + r).toFixed(2) + ' c',
+    (cx - k).toFixed(2) + ' ' + (y + r).toFixed(2) + ' ' + (cx - r).toFixed(2) + ' ' + (y + k).toFixed(2) + ' ' + (cx - r).toFixed(2) + ' ' + y.toFixed(2) + ' c',
+    (cx - r).toFixed(2) + ' ' + (y - k).toFixed(2) + ' ' + (cx - k).toFixed(2) + ' ' + (y - r).toFixed(2) + ' ' + cx.toFixed(2) + ' ' + (y - r).toFixed(2) + ' c',
+    (cx + k).toFixed(2) + ' ' + (y - r).toFixed(2) + ' ' + (cx + r).toFixed(2) + ' ' + (y - k).toFixed(2) + ' ' + (cx + r).toFixed(2) + ' ' + y.toFixed(2) + ' c'
+  );
+  if (o.remplissage) { this.couleur(o.remplissage); this.flux.push('f'); }
+  else {
+    this.couleur(o.contour || COUL.blanc, true);
+    this.flux.push((o.epaisseur || 1).toFixed(2) + ' w', 's');
+  }
+};
+
+/** Opacité, dans un q…Q : reproduit un filigrane CSS (opacity: .13). */
+Doc.prototype.opacite = function (alpha) {
+  var cle = alpha.toFixed(3), nom = null;
+  for (var i = 0; i < this.etats.length; i++) if (this.etats[i].alpha === cle) nom = this.etats[i].nom;
+  if (!nom) { nom = 'GS' + this.etats.length; this.etats.push({ nom: nom, alpha: cle }); }
+  this.flux.push('/' + nom + ' gs');
 };
 
 /** Découpe un contenu par un rectangle arrondi (pour les photos). */
@@ -145,8 +250,8 @@ Doc.prototype.finirDecoupe = function () { this.flux.push('Q'); };
 Doc.prototype.texte = function (x, y, str, o) {
   o = o || {};
   var taille = o.size || 10;
-  var police = o.gras ? '/F2' : (o.ital ? '/F3' : '/F1');
-  var l = larg(str, taille, o.gras, o.ital);
+  var police = o.mono ? (o.gras ? '/F5' : '/F4') : (o.gras ? '/F2' : (o.ital ? '/F3' : '/F1'));
+  var l = larg(str, taille, o.gras, o.ital, o.mono);
   if (o.align === 'right') x -= l;
   else if (o.align === 'center') x -= l / 2;
   this.couleur(o.c || COUL.encre);
@@ -172,11 +277,42 @@ Doc.prototype.texteAjuste = function (x, y, str, maxW, o) {
   return this.texte(x, y, str, copie);
 };
 
-Doc.prototype.decouper = function (str, taille, maxW, gras) {
+/** Coupe un mot plus large que la colonne — un nom de route n'a pas d'espace. */
+function tronconner(mot, taille, maxW, gras, mono) {
+  var bouts = [], cur = '';
+  for (var i = 0; i < mot.length; i++) {
+    if (cur && larg(cur + mot[i], taille, gras, false, mono) > maxW) {
+      /* Couper après un séparateur reste lisible : « admin.adhesions. » puis
+         « periode » vaut mieux qu'une coupure au milieu d'un mot. */
+      var coupe = Math.max(cur.lastIndexOf('.'), cur.lastIndexOf('/'), cur.lastIndexOf('-'), cur.lastIndexOf('_'));
+      if (coupe >= cur.length / 3) {
+        bouts.push(cur.slice(0, coupe + 1));
+        cur = cur.slice(coupe + 1);
+      } else { bouts.push(cur); cur = ''; }
+    }
+    cur += mot[i];
+  }
+  if (cur) bouts.push(cur);
+  return bouts;
+}
+
+Doc.prototype.decouper = function (str, taille, maxW, gras, mono) {
   var mots = String(str).split(/\s+/), lignes = [], cur = '';
   for (var i = 0; i < mots.length; i++) {
-    var essai = cur ? cur + ' ' + mots[i] : mots[i];
-    if (larg(essai, taille, gras) > maxW && cur) { lignes.push(cur); cur = mots[i]; }
+    var mot = mots[i];
+
+    /* Un mot seul qui déborde de la colonne : on le coupe, sinon il empiète
+       sur la colonne voisine et rend les deux illisibles. */
+    if (larg(mot, taille, gras, false, mono) > maxW) {
+      if (cur) { lignes.push(cur); cur = ''; }
+      var bouts = tronconner(mot, taille, maxW, gras, mono);
+      for (var j = 0; j < bouts.length - 1; j++) lignes.push(bouts[j]);
+      cur = bouts[bouts.length - 1];
+      continue;
+    }
+
+    var essai = cur ? cur + ' ' + mot : mot;
+    if (larg(essai, taille, gras, false, mono) > maxW && cur) { lignes.push(cur); cur = mot; }
     else { cur = essai; }
   }
   if (cur) lignes.push(cur);
@@ -216,17 +352,30 @@ Doc.prototype.produire = function () {
 
   for (i = 0; i < nPages; i++) idPage.push(num++);
   for (i = 0; i < nPages; i++) idContenus.push(num++);
-  var idF1 = num++, idF2 = num++, idF3 = num++;
+  var idF1 = num++, idF2 = num++, idF3 = num++, idF4 = num++, idF5 = num++;
   this.images.forEach(function (im) { idImages[im.nom] = num++; });
 
   objs[0] = '<< /Type /Catalog /Pages 2 0 R >>';
   objs[1] = '<< /Type /Pages /Kids [' + idPage.map(function (n) { return n + ' 0 R'; }).join(' ')
           + '] /Count ' + nPages + ' >>';
 
-  var res = '<< /Font << /F1 ' + idF1 + ' 0 R /F2 ' + idF2 + ' 0 R /F3 ' + idF3 + ' 0 R >>';
+  var res = '<< /Font << /F1 ' + idF1 + ' 0 R /F2 ' + idF2 + ' 0 R /F3 ' + idF3 + ' 0 R'
+          + ' /F4 ' + idF4 + ' 0 R /F5 ' + idF5 + ' 0 R >>';
   if (this.images.length) {
     res += ' /XObject << ' + this.images.map(function (im) {
       return '/' + im.nom + ' ' + idImages[im.nom] + ' 0 R';
+    }).join(' ') + ' >>';
+  }
+  /* Nuanciers et états graphiques tiennent en dictionnaires directs : pas
+     d'objet indirect à numéroter, donc rien à casser dans la table xref. */
+  if (this.degrades.length) {
+    res += ' /Shading << ' + this.degrades.map(function (d) {
+      return '/' + d.nom + ' ' + d.dict;
+    }).join(' ') + ' >>';
+  }
+  if (this.etats.length) {
+    res += ' /ExtGState << ' + this.etats.map(function (e) {
+      return '/' + e.nom + ' << /Type /ExtGState /ca ' + e.alpha + ' /CA ' + e.alpha + ' >>';
     }).join(' ') + ' >>';
   }
   res += ' >>';
@@ -241,6 +390,9 @@ Doc.prototype.produire = function () {
   objs[idF1 - 1] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>';
   objs[idF2 - 1] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>';
   objs[idF3 - 1] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Oblique /Encoding /WinAnsiEncoding >>';
+  /* Chasse fixe : indispensable pour que les schemas en caracteres restent alignes. */
+  objs[idF4 - 1] = '<< /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>';
+  objs[idF5 - 1] = '<< /Type /Font /Subtype /Type1 /BaseFont /Courier-Bold /Encoding /WinAnsiEncoding >>';
 
   this.images.forEach(function (im) {
     objs[idImages[im.nom] - 1] = '<< /Type /XObject /Subtype /Image /Width ' + im.w + ' /Height ' + im.h
@@ -331,7 +483,7 @@ function telecharger(blob, nomFichier) {
 }
 
 global.MjaPdf = {
-  A4: A4, MM: MM, COUL: COUL,
+  A4: A4, MM: MM, COUL: COUL, hex: hex,
   Doc: Doc, larg: larg, chargerImage: chargerImage, telecharger: telecharger
 };
 

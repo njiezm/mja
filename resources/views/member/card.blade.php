@@ -298,19 +298,34 @@ function filets(doc, x, y, w, h) {
   doc.rect(x + 2 * t, y, t, h, C.rouge);
 }
 
+/* Le fond du recto, repris tel quel du CSS de la carte à l'écran :
+   linear-gradient(135deg, #14306E 0%, #1A3D8A 42%, #2A55B4 100%). */
+var FOND = [[0, P.hex('#14306E')], [0.42, P.hex('#1A3D8A')], [1, P.hex('#2A55B4')]];
+
+/** Anneaux du logo en filigrane, en haut à droite (opacity .13 à l'écran). */
+function anneaux(doc, x, y) {
+  /* Le cadre SVG mesure 46 mm et déborde de la carte (right:-14mm, top:-12mm) :
+     son centre tombe donc au-delà du bord, et la découpe arrondie le recoupe. */
+  var cx = x + (85.6 - 46 + 14 + 23) * MM, cy = y + (-12 + 23) * MM;
+  var k = 46 / 200;   /* le viewBox fait 200 unités pour 46 mm */
+
+  doc.flux.push('q');
+  doc.opacite(0.13);
+  [[95, C.blanc], [72, P.hex('#F5A623')], [49, P.hex('#D0021B')]].forEach(function (a) {
+    doc.cercle(cx, cy, a[0] * k * MM, { contour: a[1], epaisseur: 3 * k * MM });
+  });
+  doc.flux.push('Q');
+}
+
 /* ── Recto ────────────────────────────────────────────────────────── */
 function recto(doc, x, y, logo, photo) {
   var w = CARTE.w, h = CARTE.h;
 
-  doc.rectArrondi(x, y, w, h, CARTE.r, C.navy);
-
-  /* Aplat plus clair en diagonale, pour éviter un bloc de couleur plat. */
+  /* Tout le fond est peint dans une seule découpe arrondie : le dégradé
+     continu, puis les anneaux, puis les filets tricolores. */
   doc.commencerDecoupe(x, y, w, h, CARTE.r);
-  doc.rect(x + w * 0.46, y, w * 0.54, h, C.mid);
-  doc.rect(x + w * 0.62, y, w * 0.38, h, C.dark);
-  doc.finirDecoupe();
-
-  doc.commencerDecoupe(x, y, w, h, CARTE.r);
+  doc.degrade(x, y, w, h, FOND, 'diagonale');
+  anneaux(doc, x, y);
   filets(doc, x, y, w, 1.5 * MM);
   filets(doc, x, y + h - 1.5 * MM, w, 1.5 * MM);
   doc.finirDecoupe();

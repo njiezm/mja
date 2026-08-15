@@ -140,15 +140,32 @@ function note(doc, texte, entete) {
 
 function code(doc, texte, entete) {
   var lignes = String(texte).split('\n');
-  var h = lignes.length * 12 + 16;
-  place(doc, h + 6, entete);
-  doc.rectArrondi(MARGE, doc.y, L, h, 7, C.encre);
-  for (var i = 0; i < lignes.length; i++) {
-    /* Helvetica plutôt qu'une chasse fixe : le PDF n'embarque que les
-       polices standard, et Courier rendrait mal les accents ici absents. */
-    doc.texte(MARGE + 14, doc.y + 20 + i * 12, lignes[i], { size: 8.5, c: [0.847, 0.894, 0.973] });
+
+  /* Chasse fixe (Courier) : les schémas dessinés en caractères ne tiennent
+     que si toutes les colonnes ont la même largeur. La taille s'ajuste à la
+     ligne la plus longue plutôt que de la laisser déborder. */
+  var plusLongue = lignes.reduce(function (m, l) { return Math.max(m, l.length); }, 0);
+  var taille = Math.min(8.5, (L - 28) / (plusLongue * 0.6 || 1));
+  if (taille < 5) taille = 5;
+  var interligne = taille * 1.42;
+
+  /* Un long schéma ne tient pas toujours sur la page en cours : on le coupe
+     en tranches, chacune dans son propre cadre. */
+  var i = 0;
+  while (i < lignes.length) {
+    if (doc.y + interligne * 3 + 16 > BAS) entete();
+    var reste = Math.floor((BAS - doc.y - 16) / interligne);
+    var tranche = lignes.slice(i, i + Math.max(reste, 1));
+    var h = tranche.length * interligne + 16;
+
+    doc.rectArrondi(MARGE, doc.y, L, h, 7, C.encre);
+    for (var j = 0; j < tranche.length; j++) {
+      doc.texte(MARGE + 14, doc.y + 12 + taille + j * interligne, tranche[j],
+                { size: taille, mono: true, c: [0.847, 0.894, 0.973] });
+    }
+    doc.y += h + 12;
+    i += tranche.length;
   }
-  doc.y += h + 12;
 }
 
 /* ── Composition ─────────────────────────────────────────────────── */
@@ -189,7 +206,7 @@ function composer(logo) {
   doc.texte(MARGE, 198, 'Documentation technique et fonctionnelle du site', { size: 14, c: [0.788, 0.859, 0.980] });
   doc.texte(MARGE, 224, "Pour toute personne qui reprend ou découvre le projet", { size: 10.5, c: C.bleuClair });
 
-  var stats = [['135', 'routes'], ['18', 'tables'], ['88', 'gabarits'], ['32', 'migrations']];
+  var stats = [['138', 'routes'], ['16', 'tables'], ['89', 'gabarits'], ['32', 'migrations']];
   var cw = (L - 3 * 10) / 4;
   stats.forEach(function (s, i) {
     var x = MARGE + i * (cw + 10);

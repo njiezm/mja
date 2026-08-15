@@ -28,7 +28,7 @@
         ['table', ['entetes' => ['Élément', 'Choix', 'Précision'], 'lignes' => [
             ['Framework', 'Laravel 13', 'PHP 8.3 minimum'],
             ['Base de données', 'PostgreSQL', 'SQLite en test (mémoire)'],
-            ['Gabarits', 'Blade', '88 vues'],
+            ['Gabarits', 'Blade', '89 vues'],
             ['Styles', 'Tailwind CSS précompilé', 'feuille statique, pas de build au déploiement'],
             ['Icônes', 'Font Awesome', 'servi en local, repli CDN'],
             ['Polices', 'Gill Sans, AllRound Gothic', 'servies depuis le domaine, préchargées'],
@@ -36,8 +36,6 @@
             ['Emails', 'Mailables Laravel', 'gabarits Blade en tableaux HTML'],
         ]]],
         ['note', "La feuille Tailwind est précompilée et livrée telle quelle. Conséquence pratique : une classe utilitaire absente de cette feuille — notamment toute valeur arbitraire entre crochets — n'aura aucun effet. Les mises en page inhabituelles s'écrivent donc en CSS, dans un bloc de la vue concernée."],
-        ['sous', 'Aucune dépendance JavaScript'],
-        ['p', "Le générateur de visuels, le monteur vidéo et les exports PDF sont écrits à la main, sans librairie. Le SVG est produit par concaténation de chaînes, la vidéo par MediaRecorder sur un canvas, et le PDF par écriture directe des objets du format. C'est plus de code, mais aucune dépendance à maintenir et aucun téléchargement pour le visiteur."],
     ]],
 
     ['titre' => 'Arborescence du code', 'blocs' => [
@@ -53,80 +51,429 @@
             ['app/Console/Commands', '6', 'Purge, sauvegarde, relances, diagnostics'],
             ['database/migrations', '32', 'Schéma, dans l\'ordre chronologique'],
             ['database/seeders', '11', 'Jeux de données : contenu, équipe, adhérents, saison'],
-            ['resources/views', '88', 'Gabarits Blade'],
+            ['resources/views', '89', 'Gabarits Blade'],
         ]]],
-        ['sous', 'Les 135 routes'],
+        ['sous', 'Les 138 routes'],
         ['liste', [
-            "40 publiques — accueil, projets, événements, actualités, ressources, adhésion, dons, contact, mentions légales, sitemap.",
+            "38 publiques — accueil, projets, événements, actualités, ressources, adhésion, dons, contact, recherche, mentions légales, sitemap.",
             "17 dans l'espace adhérent, sous le préfixe /espace.",
-            "78 dans le back-office, sous le préfixe /admin.",
+            "5 d'authentification du back-office — connexion, déconnexion, mot de passe oublié.",
+            "77 dans le back-office, sous le préfixe /admin.",
         ]],
+        ['p', "Le détail de chacune figure au chapitre « Les routes, une par une »."],
         ['p', "Une route de suivi des sources d'acquisition est déclarée en dernier : elle capture tout segment unique non déjà routé et renvoie une erreur 404 si le slug ne correspond à aucune source enregistrée. Sa position en fin de fichier est délibérée — la déplacer casserait toutes les pages."],
-        ['sous', 'Outils internes'],
-        ['table', ['entetes' => ['Route', 'Accès', 'Rôle'], 'lignes' => [
-            ['/kit-adhesion', 'Public', "Générateur de 139 visuels : posts, stories, affiches, flyers, kakémonos, bannières, vidéos"],
-            ['/kit-video', 'Public', 'Monteur vidéo : intro, plans, outro, export MP4'],
-            ['/plan-comm', 'Back-office', 'Plan de communication modifiable, export CSV et PDF'],
-            ['/cahier-projet', 'Back-office', 'Le présent document'],
-        ]]],
     ]],
 
     ['titre' => 'Modèle de données', 'blocs' => [
-        ['p', "Dix-huit tables métier. Le pivot du modèle est le couple compte / adhésion : une personne possède un compte unique, et autant d'adhésions que de saisons auxquelles elle a participé."],
+        ['p', "Seize tables métier et neuf tables techniques. Le pivot du modèle est le couple compte / adhésion : une personne possède un compte unique, et autant d'adhésions que de saisons auxquelles elle a participé. Tout le reste — contenu éditorial, suivi des sources, réglages — gravite autour sans y toucher."],
+
+        ['sous', "Schéma d'ensemble"],
+        ['code', <<<SCHEMA
+                          +----------------------+
+                          |   adhesion_periods   |   les saisons
+                          +----------+-----------+
+                                     | 1
+                                     | N
+  +--------------+  1        N  +----+---------+  1        N  +--------------------+
+  |    users     |--------------|   adhesions  |--------------| adhesion_relances  |
+  |  (comptes)   |              |              |              +--------------------+
+  +------+-------+              +---+------+---+
+         |                          |      |
+         | adhesion_id (courante)   |      | renouvelle_adhesion_id
+         +--------------------------+      +--> adhesions (saison precedente)
+                                    |
+                                    | source_id
+                                    v
+                             +-------------+  1     N  +-----------------+
+                             |   sources   |-----------|  source_visits  |
+                             +-------------+           +-----------------+
+
+  +------------+  1     N  +-----------+
+  |  projects  |-----------|  events   |
+  +------------+           +-----------+
+
+  +-----------+  +-------------+  +--------------+  +-------------+  +------------+
+  | articles  |  |  resources  |  | team_members |  | partenaires |  |  contacts  |
+  +-----------+  +-------------+  +--------------+  +-------------+  +------------+
+
+  +-------------+  +------------+
+  |  donations  |  |  settings  |
+  +-------------+  +------------+
+SCHEMA],
+        ['p', "Il se lit ainsi : un trait « 1 — N » signifie qu'une ligne de la table de gauche peut avoir plusieurs lignes en face. Une saison a plusieurs adhésions ; un compte a plusieurs adhésions ; une adhésion a plusieurs relances ; un projet a de zéro à N événements."],
 
         ['sous', 'users — le compte unique'],
-        ['p', "Une seule table de comptes pour tout le site. Un compte peut être adhérent, administrateur, ou les deux. Le rôle décide de l'accès au back-office ; la clé adhesion_id décide de l'accès à l'espace adhérent."],
+        ['p', "Une seule table de comptes pour tout le site, depuis la fusion des comptes adhérents et administrateurs. Un compte peut être adhérent, administrateur, ou les deux. Le rôle décide de l'accès au back-office ; la clé adhesion_id décide de l'accès à l'espace adhérent."],
         ['table', ['entetes' => ['Colonne', 'Type', 'Rôle'], 'lignes' => [
             ['id', 'entier', 'Identifiant'],
-            ['name, email', 'texte', 'Identité — email unique, stocké en minuscules'],
-            ['password', 'haché', 'Authentification'],
-            ['password_encrypted', 'chiffré', 'Copie réversible, lisible par le super admin uniquement'],
+            ['name', 'texte', "Nom affiché — « Prénom Nom » pour un adhérent"],
+            ['email', 'texte', 'Identifiant de connexion, unique, stocké en minuscules'],
+            ['email_verified_at', 'date', "Vérification de l'adresse — non utilisé actuellement"],
+            ['password', 'haché', 'Mot de passe, hachage bcrypt'],
+            ['password_encrypted', 'chiffré', 'Copie réversible du mot de passe, lisible du seul super admin'],
+            ['remember_token', 'texte', 'Connexion persistante « se souvenir de moi »'],
             ['role', 'texte', 'membre, gestionnaire_contenu, admin, super_admin'],
-            ['is_active', 'booléen', "Révocation d'accès sans suppression"],
+            ['is_active', 'booléen', "Révocation d'accès sans suppression du compte"],
             ['adhesion_id', 'clé', 'Adhésion en cours — null pour un compte purement administrateur'],
-            ['show_in_directory', 'booléen', 'Visibilité au trombinoscope'],
-            ['restore_token', 'texte', 'Restauration après suppression (30 jours)'],
-            ['deleted_at', 'date', 'Suppression douce'],
+            ['show_in_directory', 'booléen', 'Visibilité au trombinoscope des adhérents'],
+            ['restore_token', 'texte', 'Jeton de restauration après suppression, 30 jours'],
+            ['deleted_at', 'date', 'Suppression douce — le compte disparaît sans être effacé'],
+            ['created_at, updated_at', 'date', 'Horodatage'],
         ]]],
 
         ['sous', 'adhesions — une ligne par saison'],
-        ['p', "Trente-deux colonnes. Chaque adhésion porte l'identité, les coordonnées, les informations pratiques, le consentement RGPD, le moyen de paiement et le statut."],
-        ['table', ['entetes' => ['Colonne', 'Rôle'], 'lignes' => [
-            ['user_id', 'Compte propriétaire — plusieurs adhésions pour un même compte'],
-            ['period_id', 'Saison concernée'],
-            ['renouvelle_adhesion_id', "Adhésion de l'année précédente que celle-ci renouvelle"],
-            ['statut', 'nouvelle, prise_infos, en_attente_paiement, payee, refusee, desistement'],
-            ['moyen_paiement', 'cheque, espece, virement, en_ligne'],
-            ['reseaux_sociaux', 'JSON — facultatif, affiché au trombinoscope'],
-            ['photo', 'Facultative, déposable plus tard depuis l\'espace'],
-            ['message', "Question posée lors d'une simple prise d'informations"],
-            ['account_token', 'Jeton de création de compte, valable 30 jours'],
-            ['renouvellement_token', 'Lien magique de réadhésion, valable 90 jours'],
-            ['source_id', "Source d'acquisition ayant amené la personne"],
+        ['p', "Trente-deux colonnes : l'identité, les coordonnées, les informations pratiques, le consentement, le paiement, le statut et les jetons. Une adhésion n'est jamais modifiée d'une saison à l'autre — une réadhésion crée une nouvelle ligne qui pointe vers la précédente."],
+        ['table', ['entetes' => ['Colonne', 'Type', 'Rôle'], 'lignes' => [
+            ['id', 'entier', 'Identifiant'],
+            ['user_id', 'clé', 'Compte propriétaire — plusieurs adhésions pour un même compte'],
+            ['period_id', 'clé', 'Saison concernée — null tant que le rattachement n\'est pas fait'],
+            ['renouvelle_adhesion_id', 'clé', "Adhésion de la saison précédente que celle-ci renouvelle"],
+            ['source_id', 'clé', "Source d'acquisition ayant amené la personne"],
+            ['premiere_adhesion', 'texte', 'premiere, readhesion ou information'],
+            ['civilite, nom, prenom', 'texte', 'Identité'],
+            ['date_naissance', 'texte', 'Saisie au format jj/mm/aaaa'],
+            ['profession', 'texte', 'Situation professionnelle ou études'],
+            ['telephone', 'texte', 'Formaté avec espaces à l\'enregistrement'],
+            ['email', 'texte', "Sert de clé de rapprochement avec le compte"],
+            ['adresse_postale', 'texte', "Colonne héritée — plus demandée ni affichée"],
+            ['taille_tshirt', 'texte', 'XS à XXL'],
+            ['permis', 'texte', 'Oui, Non, En cours — utile pour organiser les déplacements'],
+            ['problemes_sante', 'texte', 'Allergies et contre-indications, facultatif'],
+            ['urgence_contact', 'texte', "Personne à prévenir"],
+            ['droit_image', 'booléen', "Autorisation de diffusion de l'image"],
+            ['rgpd_consentement', 'booléen', 'Consentement au traitement des données'],
+            ['reseaux_sociaux', 'JSON', 'Comptes facultatifs, affichés au trombinoscope'],
+            ['photo', 'texte', "Chemin de la photo, facultative, déposable plus tard"],
+            ['message', 'texte', "Question posée lors d'une simple prise d'informations"],
+            ['moyen_paiement', 'texte', 'cheque, espece, virement, en_ligne'],
+            ['statut', 'texte', 'nouvelle, prise_infos, en_attente_paiement, payee, refusee, desistement'],
+            ['lu', 'booléen', "Marqueur de lecture en back-office"],
+            ['account_token', 'texte', 'Jeton de création de compte, valable 30 jours'],
+            ['account_token_expires_at', 'date', "Échéance du précédent"],
+            ['renouvellement_token', 'texte', 'Lien magique de réadhésion, valable 90 jours'],
+            ['renouvellement_token_expires_at', 'date', "Échéance du précédent"],
+            ['created_at, updated_at', 'date', 'Horodatage'],
+        ]]],
+        ['note', "Le statut « payee » est le pivot : il déclenche l'email de bienvenue, le jeton de création de compte, l'entrée au trombinoscope et l'accès à la carte de membre."],
+
+        ['sous', 'adhesion_periods — les saisons'],
+        ['table', ['entetes' => ['Colonne', 'Type', 'Rôle'], 'lignes' => [
+            ['label', 'texte', 'Intitulé affiché, par exemple « Saison 2026-2027 »'],
+            ['date_debut, date_fin', 'date', 'Bornes de la saison'],
+            ['actif', 'booléen', 'Une saison inactive ne devient jamais la saison courante'],
+        ]]],
+        ['p', "La saison courante est celle qui est active et qui contient la date du jour. C'est elle qui est attribuée aux nouvelles adhésions et qui détermine si une adhésion est à renouveler."],
+
+        ['sous', 'adhesion_relances — le journal des envois'],
+        ['table', ['entetes' => ['Colonne', 'Type', 'Rôle'], 'lignes' => [
+            ['adhesion_id', 'clé', 'Adhésion relancée'],
+            ['type', 'texte', 'renouvellement ou paiement'],
+            ['numero', 'entier', 'Rang de la relance : première, deuxième, troisième'],
+            ['email', 'texte', "Adresse réellement destinataire au moment de l'envoi"],
+            ['automatique', 'booléen', 'Envoi déclenché par le planificateur ou à la main'],
+            ['envoyee_le', 'date', "Date d'envoi — sert d'anti-doublon"],
         ]]],
 
-        ['sous', 'Les relations'],
+        ['sous', 'projects et events — les actions'],
+        ['table', ['entetes' => ['Table', 'Colonnes', 'Précision'], 'lignes' => [
+            ['projects', 'titre, slug, description_courte, description, image, statut, date_debut, date_fin, actif, ordre', "statut vaut en_cours, a_venir ou termine ; ordre commande l'affichage"],
+            ['events', 'titre, slug, description_courte, description, image, date_debut, date_fin, lieu, adresse, gratuit, prix, lien_inscription, publie, project_id', "project_id rattache l'événement à un projet — null s'il est isolé"],
+        ]]],
+        ['p', "Un projet est une action récurrente (Fwi Ti Dèj, La Caravane de l'unité) ; un événement en est une édition datée. La page d'un projet affiche ses éditions à venir puis ses éditions passées."],
+
+        ['sous', 'Le contenu éditorial'],
+        ['table', ['entetes' => ['Table', 'Colonnes', 'Précision'], 'lignes' => [
+            ['articles', 'titre, slug, extrait, contenu, image, categorie, auteur, publie, publie_le', 'Actualités ; publie_le commande le tri'],
+            ['resources', 'titre, description, fichier, lien_externe, type, categorie, actif, ordre', 'Documents à télécharger ou liens externes'],
+            ['team_members', 'prenom, nom, role, bio, photo, email, actif, ordre', "Bureau et équipe affichés sur la page À propos"],
+            ['partenaires', 'nom, logo, url, description, ordre, actif', 'Logos et liens des partenaires'],
+        ]]],
+
+        ['sous', 'Les autres tables métier'],
+        ['table', ['entetes' => ['Table', 'Colonnes', 'Précision'], 'lignes' => [
+            ['contacts', 'nom, email, telephone, sujet, message, lu, source_id', 'Messages reçus par le formulaire de contact'],
+            ['donations', 'prenom, nom, email, montant, message, statut, stripe_session_id, lu', 'Dons ponctuels, encaissés par Stripe Checkout'],
+            ['settings', 'key, value', "Réglages clé-valeur ; les valeurs sensibles sont chiffrées au repos"],
+            ['sources', 'slug, label, description, target, is_active', "Liens tracés : /flyer-septembre redirige vers la cible en notant la visite"],
+            ['source_visits', 'source_id, visitor_hash, ip, user_agent, referer, utm_medium, utm_campaign, device', 'Une ligne par visite, visiteur anonymisé par empreinte'],
+            ['members', 'adhesion_id, email, password, show_in_directory, restore_token', 'Ancienne table des comptes adhérents, conservée après la fusion'],
+        ]]],
+        ['note', "La table members n'est plus lue ni écrite par le code. Elle reste en place le temps de valider la bascule en production ; une migration ultérieure pourra la retirer."],
+
+        ['sous', 'Les tables techniques'],
+        ['p', "Neuf tables appartiennent au fonctionnement de Laravel et ne contiennent aucune donnée métier : migrations, sessions, cache, cache_locks, jobs, job_batches, failed_jobs, password_reset_tokens et member_password_reset_tokens. Elles peuvent être vidées sans perte, à l'exception de migrations qui mémorise le schéma appliqué."],
+
+        ['sous', 'Les relations, en résumé'],
         ['etapes', [
-            ['users → adhesions', "Un compte a plusieurs adhésions (historique). users.adhesion_id désigne la courante."],
-            ['adhesions → adhesion_periods', "Chaque adhésion appartient à une saison."],
-            ['adhesions → adhesions', "renouvelle_adhesion_id chaîne les saisons successives d'une même personne."],
-            ['adhesions → adhesion_relances', "Journal des relances envoyées, garde-fou contre les doublons."],
-            ['projects → events', "Un projet a de zéro à N événements ; un événement appartient à un seul projet, ou à aucun."],
-            ['sources → source_visits', "Suivi des campagnes d'acquisition, visiteur anonymisé par empreinte."],
+            ['users -> adhesions', "Un compte a plusieurs adhésions (historique). users.adhesion_id désigne la courante."],
+            ['adhesions -> adhesion_periods', "Chaque adhésion appartient à une saison ; le rattachement est modifiable en back-office."],
+            ['adhesions -> adhesions', "renouvelle_adhesion_id chaîne les saisons successives d'une même personne."],
+            ['adhesions -> adhesion_relances', "Journal des relances envoyées, garde-fou contre les doublons."],
+            ['adhesions -> sources', "L'adhésion garde la trace du support qui a amené la personne."],
+            ['projects -> events', "Un projet a de zéro à N événements ; un événement appartient à un seul projet, ou à aucun."],
+            ['sources -> source_visits', "Suivi des campagnes d'acquisition, visiteur anonymisé par empreinte."],
         ]],
+    ]],
 
-        ['sous', 'Les autres tables'],
-        ['table', ['entetes' => ['Table', 'Contenu'], 'lignes' => [
-            ['projects, events, articles, resources', 'Contenu éditorial du site'],
-            ['team_members', "Bureau et équipe affichés sur la page À propos"],
-            ['partenaires', 'Logos et liens des partenaires'],
-            ['contacts', 'Messages reçus via le formulaire de contact'],
-            ['donations', 'Dons, avec la session Stripe associée'],
-            ['settings', 'Réglages clé-valeur ; les secrets sont chiffrés au repos'],
-            ['adhesion_periods', 'Saisons — détermine la période courante et déclenche les renouvellements'],
-            ['members', 'Ancienne table des comptes adhérents, conservée comme filet de sécurité après la fusion'],
+    ['titre' => 'Les routes, une par une', 'blocs' => [
+        ['p', "Toutes les routes sont déclarées dans routes/web.php, à l'exception de l'authentification du back-office qui vit dans routes/auth.php. L'ordre du fichier compte : la route de suivi des sources, déclarée en dernier, capture tout segment unique non déjà routé."],
+
+        ['sous', 'Pages publiques'],
+        ['table', ['entetes' => ['Méthode et URL', 'Nom', 'Ce que fait la route'], 'lignes' => [
+            ['GET /', 'home', "Accueil : carrousel, projets phares, prochains événements, dernières actualités"],
+            ['GET /a-propos', 'about', "Histoire, valeurs, bureau et équipe, partenaires"],
+            ['GET /contact', 'contact', 'Formulaire de contact'],
+            ['POST /contact', 'contact.store', 'Enregistre le message, notifie et accuse réception — pot de miel, 5 envois par minute'],
+            ['GET /projets', 'projects.index', 'Liste des projets actifs'],
+            ['GET /projets/{slug}', 'projects.show', "Fiche projet, avec ses éditions à venir et passées"],
+            ['GET /evenements', 'events.index', 'Agenda : à venir puis passés'],
+            ['GET /evenements/{slug}', 'events.show', "Fiche événement, lieu, tarif, lien d'inscription"],
+            ['GET /evenements/{slug}/ics', 'events.ics', "Fichier calendrier à ajouter à son agenda"],
+            ['GET /actualites', 'articles.index', 'Liste des actualités publiées'],
+            ['GET /actualites/{slug}', 'articles.show', 'Article complet'],
+            ['GET /ressources', 'resources.index', 'Documents à télécharger et liens utiles'],
+            ['GET /sante-nutrition-sport', 'sns', "Page du programme Fwi Ti Dèj et Santé Nutrition Sport"],
+            ['GET /adhesion', 'adhesion', "Formulaire d'adhésion — redirige un adhérent connecté vers son renouvellement"],
+            ['POST /adhesion', 'adhesion.store', 'Enregistre la demande, vérifie le paiement, envoie les emails'],
+            ['POST /adhesion/paiement-intent', 'adhesion.payment-intent', 'Crée le paiement Stripe appelé depuis la page, en AJAX'],
+            ['GET /adhesion/paiement/succes', 'adhesion.paiement.succes', 'Retour de paiement abouti'],
+            ['GET /adhesion/paiement/annule', 'adhesion.paiement.annule', 'Retour de paiement abandonné'],
+            ['GET /adhesion/renouveler/{token}', 'adhesion.renouveler', 'Lien magique de réadhésion, sans connexion, 90 jours'],
+            ['GET /don', 'don', 'Formulaire de don'],
+            ['POST /don', 'don.store', 'Ouvre la page de paiement Stripe'],
+            ['GET /don/merci', 'don.merci', 'Remerciement après don'],
+            ['GET /recherche', 'search', 'Recherche parmi actualités, projets, événements et ressources'],
+            ['GET /mentions-legales', 'mentions-legales', 'Mentions légales'],
+            ['GET /politique-de-confidentialite', 'confidentialite', 'Politique de confidentialité et RGPD'],
+            ['GET /sitemap.xml', 'sitemap', 'Plan du site pour les moteurs de recherche'],
+            ['GET /{source}', 'source.track', "Lien tracé : note la visite puis redirige. Doit rester la dernière route déclarée"],
         ]]],
-        ['note', "La table members n'est plus utilisée par le code. Elle reste en place le temps de valider la bascule en production ; une migration ultérieure pourra la retirer."],
+
+        ['sous', 'Espace adhérent — préfixe /espace'],
+        ['table', ['entetes' => ['Méthode et URL', 'Nom', 'Ce que fait la route'], 'lignes' => [
+            ['GET /espace/creer/{token}', 'member.account.create', 'Formulaire de création de compte, ouvert par le lien reçu par email'],
+            ['POST /espace/creer/{token}', 'member.account.store', 'Crée le compte et connecte la personne'],
+            ['GET /espace/restaurer/{token}', 'member.account.restore', 'Restaure un compte supprimé, dans les 30 jours'],
+            ['GET /espace/connexion', 'member.login', 'Page de connexion adhérent'],
+            ['POST /espace/connexion', 'member.login.post', 'Connexion — 6 tentatives par minute'],
+            ['POST /espace/deconnexion', 'member.logout', 'Déconnexion'],
+            ['GET /espace/mot-de-passe-oublie', 'member.password.request', 'Demande de lien de réinitialisation'],
+            ['POST /espace/mot-de-passe-oublie', 'member.password.email', 'Envoie le lien — 4 demandes par minute'],
+            ['GET /espace/reinitialiser/{token}', 'member.password.reset', 'Formulaire de nouveau mot de passe'],
+            ['POST /espace/reinitialiser', 'member.password.update', 'Enregistre le nouveau mot de passe'],
+            ['GET /espace', 'member.dashboard', "Tableau de bord : adhésion en cours, rappel de renouvellement, accès rapides"],
+            ['GET /espace/trombinoscope', 'member.trombinoscope', 'Annuaire des adhérents qui ont accepté d\'y figurer'],
+            ['GET /espace/carte', 'member.card', 'Carte de membre et attestation, téléchargeables en PDF'],
+            ['GET /espace/profil', 'member.profile.edit', 'Modification des informations personnelles'],
+            ['PUT /espace/profil', 'member.profile.update', 'Enregistre les modifications'],
+            ['DELETE /espace/compte', 'member.account.destroy', 'Suppression du compte, réversible 30 jours'],
+            ['GET /espace/renouveler', 'adhesion.renouveler.espace', 'Réadhésion pré-remplie depuis l\'espace'],
+        ]]],
+
+        ['sous', 'Authentification du back-office'],
+        ['table', ['entetes' => ['Méthode et URL', 'Nom', 'Ce que fait la route'], 'lignes' => [
+            ['GET /connexion', 'login', 'Page de connexion du back-office'],
+            ['POST /connexion', 'login.post', 'Connexion'],
+            ['POST /deconnexion', 'logout', 'Déconnexion'],
+            ['GET /mot-de-passe-oublie', 'password.request', 'Demande de lien de réinitialisation'],
+            ['POST /mot-de-passe-oublie', 'password.email', 'Envoie le lien'],
+            ['GET /reinitialiser-mot-de-passe/{token}', 'password.reset', 'Formulaire de nouveau mot de passe'],
+            ['POST /reinitialiser-mot-de-passe', 'password.update', 'Enregistre le nouveau mot de passe'],
+        ]]],
+
+        ['sous', 'Back-office — contenu (gestionnaire, admin, super admin)'],
+        ['table', ['entetes' => ['URL', 'Nom', 'Ce que fait la route'], 'lignes' => [
+            ['GET /admin', 'admin.dashboard', 'Tableau de bord : chiffres clés, dernières demandes, alertes'],
+            ['/admin/articles', 'admin.articles.*', 'Actualités : liste, création, édition, suppression'],
+            ['/admin/projects', 'admin.projects.*', "Projets, avec rattachement des événements"],
+            ['/admin/events', 'admin.events.*', 'Événements, avec rattachement à un projet'],
+            ['/admin/resources', 'admin.resources.*', 'Ressources : fichiers et liens'],
+            ['/admin/team', 'admin.team.*', "Bureau et équipe"],
+            ['/admin/partenaires', 'admin.partenaires.*', 'Partenaires'],
+            ['GET /admin/contacts', 'admin.contacts.index', 'Messages reçus'],
+            ['GET /admin/contacts/{id}', 'admin.contacts.show', 'Message détaillé, marqué comme lu'],
+            ['DELETE /admin/contacts/{id}', 'admin.contacts.destroy', 'Supprime le message'],
+        ]]],
+        ['p', "Les groupes notés avec une étoile suivent la convention Laravel : index, create, store, edit, update, destroy. Six routes chacun, sauf les partenaires et l'équipe qui n'ont pas de page publique dédiée."],
+
+        ['sous', 'Back-office — gestion (admin et super admin)'],
+        ['table', ['entetes' => ['Méthode et URL', 'Nom', 'Ce que fait la route'], 'lignes' => [
+            ['GET /admin/adhesions', 'admin.adhesions.index', 'Liste des demandes, filtre par saison, alerte sur les adhésions sans saison'],
+            ['GET /admin/adhesions/export', 'admin.adhesions.export', 'Export CSV, filtré par saison'],
+            ['GET /admin/adhesions/{id}', 'admin.adhesions.show', 'Fiche complète de la demande'],
+            ['PATCH /admin/adhesions/{id}/statut', 'admin.adhesions.statut', "Change le statut et envoie l'email correspondant"],
+            ['PATCH /admin/adhesions/{id}/periode', 'admin.adhesions.periode', 'Rattache la demande à une saison, ou l\'en détache'],
+            ['POST /admin/adhesions/rattacher-periode', 'admin.adhesions.rattacher-periode', 'Rattache d\'un coup toutes les adhésions sans saison'],
+            ['DELETE /admin/adhesions/{id}', 'admin.adhesions.destroy', 'Supprime la demande et sa photo'],
+            ['GET /admin/relances', 'admin.relances.index', 'Réglages, relances dues, historique des envois'],
+            ['PUT /admin/relances', 'admin.relances.update', 'Enregistre les réglages de relance'],
+            ['POST /admin/relances/executer', 'admin.relances.executer', 'Déclenche à la main la campagne du jour'],
+            ['POST /admin/relances/adhesion/{id}', 'admin.relances.une', 'Relance une seule personne'],
+            ['GET /admin/periodes', 'admin.periods.index', 'Saisons : liste et création'],
+            ['/admin/periodes/{id}', 'admin.periods.*', 'Édition et suppression'],
+            ['GET /admin/dons', 'admin.donations.index', 'Dons reçus'],
+            ['DELETE /admin/dons/{id}', 'admin.donations.destroy', 'Supprime un don'],
+            ['GET /admin/sources', 'admin.sources.index', "Liens tracés et statistiques d'acquisition"],
+            ['GET /admin/sources/export', 'admin.sources.export', 'Export CSV des visites'],
+            ['/admin/sources/{id}', 'admin.sources.*', 'Édition et suppression'],
+            ['GET /admin/comptes-adherents', 'admin.members.index', 'Comptes des adhérents'],
+            ['POST /admin/comptes-adherents', 'admin.members.store', 'Crée le compte d\'un adhérent et lui envoie ses accès'],
+            ['GET /admin/comptes-adherents/export', 'admin.members.export', 'Export CSV des comptes'],
+            ['PATCH /admin/comptes-adherents/{id}/mot-de-passe', 'admin.members.reset-password', 'Réinitialise un mot de passe'],
+            ['PATCH /admin/comptes-adherents/{id}/role', 'admin.members.role', 'Nomme un adhérent gestionnaire ou administrateur'],
+            ['PATCH /admin/comptes-adherents/{id}/trombinoscope', 'admin.members.toggle-directory', 'Affiche ou masque la personne au trombinoscope'],
+            ['GET /admin/parametres', 'admin.settings.edit', 'Cotisation, frais bancaires, coordonnées, Stripe, relances'],
+            ['PUT /admin/parametres', 'admin.settings.update', 'Enregistre les réglages'],
+        ]]],
+
+        ['sous', 'Back-office — comptes du personnel (super admin)'],
+        ['table', ['entetes' => ['Méthode et URL', 'Nom', 'Ce que fait la route'], 'lignes' => [
+            ['/admin/users', 'admin.users.*', 'Comptes administrateurs et gestionnaires : liste, création, édition, suppression'],
+            ['PATCH /admin/users/{id}/reset-password', 'admin.users.reset-password', 'Réinitialise le mot de passe et le communique'],
+            ['PATCH /admin/users/{id}/toggle-active', 'admin.users.toggle-active', "Suspend ou réactive l'accès"],
+        ]]],
+    ]],
+
+    ['titre' => 'Les contrôleurs', 'blocs' => [
+        ['p', "Trente-trois contrôleurs, répartis en quatre familles : les pages publiques à la racine, l'authentification du back-office dans Auth, l'espace adhérent dans Member, le back-office dans Admin. Un contrôleur ne contient que l'enchaînement des opérations ; les règles de calcul vivent dans app/Support et app/Services."],
+
+        ['sous', 'Pages publiques'],
+        ['table', ['entetes' => ['Contrôleur', 'Méthodes', 'Rôle'], 'lignes' => [
+            ['HomeController', 'index, about, contact, contactStore, sns, mentionsLegales, confidentialite', "Accueil et pages institutionnelles. index compose le carrousel, les projets phares et l'agenda."],
+            ['ProjectController', 'index, show', "Liste des projets ; la fiche charge les événements liés, séparés en à venir et passés."],
+            ['EventController', 'index, show, ics', "Agenda public ; ics produit un fichier calendrier à la volée."],
+            ['ArticleController', 'index, show', 'Actualités publiées, triées par date de publication.'],
+            ['ResourceController', 'index', 'Documents et liens, groupés par catégorie.'],
+            ['AdhesionController', 'create, store, paymentIntent, paiementSucces, paiementAnnule, renouvelerParLien, renouvelerDepuisEspace', "Le contrôleur le plus dense du projet : formulaire, paiement, enregistrement, emails, réadhésion."],
+            ['DonationController', 'create, store, merci', 'Dons ponctuels par Stripe Checkout.'],
+            ['SearchController', 'index', 'Recherche transversale sur quatre types de contenu.'],
+            ['SitemapController', 'index', 'Plan du site au format XML, alimenté par le contenu publié.'],
+            ['SourceTrackController', 'handle', 'Enregistre la visite issue d\'un lien tracé puis redirige.'],
+        ]]],
+
+        ['sous', 'Espace adhérent'],
+        ['table', ['entetes' => ['Contrôleur', 'Méthodes', 'Rôle'], 'lignes' => [
+            ['Member\\SpaceController', 'dashboard, trombinoscope, card, editProfile, updateProfile, destroy', "Tableau de bord, annuaire, carte de membre, profil, suppression de compte."],
+            ['Member\\AccountController', 'showCreate, store, restore', 'Création du compte par jeton, restauration après suppression.'],
+            ['Member\\AuthController', 'showLogin, login, logout', 'Connexion adhérent — même identité que le back-office.'],
+            ['Member\\PasswordResetController', 'showLinkRequest, sendResetLink, showReset, reset', 'Mot de passe oublié.'],
+        ]]],
+
+        ['sous', 'Back-office — contenu'],
+        ['table', ['entetes' => ['Contrôleur', 'Rôle'], 'lignes' => [
+            ['Admin\\DashboardController', 'Chiffres clés, dernières demandes, alertes.'],
+            ['Admin\\ArticleController', 'Actualités : image, extrait, contenu enrichi, publication.'],
+            ['Admin\\ProjectController', "Projets ; synchronise aussi les événements rattachés."],
+            ['Admin\\EventController', 'Événements ; rattachement à un projet, tarif, inscription.'],
+            ['Admin\\ResourceController', 'Ressources : fichier téléversé ou lien externe.'],
+            ['Admin\\TeamController', "Bureau et équipe, avec ordre d'affichage."],
+            ['Admin\\PartenaireController', 'Partenaires : logo, lien, ordre.'],
+            ['Admin\\ContactController', 'Messages reçus : consultation et suppression.'],
+        ]]],
+
+        ['sous', 'Back-office — gestion'],
+        ['table', ['entetes' => ['Contrôleur', 'Rôle'], 'lignes' => [
+            ['Admin\\AdhesionController', "Demandes d'adhésion : liste, fiche, statut, rattachement à une saison, export CSV, suppression."],
+            ['Admin\\RelanceController', 'Relances : réglages, aperçu des envois dus, déclenchement manuel, historique.'],
+            ['Admin\\PeriodController', 'Saisons : création, édition, activation.'],
+            ['Admin\\DonationController', 'Dons reçus.'],
+            ['Admin\\SourceController', "Liens tracés et statistiques d'acquisition."],
+            ['Admin\\MemberAccountController', "Comptes adhérents : création, mot de passe, rôle, visibilité au trombinoscope, export."],
+            ['Admin\\SettingController', 'Réglages du site ; les secrets sont chiffrés avant enregistrement.'],
+            ['Admin\\UserController', 'Comptes du personnel — réservé au super administrateur.'],
+        ]]],
+
+        ['sous', 'Autour des contrôleurs'],
+        ['table', ['entetes' => ['Classe', 'Rôle'], 'lignes' => [
+            ['Support\\Cotisation', "Montant à régler pour que l'association encaisse la cotisation entière."],
+            ['Support\\Telephone', 'Mise en forme des numéros : trois chiffres puis des paires.'],
+            ['Support\\HtmlRiche', "Assainissement du texte enrichi par liste blanche."],
+            ['Support\\ReseauSocial', "Transforme un pseudo en adresse de profil."],
+            ['Services\\StripeService', 'Appels HTTP directs à Stripe : paiement, vérification, session de don.'],
+            ['Services\\RelanceService', 'Sélection des personnes à relancer, envoi, journalisation.'],
+            ['Auth\LoginController', 'Connexion et déconnexion du back-office.'],
+            ['Auth\ForgotPasswordController', 'Demande de réinitialisation du mot de passe.'],
+            ['Auth\ResetPasswordController', 'Enregistrement du nouveau mot de passe.'],
+            ['Middleware', 'content, admin, super_admin, honeypot, TrackVisit, DeclencheurRelances.'],
+        ]]],
+    ]],
+
+    ['titre' => 'Les vues', 'blocs' => [
+        ['p', "Quatre-vingt-neuf gabarits Blade. Deux mises en page servent de socle : layouts/app pour le site public et l'espace adhérent, layouts/admin pour le back-office. Les vues préfixées d'un tiret bas sont des formulaires partagés entre la création et l'édition."],
+
+        ['sous', 'Socle et éléments réutilisables'],
+        ['table', ['entetes' => ['Vue', 'Rôle'], 'lignes' => [
+            ['layouts/app', "Mise en page publique : en-tête, menu, pied de page, métadonnées de partage."],
+            ['layouts/admin', 'Mise en page du back-office : barre latérale, messages, confirmation avant suppression.'],
+            ['partials/seasonal-banner', "Bandeau saisonnier affiché selon la période de l'année."],
+            ['components/editeur-riche', "Éditeur de texte enrichi : gras, listes, liens, alignement."],
+            ['components/phone-field', 'Champ téléphone : indicatif et mise en forme automatique.'],
+            ['welcome', 'Page par défaut de Laravel, non utilisée.'],
+        ]]],
+
+        ['sous', 'Site public'],
+        ['table', ['entetes' => ['Vue', 'Rôle'], 'lignes' => [
+            ['home', 'Accueil : carrousel, présentation, projets, agenda, actualités, partenaires.'],
+            ['about', "À propos : histoire, valeurs, bureau et équipe."],
+            ['contact', 'Formulaire de contact.'],
+            ['adhesion', "Formulaire d'adhésion, de réadhésion et de prise d'informations, avec paiement intégré."],
+            ['projects/index, projects/show', "Liste des projets ; fiche avec éditions à venir et passées."],
+            ['events/index, events/show', 'Agenda et fiche événement.'],
+            ['articles/index, articles/show', 'Actualités.'],
+            ['resources/index', 'Ressources à télécharger.'],
+            ['sns', "Programme Fwi Ti Dèj et Santé Nutrition Sport."],
+            ['search', 'Résultats de recherche, groupés par type.'],
+            ['don/create, don/merci', 'Don et remerciement.'],
+            ['legal/mentions-legales, legal/confidentialite', 'Pages légales.'],
+            ['sitemap', 'Plan du site au format XML.'],
+        ]]],
+
+        ['sous', 'Espace adhérent'],
+        ['table', ['entetes' => ['Vue', 'Rôle'], 'lignes' => [
+            ['member/dashboard', "Tableau de bord : adhésion en cours, rappel de renouvellement, accès rapides."],
+            ['member/card', "Attestation d'adhésion et carte de membre, avec téléchargement en PDF."],
+            ['member/trombinoscope', 'Annuaire des adhérents qui ont accepté de figurer.'],
+            ['member/profile', 'Modification des informations et suppression du compte.'],
+            ['member/create', 'Création du compte depuis le lien reçu par email.'],
+            ['member/login, member/forgot-password, member/reset-password', 'Connexion et mot de passe oublié.'],
+        ]]],
+
+        ['sous', 'Back-office'],
+        ['table', ['entetes' => ['Vue', 'Rôle'], 'lignes' => [
+            ['admin/dashboard', 'Vue d\'ensemble : chiffres, dernières demandes, alertes.'],
+            ['admin/adhesions/index, show', "Liste des demandes et fiche détaillée."],
+            ['admin/relances/index', 'Réglages, relances dues, historique.'],
+            ['admin/members/index', 'Comptes adhérents et attribution des rôles.'],
+            ['admin/users/index, create, edit', 'Comptes du personnel.'],
+            ['admin/periods/index, edit', "Saisons d'adhésion."],
+            ['admin/settings/edit', 'Réglages du site, cotisation, Stripe, coordonnées bancaires.'],
+            ['admin/articles/*', 'Actualités : liste, création, édition, formulaire partagé.'],
+            ['admin/projects/*', "Projets, avec la liste des événements à rattacher."],
+            ['admin/events/*', 'Événements, avec le projet de rattachement.'],
+            ['admin/resources/*', 'Ressources.'],
+            ['admin/team/*', "Bureau et équipe."],
+            ['admin/partenaires/*', 'Partenaires.'],
+            ['admin/sources/index, edit', 'Liens tracés et statistiques.'],
+            ['admin/contacts/index, show', 'Messages reçus.'],
+            ['admin/donations/index', 'Dons.'],
+        ]]],
+
+        ['sous', 'Emails'],
+        ['p', "Douze gabarits, écrits en tableaux HTML pour rester lisibles dans tous les clients de messagerie."],
+        ['table', ['entetes' => ['Vue', 'Envoyé quand'], 'lignes' => [
+            ['emails/adhesion-confirmation', "Une demande d'adhésion vient d'être enregistrée — accusé de réception."],
+            ['emails/adhesion-notification', "Une demande vient d'arriver — alerte vers l'association."],
+            ['emails/adhesion-statut', 'Le statut de la demande change : acceptée, en attente de paiement, refusée.'],
+            ['emails/relance-renouvellement', "La saison a changé et l'adhésion n'a pas été renouvelée."],
+            ['emails/relance-paiement', "Un règlement par chèque, espèces ou virement n'est pas parvenu."],
+            ['emails/member-password-reset', 'Un adhérent a demandé un nouveau mot de passe.'],
+            ['emails/account-deleted', "Un compte vient d'être supprimé — contient le lien de restauration."],
+            ['emails/contact-confirmation', 'Accusé de réception du formulaire de contact.'],
+            ['emails/contact-notification', "Un message de contact vient d'arriver."],
+            ['emails/admin-created', "Un compte de back-office vient d'être créé."],
+            ['emails/admin-password-reset', 'Mot de passe de back-office réinitialisé.'],
+            ['emails/reset-password', 'Lien de réinitialisation du back-office.'],
+        ]]],
     ]],
 
     ['titre' => 'Rôles et permissions', 'blocs' => [
@@ -185,11 +532,8 @@
         ['p', "Le contenu rédigé en back-office peut porter du gras, des listes, des liens et surtout de l'alignement, justification comprise. Comme il s'affiche tel quel sur le site public, il est assaini à l'écriture par une liste blanche stricte : balises autorisées, attributs autorisés, seules quatre valeurs d'alignement acceptées, et seuls les liens http, mailto, tel ou internes conservés. L'assainissement se fait dans un mutateur du modèle, donc quel que soit le chemin emprunté."],
         ['note', "Les textes enregistrés avant l'éditeur ne contiennent aucune balise : ils continuent d'être échappés et affichés comme avant. La bascule est automatique."],
 
-        ['sous', 'Le générateur de visuels'],
-        ['p', "139 visuels composés en SVG à la volée, dans huit gabarits et quatorze pictogrammes vectoriels dessinés à la main. L'export rasterise le SVG dans un canvas, avec polices et images encodées en base64 — un SVG chargé dans une balise image n'a accès à aucune ressource externe. Les PDF sont écrits directement, une page, une image JPEG, sans librairie."],
-
         ['sous', 'Les exports PDF'],
-        ['p', "Un moteur partagé écrit les objets PDF à la main : pages A4, polices standard, texte sélectionnable, encodage WinAnsi pour les accents. Les largeurs de texte sont mesurées avec un canvas en Arial, métriquement compatible avec Helvetica. Il sert au cahier du projet, au plan de communication et à la carte de membre."],
+        ['p', "L'attestation d'adhésion et la carte de membre sont produites en PDF vectoriel : pages A4, polices standard, texte sélectionnable, encodage WinAnsi pour les accents, dégradés et images. Le document est écrit directement dans le format, sans librairie — l'adhérent télécharge un vrai PDF, pas une impression de page web."],
 
         ['sous', 'Le suivi des sources'],
         ['p', "Chaque source d'acquisition dispose d'un lien court. La visite est enregistrée avec une empreinte anonyme, et l'identifiant est conservé en session : si la personne adhère, l'adhésion porte la source. C'est ce qui permet de savoir quel support a réellement fonctionné."],
@@ -333,9 +677,9 @@ footer{padding:24px 0 44px;color:var(--gris);font-size:13px;display:flex;flex-wr
     <div class="st">Documentation technique et fonctionnelle du site</div>
     <div class="compteurs">
       <div class="compteur"><b>{{ $nbSections }}</b> sections</div>
-      <div class="compteur"><b>135</b> routes</div>
-      <div class="compteur"><b>18</b> tables métier</div>
-      <div class="compteur"><b>88</b> gabarits</div>
+      <div class="compteur"><b>138</b> routes</div>
+      <div class="compteur"><b>16</b> tables métier</div>
+      <div class="compteur"><b>89</b> gabarits</div>
       <div class="compteur"><b>32</b> migrations</div>
     </div>
   </div>
