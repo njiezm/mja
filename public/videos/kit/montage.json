@@ -21,12 +21,12 @@
       "note": "Lumière violette, ambiance de fin de journée. Le tee-shirt de l'action est lisible."
     },
     "02-exterieur-pluie.mp4": {
-      "titre": "Sous la pluie, on y va quand même",
+      "titre": "L'échauffement sous la pluie",
       "lieu": "Martinique",
-      "action": "Logistique",
-      "depart": 3.0,
-      "duree": 2.2,
-      "note": "Plan large et gris — à garder pour un montage « coulisses », pas pour une accroche."
+      "action": "Relais pour la Vie",
+      "depart": 1.6,
+      "duree": 2.8,
+      "note": "Aller-retour en courant sur le parking détrempé, montagnes en fond. Drôle et sincère : à utiliser, pas à écarter."
     },
     "03-collecte-point-equipe.mp4": {
       "titre": "Le point d'équipe avant la fin",
@@ -77,12 +77,12 @@
       "note": "Fatigue joyeuse et complicité : le plan de clôture idéal."
     },
     "09-relais-pour-la-vie.mp4": {
-      "titre": "Relais pour la Vie 2025 avec la MAD'TEAM",
+      "titre": "Relais pour la Vie 2025",
       "lieu": "Martinique",
       "action": "Relais pour la Vie",
-      "depart": 4.0,
+      "depart": 1.4,
       "duree": 3.0,
-      "note": "Contient déjà un carton titre incrusté — parfait pour annoncer l'action sans rien rajouter."
+      "note": "Stade, piste, coureurs, puis le carton titre incrusté. Démarrer tôt pour avoir la course avant le texte."
     },
     "10-equipe-camion-trajet.mp4": {
       "titre": "Dans le camion, entre deux étapes",
@@ -93,28 +93,28 @@
       "note": "Tee-shirts de l'association bien visibles."
     },
     "11-equipe-sud-le-marin.mp4": {
-      "titre": "L'équipe sud avait faim",
+      "titre": "Le fou rire de l'équipe sud",
       "lieu": "Le Marin",
       "action": "Vie de l'équipe",
-      "depart": 8.0,
+      "depart": 21.0,
       "duree": 2.6,
-      "note": "Séquence longue : n'en garder qu'un extrait."
+      "note": "Séquence longue ; le fou rire arrive vers la 21e seconde, c'est là qu'il faut entrer."
     },
     "12-reunion-salle.mp4": {
-      "titre": "Réunion de préparation",
+      "titre": "Activité de groupe en salle",
       "lieu": "Martinique",
-      "action": "Vie associative",
-      "depart": 1.5,
-      "duree": 2.4,
-      "note": "Montre le travail de fond, moins spectaculaire mais utile au récit."
+      "action": "Atelier",
+      "depart": 2.2,
+      "duree": 2.6,
+      "note": "Exercice devant le groupe assis en cercle, vidéoprojection au mur. Ce n'est pas une réunion : il s'y passe quelque chose."
     },
     "13-le-carbet.mp4": {
-      "titre": "Au Carbet",
+      "titre": "Mise à l'eau au Carbet",
       "lieu": "Le Carbet",
       "action": "Sortie",
       "depart": 0.8,
-      "duree": 2.0,
-      "note": "Sombre et peu lisible — à réserver à un montage long, sinon à écarter."
+      "duree": 2.4,
+      "note": "L'équipe manœuvre la coque au bord de l'eau. Enchaîne naturellement avec la journée bateau."
     },
     "14-stand-kakemonos.mp4": {
       "titre": "Le stand et les kakémonos",
@@ -193,6 +193,30 @@
       "action": "La Caravane de l'unité",
       "duree": 2.0,
       "note": "Logo et nom de l'action en grand : bon plan juste avant l'outro."
+    },
+    "24-journee-bateau.mp4": {
+      "titre": "La journée bateau",
+      "lieu": "Martinique",
+      "action": "Sortie",
+      "depart": 3.6,
+      "duree": 3.0,
+      "note": "Eau turquoise, bouées, bateaux amarrés, tout le monde à l'eau. Le plan le plus vendeur du lot : c'est ce que les gens veulent voir avant d'adherer."
+    },
+    "25-parcours-prevention.mp4": {
+      "titre": "Le parcours de prévention",
+      "lieu": "Martinique",
+      "action": "Prévention",
+      "depart": 1.8,
+      "duree": 2.6,
+      "note": "Slalom entre les plots, en 720p. Montre le volet prévention, absent partout ailleurs."
+    },
+    "26-air-hockey.mp4": {
+      "titre": "La partie de air hockey",
+      "lieu": "Martinique",
+      "action": "Vie de l'équipe",
+      "depart": 1.2,
+      "duree": 2.8,
+      "note": "Salle de jeux, lumière bleue, duel autour de la table. Le plan « on s'amuse » qui manquait."
     }
   },
   "ebauches": [
@@ -211,7 +235,11 @@
         "04-collecte-chargement-camion.mp4",
         "05-collecte-chariot-courses.mp4",
         "06-atelier-tour-de-table.mp4",
-        "18-foule-fumigenes.mp4",
+        {
+          "fichier": "11-equipe-sud-le-marin.mp4",
+          "duree": 2.6,
+          "depart": 8.5
+        },
         "19-afterwork-gateau.mp4",
         "08-equipe-clap-de-fin.mp4"
       ],
@@ -250,9 +278,17 @@
         "06-atelier-tour-de-table.mp4",
         "10-equipe-camion-trajet.mp4",
         "11-equipe-sud-le-marin.mp4",
-        "12-reunion-salle.mp4",
+        {
+          "fichier": "24-journee-bateau.mp4",
+          "duree": 2.4,
+          "depart": 3.6
+        },
         "20-afterwork-pizza.mp4",
-        "19-afterwork-gateau.mp4",
+        {
+          "fichier": "13-le-carbet.mp4",
+          "duree": 2.6,
+          "depart": 0.8
+        },
         "08-equipe-clap-de-fin.mp4",
         "22-photocall-engagement.jpg"
       ],
@@ -339,7 +375,11 @@
         "17-arrivee-portail.mp4",
         "10-equipe-camion-trajet.mp4",
         "03-collecte-point-equipe.mp4",
-        "04-collecte-chargement-camion.mp4",
+        {
+          "fichier": "14-stand-kakemonos.mp4",
+          "duree": 2.6,
+          "depart": 4.0
+        },
         "15-collation-cupcakes.mp4",
         "11-equipe-sud-le-marin.mp4",
         "08-equipe-clap-de-fin.mp4"
@@ -434,12 +474,12 @@
           "depart": 6.0
         },
         {
-          "fichier": "14-stand-kakemonos.mp4",
+          "fichier": "25-parcours-prevention.mp4",
           "duree": 2.6,
-          "depart": 4.0
+          "depart": 1.8
         },
         {
-          "fichier": "18-foule-fumigenes.mp4",
+          "fichier": "20-afterwork-pizza.mp4",
           "duree": 3.0,
           "depart": 2.0
         },
@@ -521,9 +561,9 @@
           "depart": 9.0
         },
         {
-          "fichier": "06-atelier-tour-de-table.mp4",
+          "fichier": "01-caravane-soiree.mp4",
           "duree": 3.2,
-          "depart": 6.0
+          "depart": 0.6
         },
         {
           "fichier": "08-equipe-clap-de-fin.mp4",
@@ -588,13 +628,975 @@
           "depart": 2.0
         },
         {
-          "fichier": "21-foyal-color-poudres.mp4",
+          "fichier": "09-relais-pour-la-vie.mp4",
           "duree": 3.4,
           "depart": 4.0
         },
         {
           "fichier": "22-photocall-engagement.jpg",
           "duree": 3.0
+        }
+      ]
+    },
+    {
+      "id": "etre-membre",
+      "nom": "Être membre de MJA",
+      "resume": "Une phrase par plan, l'engagement d'abord et le défi pour finir. Le montage qui explique le mieux ce qu'on vient chercher ici.",
+      "intro": "titre",
+      "outro": "appel",
+      "accroche": "ÊTRE MEMBRE DE MJA C'EST",
+      "sous": "SAISON 2026-2027",
+      "saison": "SAISON 2026-2027",
+      "transition": "fondu",
+      "plans": [
+        {
+          "fichier": "04-collecte-chargement-camion.mp4",
+          "duree": 3.4,
+          "depart": 3.5,
+          "texte": "S'engager pour une cause"
+        },
+        {
+          "fichier": "06-atelier-tour-de-table.mp4",
+          "duree": 3.4,
+          "depart": 6.0,
+          "texte": "Rejoindre une équipe de jeunes ambitieux"
+        },
+        {
+          "fichier": "19-afterwork-gateau.mp4",
+          "duree": 3.2,
+          "depart": 9.0,
+          "texte": "Passer de bons moments"
+        },
+        {
+          "fichier": "21-foyal-color-poudres.mp4",
+          "duree": 3.4,
+          "depart": 4.0,
+          "texte": "Partir dans des délires hors du commun"
+        },
+        {
+          "fichier": "16-caravane-preparation.mp4",
+          "duree": 1.8,
+          "depart": 6.5,
+          "texte": "Et surtout…"
+        },
+        {
+          "fichier": "18-foule-fumigenes.mp4",
+          "duree": 3.6,
+          "depart": 2.0,
+          "texte": "Relever tous les défis !"
+        }
+      ]
+    },
+    {
+      "id": "etre-membre-court",
+      "nom": "Être membre — version courte",
+      "resume": "Le même propos en quinze secondes, coupes serrées : pour une story ou une relance de campagne.",
+      "intro": "flash",
+      "outro": "logo",
+      "accroche": "MEMBRE DE MJA",
+      "sous": "C'EST QUOI ?",
+      "saison": "SAISON 2026-2027",
+      "transition": "coupe",
+      "plans": [
+        {
+          "fichier": "05-collecte-chariot-courses.mp4",
+          "duree": 2.2,
+          "depart": 1.0,
+          "texte": "Une cause"
+        },
+        {
+          "fichier": "06-atelier-tour-de-table.mp4",
+          "duree": 2.2,
+          "depart": 6.5,
+          "texte": "Une équipe"
+        },
+        {
+          "fichier": "20-afterwork-pizza.mp4",
+          "duree": 2.0,
+          "depart": 2.0,
+          "texte": "De bons moments"
+        },
+        {
+          "fichier": "21-foyal-color-poudres.mp4",
+          "duree": 2.4,
+          "depart": 4.5,
+          "texte": "Des délires"
+        },
+        {
+          "fichier": "18-foule-fumigenes.mp4",
+          "duree": 3.0,
+          "depart": 2.0,
+          "texte": "Et des défis relevés"
+        }
+      ]
+    },
+    {
+      "id": "etre-membre-cartons",
+      "nom": "Être membre — cartons",
+      "resume": "Une phrase sur aplat, puis l'image qui l'illustre. Le texte se lit sans effort, et chaque plan a le temps de respirer.",
+      "intro": "titre",
+      "outro": "appel",
+      "accroche": "ÊTRE MEMBRE DE MJA C'EST",
+      "sous": "SAISON 2026-2027",
+      "saison": "SAISON 2026-2027",
+      "transition": "fondu",
+      "plans": [
+        {
+          "carton": "S'engager pour une cause",
+          "duree": 1.5
+        },
+        {
+          "fichier": "04-collecte-chargement-camion.mp4",
+          "duree": 2.8,
+          "depart": 3.5
+        },
+        {
+          "carton": "Rejoindre une équipe de jeunes ambitieux",
+          "duree": 1.8
+        },
+        {
+          "fichier": "06-atelier-tour-de-table.mp4",
+          "duree": 2.8,
+          "depart": 6.0
+        },
+        {
+          "carton": "Passer de bons moments",
+          "duree": 1.5
+        },
+        {
+          "fichier": "19-afterwork-gateau.mp4",
+          "duree": 2.6,
+          "depart": 9.0
+        },
+        {
+          "carton": "Partir dans des délires hors du commun",
+          "duree": 1.8
+        },
+        {
+          "fichier": "21-foyal-color-poudres.mp4",
+          "duree": 2.8,
+          "depart": 4.0
+        },
+        {
+          "carton": "Et surtout…",
+          "duree": 1.2
+        },
+        {
+          "carton": "Relever tous les défis !",
+          "duree": 1.8
+        },
+        {
+          "fichier": "18-foule-fumigenes.mp4",
+          "duree": 3.0,
+          "depart": 2.0
+        }
+      ]
+    },
+    {
+      "id": "modele-textes",
+      "nom": "Modèle à personnaliser",
+      "resume": "Charpente prête à remplir : cinq phrases sur aplat, cinq plans entre elles. Retape les textes, échange les images, c'est publié.",
+      "intro": "titre",
+      "outro": "appel",
+      "accroche": "TON TITRE ICI",
+      "sous": "SAISON 2026-2027",
+      "saison": "SAISON 2026-2027",
+      "transition": "fondu",
+      "plans": [
+        {
+          "carton": "Écris ici ta première idée",
+          "duree": 1.6
+        },
+        {
+          "fichier": "16-caravane-preparation.mp4",
+          "duree": 2.6,
+          "depart": 6.0
+        },
+        {
+          "carton": "Puis la deuxième",
+          "duree": 1.6
+        },
+        {
+          "fichier": "06-atelier-tour-de-table.mp4",
+          "duree": 2.6,
+          "depart": 6.0
+        },
+        {
+          "carton": "Une troisième, plus courte",
+          "duree": 1.6
+        },
+        {
+          "fichier": "05-collecte-chariot-courses.mp4",
+          "duree": 2.6,
+          "depart": 1.0
+        },
+        {
+          "carton": "Garde le meilleur pour la fin",
+          "duree": 1.6
+        },
+        {
+          "fichier": "21-foyal-color-poudres.mp4",
+          "duree": 2.8,
+          "depart": 4.0
+        },
+        {
+          "carton": "Et termine par ton appel",
+          "duree": 1.8
+        },
+        {
+          "fichier": "18-foule-fumigenes.mp4",
+          "duree": 3.0,
+          "depart": 2.0
+        }
+      ]
+    },
+    {
+      "id": "annonce-evenement",
+      "nom": "Annoncer un événement",
+      "resume": "Quoi, quand, où, et l'invitation. Le modèle à ressortir avant chaque rendez-vous : seules les quatre phrases changent.",
+      "intro": "flash",
+      "outro": "contact",
+      "accroche": "NOM DE L'ÉVÉNEMENT",
+      "sous": "ON T’ATTEND",
+      "saison": "SAISON 2026-2027",
+      "transition": "fondu",
+      "plans": [
+        {
+          "carton": "Le nom de ton événement",
+          "duree": 1.6
+        },
+        {
+          "fichier": "18-foule-fumigenes.mp4",
+          "duree": 2.8,
+          "depart": 2.0
+        },
+        {
+          "carton": "Samedi 00 mois, 00 h",
+          "duree": 1.6
+        },
+        {
+          "fichier": "14-stand-kakemonos.mp4",
+          "duree": 2.6,
+          "depart": 4.0
+        },
+        {
+          "carton": "Le lieu, en toutes lettres",
+          "duree": 1.6
+        },
+        {
+          "fichier": "17-arrivee-portail.mp4",
+          "duree": 2.4,
+          "depart": 1.5
+        },
+        {
+          "carton": "Gratuit et ouvert à tous",
+          "duree": 1.8
+        },
+        {
+          "fichier": "06-atelier-tour-de-table.mp4",
+          "duree": 2.6,
+          "depart": 6.0
+        },
+        {
+          "carton": "On compte sur toi !",
+          "duree": 1.8
+        },
+        {
+          "fichier": "21-foyal-color-poudres.mp4",
+          "duree": 2.8,
+          "depart": 4.0
+        }
+      ]
+    },
+    {
+      "id": "etre-membre-modele",
+      "nom": "Être membre de MJA — modèle",
+      "resume": "Vos six phrases sur aplat, chacune suivie de l'image qui l'illustre. Tout se retouche dans la timeline : texte, durée, plan.",
+      "intro": "titre",
+      "outro": "appel",
+      "accroche": "ÊTRE MEMBRE DE MJA C'EST :",
+      "sous": "SAISON 2026-2027",
+      "saison": "SAISON 2026-2027",
+      "transition": "fondu",
+      "plans": [
+        {
+          "carton": "S'engager pour une cause",
+          "duree": 1.7
+        },
+        {
+          "fichier": "04-collecte-chargement-camion.mp4",
+          "duree": 2.6,
+          "depart": 3.5
+        },
+        {
+          "carton": "Rejoindre une équipe de jeunes ambitieux",
+          "duree": 2.0
+        },
+        {
+          "fichier": "06-atelier-tour-de-table.mp4",
+          "duree": 2.6,
+          "depart": 6.0
+        },
+        {
+          "carton": "Passer de bons moments",
+          "duree": 1.7
+        },
+        {
+          "fichier": "19-afterwork-gateau.mp4",
+          "duree": 2.6,
+          "depart": 9.0
+        },
+        {
+          "carton": "Partir dans des délires hors du commun",
+          "duree": 2.0
+        },
+        {
+          "fichier": "21-foyal-color-poudres.mp4",
+          "duree": 2.8,
+          "depart": 4.0
+        },
+        {
+          "carton": "Et surtout...",
+          "duree": 1.3
+        },
+        {
+          "carton": "Relever des défis",
+          "duree": 2.2,
+          "emoji": "cool"
+        },
+        {
+          "fichier": "18-foule-fumigenes.mp4",
+          "duree": 3.0,
+          "depart": 2.0
+        }
+      ]
+    },
+    {
+      "id": "etre-membre-dynamique",
+      "nom": "Être membre — version dynamique",
+      "resume": "Vos six phrases, mais chaque plan avance vers le sujet et les raccords se font au balayage. Plus nerveux, sans un plan de plus.",
+      "intro": "compte",
+      "outro": "appel",
+      "accroche": "ÊTRE MEMBRE DE MJA C'EST :",
+      "sous": "SAISON 2026-2027",
+      "saison": "SAISON 2026-2027",
+      "transition": "balayage",
+      "poussee": true,
+      "plans": [
+        {
+          "carton": "S'engager pour une cause",
+          "duree": 1.5
+        },
+        {
+          "fichier": "04-collecte-chargement-camion.mp4",
+          "duree": 2.4,
+          "depart": 3.5
+        },
+        {
+          "carton": "Rejoindre une équipe de jeunes ambitieux",
+          "duree": 1.8
+        },
+        {
+          "fichier": "06-atelier-tour-de-table.mp4",
+          "duree": 2.4,
+          "depart": 6.0
+        },
+        {
+          "carton": "Passer de bons moments",
+          "duree": 1.5
+        },
+        {
+          "fichier": "19-afterwork-gateau.mp4",
+          "duree": 2.4,
+          "depart": 9.0
+        },
+        {
+          "carton": "Partir dans des délires hors du commun",
+          "duree": 1.8
+        },
+        {
+          "fichier": "21-foyal-color-poudres.mp4",
+          "duree": 2.6,
+          "depart": 4.0
+        },
+        {
+          "carton": "Et surtout...",
+          "duree": 1.2
+        },
+        {
+          "carton": "Relever des défis",
+          "duree": 2.0,
+          "emoji": "cool"
+        },
+        {
+          "fichier": "18-foule-fumigenes.mp4",
+          "duree": 2.8,
+          "depart": 2.0
+        }
+      ]
+    },
+    {
+      "id": "mots-a-mots",
+      "nom": "Mots à mots",
+      "resume": "Chaque phrase s'écrit mot après mot, au rythme de la lecture. Le procédé qui retient le mieux, sans un plan de plus.",
+      "intro": "aucune",
+      "outro": "appel",
+      "accroche": "ÊTRE MEMBRE DE MJA C'EST :",
+      "sous": "SAISON 2026-2027",
+      "saison": "SAISON 2026-2027",
+      "transition": "fondu",
+      "plans": [
+        {
+          "fichier": "21-foyal-color-poudres.mp4",
+          "duree": 1.4,
+          "depart": 5.0
+        },
+        {
+          "carton": "Être membre de MJA c'est :",
+          "duree": 2.2,
+          "mots": true
+        },
+        {
+          "carton": "S'engager pour une cause",
+          "duree": 2.0,
+          "mots": true
+        },
+        {
+          "fichier": "04-collecte-chargement-camion.mp4",
+          "duree": 2.4,
+          "depart": 3.5
+        },
+        {
+          "carton": "Rejoindre une équipe de jeunes ambitieux",
+          "duree": 2.6,
+          "mots": true
+        },
+        {
+          "fichier": "06-atelier-tour-de-table.mp4",
+          "duree": 2.4,
+          "depart": 6.0
+        },
+        {
+          "carton": "Passer de bons moments",
+          "duree": 2.0,
+          "mots": true
+        },
+        {
+          "fichier": "19-afterwork-gateau.mp4",
+          "duree": 2.4,
+          "depart": 9.0
+        },
+        {
+          "carton": "Partir dans des délires hors du commun",
+          "duree": 2.6,
+          "mots": true
+        },
+        {
+          "fichier": "21-foyal-color-poudres.mp4",
+          "duree": 2.6,
+          "depart": 4.0
+        },
+        {
+          "carton": "Et surtout...",
+          "duree": 1.4
+        },
+        {
+          "carton": "Relever des défis",
+          "duree": 2.2,
+          "mots": true,
+          "emoji": "cool"
+        },
+        {
+          "fichier": "18-foule-fumigenes.mp4",
+          "duree": 3.0,
+          "depart": 2.0
+        }
+      ]
+    },
+    {
+      "id": "accroche-ralenti",
+      "nom": "Accroche et ralenti",
+      "resume": "Ouverture sur l'image la plus forte, puis un ralenti sur le nuage de couleurs. Le montage le plus cinématographique du lot.",
+      "intro": "aucune",
+      "outro": "contact",
+      "accroche": "MADIN’ JEUNES AMBITION",
+      "sous": "SAISON 2026-2027",
+      "saison": "SAISON 2026-2027",
+      "transition": "fondu",
+      "poussee": true,
+      "plans": [
+        {
+          "fichier": "18-foule-fumigenes.mp4",
+          "duree": 1.2,
+          "depart": 2.4
+        },
+        {
+          "carton": "On ne fait pas que des réunions.",
+          "duree": 2.4,
+          "mots": true
+        },
+        {
+          "fichier": "21-foyal-color-poudres.mp4",
+          "duree": 3.4,
+          "depart": 4.6,
+          "vitesse": 0.6
+        },
+        {
+          "carton": "On agit.",
+          "duree": 1.6,
+          "mots": true
+        },
+        {
+          "fichier": "04-collecte-chargement-camion.mp4",
+          "duree": 2.6,
+          "depart": 3.5
+        },
+        {
+          "fichier": "05-collecte-chariot-courses.mp4",
+          "duree": 2.4,
+          "depart": 1.0
+        },
+        {
+          "carton": "On partage.",
+          "duree": 1.6,
+          "mots": true
+        },
+        {
+          "fichier": "15-collation-cupcakes.mp4",
+          "duree": 2.2,
+          "depart": 1.0
+        },
+        {
+          "fichier": "19-afterwork-gateau.mp4",
+          "duree": 2.4,
+          "depart": 9.0
+        },
+        {
+          "carton": "Et on recommence.",
+          "duree": 2.0,
+          "mots": true
+        },
+        {
+          "fichier": "08-equipe-clap-de-fin.mp4",
+          "duree": 2.8,
+          "depart": 1.0
+        }
+      ]
+    },
+    {
+      "id": "panorama",
+      "nom": "Panorama — tous les plans",
+      "resume": "Les vingt-trois médias du dossier, du premier au dernier, en coupes courtes. Le montage à garder pour une AG ou un écran de stand.",
+      "intro": "aucune",
+      "outro": "appel",
+      "accroche": "NOTRE SAISON",
+      "sous": "MADIN’ JEUNES AMBITION",
+      "saison": "SAISON 2026-2027",
+      "transition": "fondu",
+      "poussee": true,
+      "plans": [
+        {
+          "fichier": "21-foyal-color-poudres.mp4",
+          "duree": 2.0,
+          "depart": 4.5
+        },
+        {
+          "carton": "Une saison entière",
+          "duree": 1.8,
+          "mots": true
+        },
+        {
+          "fichier": "12-reunion-salle.mp4",
+          "duree": 1.3,
+          "depart": 1.5
+        },
+        {
+          "fichier": "07-atelier-mise-en-place.mp4",
+          "duree": 1.7,
+          "depart": 2.0
+        },
+        {
+          "fichier": "16-caravane-preparation.mp4",
+          "duree": 1.7,
+          "depart": 6.0
+        },
+        {
+          "fichier": "23-tee-shirt-caravane.jpg",
+          "duree": 1.3
+        },
+        {
+          "carton": "Se déplacer",
+          "duree": 1.4,
+          "mots": true
+        },
+        {
+          "fichier": "17-arrivee-portail.mp4",
+          "duree": 1.3,
+          "depart": 1.5
+        },
+        {
+          "fichier": "10-equipe-camion-trajet.mp4",
+          "duree": 1.7,
+          "depart": 2.0
+        },
+        {
+          "fichier": "24-journee-bateau.mp4",
+          "duree": 1.3,
+          "depart": 3.6
+        },
+        {
+          "fichier": "13-le-carbet.mp4",
+          "duree": 1.3,
+          "depart": 0.8
+        },
+        {
+          "carton": "Agir",
+          "duree": 1.4,
+          "mots": true
+        },
+        {
+          "fichier": "03-collecte-point-equipe.mp4",
+          "duree": 1.7,
+          "depart": 1.2
+        },
+        {
+          "fichier": "05-collecte-chariot-courses.mp4",
+          "duree": 1.7,
+          "depart": 1.0
+        },
+        {
+          "fichier": "04-collecte-chargement-camion.mp4",
+          "duree": 2.2,
+          "depart": 3.5
+        },
+        {
+          "fichier": "09-relais-pour-la-vie.mp4",
+          "duree": 1.7,
+          "depart": 4.0
+        },
+        {
+          "fichier": "14-stand-kakemonos.mp4",
+          "duree": 1.3,
+          "depart": 4.0
+        },
+        {
+          "carton": "Partager",
+          "duree": 1.4,
+          "mots": true
+        },
+        {
+          "fichier": "15-collation-cupcakes.mp4",
+          "duree": 1.3,
+          "depart": 1.0
+        },
+        {
+          "fichier": "20-afterwork-pizza.mp4",
+          "duree": 1.3,
+          "depart": 2.0
+        },
+        {
+          "fichier": "19-afterwork-gateau.mp4",
+          "duree": 1.7,
+          "depart": 9.0
+        },
+        {
+          "fichier": "11-equipe-sud-le-marin.mp4",
+          "duree": 1.3,
+          "depart": 8.0
+        },
+        {
+          "fichier": "06-atelier-tour-de-table.mp4",
+          "duree": 2.2,
+          "depart": 6.0
+        },
+        {
+          "carton": "Et recommencer",
+          "duree": 1.6,
+          "mots": true
+        },
+        {
+          "fichier": "01-caravane-soiree.mp4",
+          "duree": 1.7,
+          "depart": 0.6
+        },
+        {
+          "fichier": "18-foule-fumigenes.mp4",
+          "duree": 2.2,
+          "depart": 2.0
+        },
+        {
+          "fichier": "22-photocall-engagement.jpg",
+          "duree": 1.7
+        },
+        {
+          "fichier": "08-equipe-clap-de-fin.mp4",
+          "duree": 2.2,
+          "depart": 1.0
+        }
+      ]
+    },
+    {
+      "id": "delires",
+      "nom": "Les délires de l'équipe",
+      "resume": "Les moments qu'on ne montre jamais : le trajet, la faim, la pizza, la fatigue heureuse. Ce qui donne envie de rejoindre le groupe.",
+      "intro": "aucune",
+      "outro": "appel",
+      "accroche": "L'AUTRE FACE DE MJA",
+      "sous": "SAISON 2026-2027",
+      "saison": "SAISON 2026-2027",
+      "transition": "coupe",
+      "plans": [
+        {
+          "fichier": "11-equipe-sud-le-marin.mp4",
+          "duree": 1.8,
+          "depart": 8.5
+        },
+        {
+          "carton": "On travaille beaucoup.",
+          "duree": 1.6,
+          "mots": true
+        },
+        {
+          "fichier": "04-collecte-chargement-camion.mp4",
+          "duree": 1.6,
+          "depart": 4.0
+        },
+        {
+          "carton": "Enfin… presque.",
+          "duree": 1.4,
+          "mots": true
+        },
+        {
+          "fichier": "10-equipe-camion-trajet.mp4",
+          "duree": 2.2,
+          "depart": 2.0
+        },
+        {
+          "fichier": "02-exterieur-pluie.mp4",
+          "duree": 1.6,
+          "depart": 3.2
+        },
+        {
+          "fichier": "26-air-hockey.mp4",
+          "duree": 1.6,
+          "depart": 1.2
+        },
+        {
+          "carton": "On a surtout faim.",
+          "duree": 1.6,
+          "mots": true
+        },
+        {
+          "fichier": "20-afterwork-pizza.mp4",
+          "duree": 2.2,
+          "depart": 2.0
+        },
+        {
+          "fichier": "15-collation-cupcakes.mp4",
+          "duree": 1.8,
+          "depart": 1.0
+        },
+        {
+          "fichier": "19-afterwork-gateau.mp4",
+          "duree": 2.2,
+          "depart": 9.2
+        },
+        {
+          "carton": "Et on rigole. Beaucoup.",
+          "duree": 1.8,
+          "mots": true
+        },
+        {
+          "fichier": "01-caravane-soiree.mp4",
+          "duree": 2.0,
+          "depart": 0.6
+        },
+        {
+          "fichier": "06-atelier-tour-de-table.mp4",
+          "duree": 2.4,
+          "depart": 7.0
+        },
+        {
+          "fichier": "08-equipe-clap-de-fin.mp4",
+          "duree": 2.6,
+          "depart": 1.0
+        }
+      ]
+    },
+    {
+      "id": "une-annee-avec-nous",
+      "nom": "Une année avec nous",
+      "resume": "Un univers par carton : la mer, le terrain, le jeu, la prévention, la fête. Le montage le plus varié du lot.",
+      "intro": "aucune",
+      "outro": "appel",
+      "accroche": "UNE ANNÉE AVEC NOUS",
+      "sous": "SAISON 2026-2027",
+      "saison": "SAISON 2026-2027",
+      "transition": "fondu",
+      "poussee": true,
+      "plans": [
+        {
+          "fichier": "24-journee-bateau.mp4",
+          "duree": 2.4,
+          "depart": 3.6
+        },
+        {
+          "carton": "On sort en mer.",
+          "duree": 1.6,
+          "mots": true
+        },
+        {
+          "fichier": "13-le-carbet.mp4",
+          "duree": 2.2,
+          "depart": 0.8
+        },
+        {
+          "carton": "On court, même sous la pluie.",
+          "duree": 2.0,
+          "mots": true
+        },
+        {
+          "fichier": "02-exterieur-pluie.mp4",
+          "duree": 2.4,
+          "depart": 1.6
+        },
+        {
+          "fichier": "09-relais-pour-la-vie.mp4",
+          "duree": 2.4,
+          "depart": 1.4
+        },
+        {
+          "carton": "On joue.",
+          "duree": 1.4,
+          "mots": true
+        },
+        {
+          "fichier": "26-air-hockey.mp4",
+          "duree": 2.6,
+          "depart": 1.2
+        },
+        {
+          "fichier": "11-equipe-sud-le-marin.mp4",
+          "duree": 2.4,
+          "depart": 21.0
+        },
+        {
+          "carton": "On prévient.",
+          "duree": 1.4,
+          "mots": true
+        },
+        {
+          "fichier": "25-parcours-prevention.mp4",
+          "duree": 2.4,
+          "depart": 1.8
+        },
+        {
+          "fichier": "12-reunion-salle.mp4",
+          "duree": 2.2,
+          "depart": 2.2
+        },
+        {
+          "carton": "On agit.",
+          "duree": 1.4,
+          "mots": true
+        },
+        {
+          "fichier": "04-collecte-chargement-camion.mp4",
+          "duree": 2.4,
+          "depart": 3.5
+        },
+        {
+          "fichier": "16-caravane-preparation.mp4",
+          "duree": 2.4,
+          "depart": 6.0
+        },
+        {
+          "carton": "Et on fête ça.",
+          "duree": 1.6,
+          "mots": true
+        },
+        {
+          "fichier": "21-foyal-color-poudres.mp4",
+          "duree": 2.6,
+          "depart": 4.0
+        },
+        {
+          "fichier": "08-equipe-clap-de-fin.mp4",
+          "duree": 2.6,
+          "depart": 1.0
+        }
+      ]
+    },
+    {
+      "id": "palette",
+      "nom": "Couleurs de la charte",
+      "resume": "Une nuance par carton — bleu nuit, jaune, rouge, blanc. À reprendre pour voir le rendu de chaque couleur avant de choisir.",
+      "intro": "aucune",
+      "outro": "appel",
+      "accroche": "MADIN’ JEUNES AMBITION",
+      "sous": "SAISON 2026-2027",
+      "saison": "SAISON 2026-2027",
+      "transition": "fondu",
+      "plans": [
+        {
+          "fichier": "24-journee-bateau.mp4",
+          "duree": 2.2,
+          "depart": 3.6
+        },
+        {
+          "carton": "On sort en mer.",
+          "duree": 1.7,
+          "couleur": "navy",
+          "mots": true
+        },
+        {
+          "fichier": "26-air-hockey.mp4",
+          "duree": 2.2,
+          "depart": 1.2
+        },
+        {
+          "carton": "On joue.",
+          "duree": 1.5,
+          "couleur": "jaune",
+          "mots": true
+        },
+        {
+          "fichier": "02-exterieur-pluie.mp4",
+          "duree": 2.2,
+          "depart": 1.6
+        },
+        {
+          "carton": "On court.",
+          "duree": 1.5,
+          "couleur": "rouge",
+          "mots": true
+        },
+        {
+          "fichier": "04-collecte-chargement-camion.mp4",
+          "duree": 2.2,
+          "depart": 3.5
+        },
+        {
+          "carton": "On agit.",
+          "duree": 1.5,
+          "couleur": "blanc",
+          "mots": true
+        },
+        {
+          "fichier": "21-foyal-color-poudres.mp4",
+          "duree": 2.4,
+          "depart": 4.0
+        },
+        {
+          "carton": "Et on fête ça.",
+          "duree": 1.7,
+          "couleur": "encre",
+          "mots": true
+        },
+        {
+          "fichier": "08-equipe-clap-de-fin.mp4",
+          "duree": 2.6,
+          "depart": 1.0
         }
       ]
     }

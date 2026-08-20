@@ -37,4 +37,29 @@ class AdhesionPeriod extends Model
     {
         return static::forDate(now());
     }
+
+    /**
+     * Saison à laquelle rattacher une adhésion enregistrée maintenant.
+     *
+     * Deux saisons se suivent rarement au jour près : entre la fin de l'une
+     * et le début de l'autre, aucune ne contient la date du jour. Sans
+     * repli, les adhésions de cet intervalle partaient sans saison —
+     * invisibles dans les filtres, les exports et les relances.
+     *
+     * Ordre retenu : la saison en cours, sinon la prochaine à s'ouvrir,
+     * sinon la dernière connue.
+     */
+    public static function pourAdhesion(): ?self
+    {
+        if ($courante = static::current()) {
+            return $courante;
+        }
+
+        $prochaine = static::where('actif', true)
+            ->whereDate('date_debut', '>', now())
+            ->orderBy('date_debut')
+            ->first();
+
+        return $prochaine ?: static::where('actif', true)->orderByDesc('date_debut')->first();
+    }
 }

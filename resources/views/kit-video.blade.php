@@ -6,16 +6,47 @@
      * poste. Les rushes déposés dans public/videos/kit sont proposés d'office ;
      * l'utilisateur peut en déposer d'autres à la volée.
      */
+    /**
+     * Fichiers d'un dossier, sans doublon.
+     *
+     * Un même rush redéposé sous un autre nom — ce qui arrive dès qu'on
+     * réexporte une conversation — apparaissait deux fois dans la
+     * bibliothèque. On compare le contenu, pas le nom, et on garde
+     * l'exemplaire déjà nommé lisiblement.
+     */
     $lister = function (string $dossier, string $motif) {
         $chemin = public_path($dossier);
         $fichiers = is_dir($chemin) ? (glob($chemin . '/' . $motif, GLOB_BRACE) ?: []) : [];
-        sort($fichiers);
 
-        return array_map(fn ($f) => [
-            'url'  => asset($dossier . '/' . rawurlencode(basename($f))),
-            'nom'  => basename($f),
-            'poids' => round(filesize($f) / 1048576, 1),
-        ], $fichiers);
+        // Les noms déjà classés (« 04-collecte… ») passent devant leur copie.
+        usort($fichiers, function ($a, $b) {
+            $classeA = (int) (bool) preg_match('/^\d{2}-/', basename($a));
+            $classeB = (int) (bool) preg_match('/^\d{2}-/', basename($b));
+
+            return $classeB <=> $classeA ?: strcmp(basename($a), basename($b));
+        });
+
+        $vus = [];
+        $sortie = [];
+
+        foreach ($fichiers as $f) {
+            $empreinte = filesize($f) . '-' . md5_file($f);
+
+            if (isset($vus[$empreinte])) {
+                continue;
+            }
+
+            $vus[$empreinte] = true;
+            $sortie[] = [
+                'url'  => asset($dossier . '/' . rawurlencode(basename($f))),
+                'nom'  => basename($f),
+                'poids' => round(filesize($f) / 1048576, 1),
+            ];
+        }
+
+        usort($sortie, fn ($a, $b) => strcmp($a['nom'], $b['nom']));
+
+        return $sortie;
     };
 
     $videos = $lister('videos/kit', '*.{mp4,MP4,webm,WEBM,mov,MOV,m4v,M4V}');
@@ -219,6 +250,10 @@ header p{margin:0;color:#C9DBFA;font-size:14px;max-width:760px}
 .clip .info{flex:1;min-width:0}
 .clip .info b{display:block;font-size:13.5px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .clip .reglages{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+.clip .legende-champ{width:100%;margin-top:5px;border:1px solid var(--bord);border-radius:8px;
+                     padding:5px 8px;font:inherit;font-size:12px;color:var(--ink);outline:none}
+.clip .legende-champ:focus{border-color:var(--blue)}
+.clip .legende-champ::placeholder{color:#A9B6C8}
 .clip select,.clip input[type=number]{font:inherit;font-size:11.5px;border:1px solid var(--bord);border-radius:7px;
                                       padding:2px 5px;color:var(--gris);background:#fff}
 .clip input[type=number]{width:52px}
@@ -346,6 +381,9 @@ header p{margin:0;color:#C9DBFA;font-size:14px;max-width:760px}
           <span style="font-size:11.5px">ou clique pour les choisir</span>
           <input type="file" id="fichiers" accept="video/*,image/*" multiple hidden>
         </div>
+        <button type="button" class="btn g" id="btn-carton" style="width:100%;justify-content:center;margin-bottom:10px">
+          <i class="fas fa-quote-left"></i> Ajouter un carton texte
+        </button>
         <div class="media" id="media"></div>
       </div>
     </div>
@@ -881,7 +919,111 @@ function dessinerOutro(id, t){
 /* =====================================================================
    5. Dessin d'un plan
    ===================================================================== */
+/* Fonds alternés des cartons : deux aplats identiques qui se suivent donnent
+   l'impression d'une vidéo figée, l'alternance marque chaque respiration. */
+var NUANCES = {
+  navy:  { nom:'Bleu nuit',   haut:'#14306E', bas:'#2A55B4', encre:'#FFFFFF' },
+  bleu:  { nom:'Bleu ciel',   haut:'#1A3D8A', bas:'#3DAEF5', encre:'#FFFFFF' },
+  encre: { nom:'Encre',       haut:'#0B1E45', bas:'#2048A4', encre:'#FFFFFF' },
+  jaune: { nom:'Jaune',       haut:'#F5A623', bas:'#FFCD78', encre:'#0B1E45' },
+  rouge: { nom:'Rouge',       haut:'#B0061E', bas:'#D0021B', encre:'#FFFFFF' },
+  blanc: { nom:'Blanc',       haut:'#FFFFFF', bas:'#E8F0FC', encre:'#0B1E45' }
+};
+
+/* Sans couleur choisie, les cartons alternent pour éviter deux aplats
+   identiques à la suite. */
+var ALTERNANCE = ['navy', 'bleu', 'encre'];
+
+/** Carton de texte plein écran, intercalé entre deux plans. */
+function dessinerCarton(clip){
+  var n = NUANCES[clip.couleur] || NUANCES[ALTERNANCE[(clip.rang || 0) % ALTERNANCE.length]];
+  var degrade = ctx.createLinearGradient(0, 0, 0, H());
+  degrade.addColorStop(0, n.haut);
+  degrade.addColorStop(1, n.bas);
+  ctx.fillStyle = degrade;
+  ctx.fillRect(0, 0, W(), H());
+
+  filetsToile();
+
+  var marge = U() * 0.09;
+  var taille = U() * 0.082;
+  var lignes = decouperToile(clip.texte || '', taille, W() - 2 * marge);
+
+  while (lignes.length > 4 && taille > U() * 0.044) {
+    taille -= U() * 0.004;
+    lignes = decouperToile(clip.texte || '', taille, W() - 2 * marge);
+  }
+
+  var interligne = taille * 1.28;
+  var y = (H() - lignes.length * interligne) / 2 + taille;
+
+  // Sur un fond clair, le filet jaune et le texte blanc disparaissent.
+  ctx.fillStyle = n.encre === '#FFFFFF' ? C.jaune : n.encre;
+  ctx.fillRect(W() / 2 - U() * 0.055, y - taille - U() * 0.062, U() * 0.11, U() * 0.009);
+
+  ctx.save();
+  ctx.textAlign = 'center';
+  ctx.font = '800 ' + taille + 'px ' + FAM;
+  ctx.fillStyle = n.encre;
+  lignes.forEach(function (ligne) {
+    ctx.fillText(ligne, W() / 2, y);
+    y += interligne;
+  });
+  ctx.restore();
+
+  if (clip.emoji === 'cool') smileyToile(W() / 2, y + U() * 0.045, U() * 0.072);
+}
+
+/**
+ * Smiley à lunettes, dessiné au trait.
+ *
+ * Les émojis en couleur ne se dessinent pas de la même façon d'un appareil à
+ * l'autre : au rendu comme à l'aperçu, on trace la forme nous-mêmes.
+ */
+function smileyToile(cx, cy, rayon){
+  ctx.save();
+
+  ctx.fillStyle = '#FFCC4D';
+  ctx.beginPath();
+  ctx.arc(cx, cy, rayon, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#14161C';
+  var l = rayon * 0.62, h = rayon * 0.40, y = cy - rayon * 0.24, r = h * 0.42;
+
+  [-1, 1].forEach(function (cote) {
+    var x = cx + cote * rayon * 0.34 - l / 2;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(x, y - h / 2, l, h, r);
+    else ctx.rect(x, y - h / 2, l, h);
+    ctx.fill();
+  });
+
+  ctx.fillRect(cx - rayon * 0.12, y - h * 0.16, rayon * 0.24, h * 0.26);
+
+  ctx.strokeStyle = '#14161C';
+  ctx.lineWidth = Math.max(2, rayon * 0.11);
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.arc(cx, cy + rayon * 0.08, rayon * 0.52, Math.PI * 0.16, Math.PI * 0.84);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+/** Filets tricolores, en haut et en bas de l'image. */
+function filetsToile(){
+  var h = Math.max(4, U() * 0.0055), t = W() / 3;
+  [C.blue, C.jaune, C.rouge].forEach(function (couleur, i) {
+    ctx.fillStyle = couleur;
+    ctx.fillRect(i * t, 0, t + 1, h);
+    ctx.fillRect(i * t, H() - h, t + 1, h);
+  });
+}
+
 function dessinerPlan(clip, t){
+  if (clip.carton) { dessinerCarton(clip); return; }
+
   var m = clip.media, src = m.element;
   if (!src) { fond('#000'); return; }
 
@@ -899,6 +1041,75 @@ function dessinerPlan(clip, t){
   if (clip.effet === 'chaud') ctx.filter = 'saturate(1.18) sepia(.18)';
   couvrir(src, sw, sh, zoom, dx, dy);
   ctx.restore();
+
+  legende(clip.texte);
+}
+
+/**
+ * Légende incrustée en bas de l'image.
+ *
+ * Un voile sombre derrière le texte : sans lui, une phrase blanche posée sur
+ * un ciel ou un tee-shirt clair devient illisible, et c'est justement là que
+ * se trouvent la plupart des plans.
+ */
+function legende(texte){
+  if (!texte) return;
+
+  var marge = U() * 0.085;
+  var taille = U() * 0.052;
+  var lignes = decouperToile(texte, taille, W() - 2 * marge);
+
+  while (lignes.length > 3 && taille > U() * 0.032) {
+    taille -= U() * 0.004;
+    lignes = decouperToile(texte, taille, W() - 2 * marge);
+  }
+
+  var interligne = taille * 1.32;
+  var hauteur = lignes.length * interligne + taille * 1.6;
+  var haut = H() - hauteur - H() * 0.075;
+
+  /* Voile dégradé : opaque derrière le texte, effacé sur les bords. */
+  var voile = ctx.createLinearGradient(0, haut, 0, haut + hauteur);
+  voile.addColorStop(0,   'rgba(11,30,69,0)');
+  voile.addColorStop(0.35, 'rgba(11,30,69,.72)');
+  voile.addColorStop(0.65, 'rgba(11,30,69,.72)');
+  voile.addColorStop(1,   'rgba(11,30,69,0)');
+  ctx.fillStyle = voile;
+  ctx.fillRect(0, haut, W(), hauteur);
+
+  ctx.save();
+  ctx.textAlign = 'center';
+  ctx.shadowColor = 'rgba(0,0,0,.55)';
+  ctx.shadowBlur = taille * 0.18;
+  ctx.shadowOffsetY = taille * 0.06;
+  ctx.font = '800 ' + taille + 'px ' + FAM;
+  ctx.fillStyle = '#FFFFFF';
+
+  var y = haut + taille * 1.5;
+  lignes.forEach(function (ligne) {
+    ctx.fillText(ligne, W() / 2, y);
+    y += interligne;
+  });
+  ctx.restore();
+
+  /* Petit trait jaune de la charte, sous la dernière ligne. */
+  ctx.fillStyle = C.jaune;
+  ctx.fillRect(W() / 2 - U() * 0.045, haut + hauteur - taille * 0.42, U() * 0.09, U() * 0.007);
+}
+
+/** Découpe une phrase en lignes qui tiennent dans `maxW`. */
+function decouperToile(texte, taille, maxW){
+  ctx.font = '800 ' + taille + 'px ' + FAM;
+  var mots = String(texte).split(/\s+/), lignes = [], cur = '';
+
+  for (var i = 0; i < mots.length; i++) {
+    var essai = cur ? cur + ' ' + mots[i] : mots[i];
+    if (ctx.measureText(essai).width > maxW && cur) { lignes.push(cur); cur = mots[i]; }
+    else { cur = essai; }
+  }
+  if (cur) lignes.push(cur);
+
+  return lignes;
 }
 
 /* =====================================================================
@@ -1022,7 +1233,7 @@ function armerVideos(seq){
   var attentes = [];
 
   seq.items.forEach(function (it) {
-    if (it.genre !== 'plan' || it.clip.media.type !== 'video') return;
+    if (it.genre !== 'plan' || !it.clip.media || it.clip.media.type !== 'video') return;
 
     var el = it.clip.media.element;
     var cible = it.clip.depart || 0;
@@ -1068,7 +1279,7 @@ function demarrer(seq, surFin){
 
   var videos = [];
   MONTAGE.forEach(function (c) {
-    if (c.media.type === 'video' && c.media.element) {
+    if (c.media && c.media.type === 'video' && c.media.element) {
       c.media.element.muted = !OPT.son;
       videos.push(c.media.element);
     }
@@ -1103,7 +1314,7 @@ function demarrer(seq, surFin){
     var temps = (performance.now() - t0) / 1000;
 
     seq.items.forEach(function (it, i) {
-      if (it.genre !== 'plan' || it.clip.media.type !== 'video') return;
+      if (it.genre !== 'plan' || !it.clip.media || it.clip.media.type !== 'video') return;
       var el = it.clip.media.element;
       var cible = it.clip.depart || 0;
       var dedans = temps >= it.debut && temps < it.debut + it.duree;
@@ -1207,7 +1418,7 @@ function exporter(){
 
       if (OPT.son) {
         MONTAGE.forEach(function (c) {
-          if (c.media.type !== 'video' || !c.media.element) return;
+          if (!c.media || c.media.type !== 'video' || !c.media.element) return;
           if (!c.media.source) c.media.source = contexte.createMediaElementSource(c.media.element);
           c.media.source.connect(sortie);
         });
@@ -1337,8 +1548,12 @@ function appliquerEbauche(id){
 
   if (MONTAGE.length && !confirm('Remplacer le montage en cours par « ' + e.nom + ' » ?')) return;
 
-  /* Un plan se cite par son nom, ou par un objet qui resserre l'extrait. */
+  /* Un plan se cite par son nom, ou par un objet qui resserre l'extrait.
+     Un objet sans fichier est un carton : une phrase sur aplat. */
   var choix = e.plans.map(function (entree) {
+    if (typeof entree === 'object' && entree.carton) {
+      return { media: null, reglage: entree };
+    }
     var nom = typeof entree === 'string' ? entree : entree.fichier;
     for (var i = 0; i < BIBLIO.length; i++) {
       if (BIBLIO[i].nom === nom) {
@@ -1348,13 +1563,32 @@ function appliquerEbauche(id){
     return null;
   }).filter(Boolean);
 
-  var medias = choix.map(function (c) { return c.media; });
+  var medias = choix.map(function (c) { return c.media; }).filter(Boolean);
 
   arreter();
   message('Préparation de « ' + e.nom + ' »…');
 
   Promise.all(medias.map(chargerMedia)).then(function () {
-    MONTAGE = choix.filter(function (c) { return c.media.element; }).map(function (c) {
+    var rang = 0;
+
+    MONTAGE = choix.filter(function (c) {
+      return c.reglage.carton || (c.media && c.media.element);
+    }).map(function (c) {
+      if (c.reglage.carton) {
+        return {
+          media: null,
+          carton: true,
+          rang: rang++,
+          emoji: c.reglage.emoji || null,
+          couleur: c.reglage.couleur || '',
+          texte: c.reglage.carton,
+          duree: c.reglage.duree || 1.5,
+          effet: 'aucun',
+          transition: e.transition || OPT.transition,
+          depart: 0
+        };
+      }
+
       var m = c.media;
       var depart = c.reglage.depart !== undefined ? c.reglage.depart : (m.depart || 0);
 
@@ -1363,7 +1597,8 @@ function appliquerEbauche(id){
         duree: c.reglage.duree || m.dureeConseillee || (m.type === 'photo' ? OPT.dureePhoto : 3),
         effet: m.type === 'photo' ? 'zoom' : 'aucun',
         transition: e.transition || OPT.transition,
-        depart: Math.min(depart, Math.max(0, (m.duree || 0) - 0.4))
+        depart: Math.min(depart, Math.max(0, (m.duree || 0) - 0.4)),
+        texte: c.reglage.texte || ''
       };
     });
 
@@ -1431,7 +1666,8 @@ function ajouter(index){
              || (m.type === 'video' ? Math.min(m.duree || 3, 4) : OPT.dureePhoto),
       effet: m.type === 'photo' ? 'zoom' : 'aucun',
       transition: OPT.transition,
-      depart: Math.min(m.depart || 0, Math.max(0, (m.duree || 0) - 0.4))
+      depart: Math.min(m.depart || 0, Math.max(0, (m.duree || 0) - 0.4)),
+      texte: ''
     });
     dessinerMontage();
     apercu();
@@ -1454,9 +1690,11 @@ function dessinerMontage(){
     d.draggable = true;
     d.dataset.index = i;
 
-    var apercuHtml = clip.media.type === 'video'
-      ? '<video src="' + clip.media.url + '#t=0.5" muted preload="metadata"></video>'
-      : '<img src="' + clip.media.url + '" alt="">';
+    var apercuHtml = clip.carton
+      ? '<i class="fas fa-quote-left"></i>'
+      : (clip.media.type === 'video'
+          ? '<video src="' + clip.media.url + '#t=' + (clip.depart || 0.5).toFixed(1) + '" muted preload="metadata"></video>'
+          : '<img src="' + clip.media.url + '" alt="">');
 
     var optEffets = Object.keys(EFFETS).map(function (k) {
       return '<option value="' + k + '"' + (clip.effet === k ? ' selected' : '') + '>' + EFFETS[k] + '</option>';
@@ -1467,12 +1705,24 @@ function dessinerMontage(){
 
     d.innerHTML =
       '<div class="apercu">' + apercuHtml + '</div>' +
-      '<div class="info"><b>' + (i + 1) + '. ' + clip.media.nom + '</b>' +
+      '<div class="info"><b>' + (i + 1) + '. '
+        + (clip.carton ? 'Carton texte' : clip.media.nom) + '</b>' +
         '<div class="reglages">' +
           '<input type="number" step="0.5" min="0.5" max="15" value="' + clip.duree + '" data-champ="duree" title="Durée en secondes">' +
-          '<select data-champ="effet">' + optEffets + '</select>' +
+          (clip.carton
+            ? '<select data-champ="couleur" title="Couleur du carton">'
+              + '<option value="">Couleur : alternée</option>'
+              + Object.keys(NUANCES).map(function (k) {
+                  return '<option value="' + k + '"' + (clip.couleur === k ? ' selected' : '') + '>'
+                       + NUANCES[k].nom + '</option>';
+                }).join('')
+              + '</select>'
+            : '<select data-champ="effet">' + optEffets + '</select>') +
           '<select data-champ="transition">' + optTrans + '</select>' +
         '</div>' +
+        '<input class="legende-champ" type="text" maxlength="90" data-champ="texte" ' +
+          'placeholder="' + (clip.carton ? 'Phrase du carton' : 'Texte à l\'écran (facultatif)') + '" '
+          + 'value="' + echapper(clip.texte || '') + '">' +
       '</div>' +
       '<div class="actions">' +
         '<button data-act="haut" title="Monter"><i class="fas fa-chevron-up"></i></button>' +
@@ -1481,11 +1731,14 @@ function dessinerMontage(){
       '</div>';
 
     d.querySelectorAll('[data-champ]').forEach(function (ch) {
-      ch.addEventListener('change', function () {
+      var appliquer = function () {
         var v = ch.dataset.champ === 'duree' ? Math.max(0.5, parseFloat(ch.value) || 1) : ch.value;
         MONTAGE[i][ch.dataset.champ] = v;
         majDuree(); apercu();
-      });
+      };
+      ch.addEventListener('change', appliquer);
+      // Le texte se voit à la frappe : c'est ainsi qu'on le cale.
+      if (ch.dataset.champ === 'texte') ch.addEventListener('input', appliquer);
       ch.addEventListener('click', function (e) { e.stopPropagation(); });
     });
 
@@ -1671,7 +1924,7 @@ function brancher(){
   });
   document.getElementById('opt-duree').addEventListener('change', function () {
     OPT.dureePhoto = parseFloat(this.value);
-    MONTAGE.forEach(function (c) { if (c.media.type === 'photo') c.duree = OPT.dureePhoto; });
+    MONTAGE.forEach(function (c) { if (c.media && c.media.type === 'photo') c.duree = OPT.dureePhoto; });
     dessinerMontage(); apercu();
   });
   ['logo', 'barre', 'son'].forEach(function (cle) {
@@ -1725,6 +1978,21 @@ function recevoir(fichiers){
 remplirListe('opt-intro', INTROS, OPT.intro, 'aide-intro');
 remplirListe('opt-outro', OUTROS, OPT.outro, 'aide-outro');
 brancher();
+
+var boutonCarton = document.getElementById('btn-carton');
+if (boutonCarton) {
+  boutonCarton.addEventListener('click', function () {
+    var rangs = MONTAGE.filter(function (c) { return c.carton; }).length;
+    MONTAGE.push({
+      media: null, carton: true, rang: rangs, couleur: '',
+      texte: 'Une phrase courte', duree: 1.5,
+      effet: 'aucun', transition: OPT.transition, depart: 0
+    });
+    dessinerMontage();
+    apercu();
+    message('Carton ajouté — écris ta phrase dans le champ du plan.');
+  });
+}
 
 Array.prototype.forEach.call(document.querySelectorAll('[data-ebauche]'), function (bouton) {
   bouton.addEventListener('click', function () { appliquerEbauche(bouton.dataset.ebauche); });

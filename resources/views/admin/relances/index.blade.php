@@ -22,17 +22,6 @@
     </form>
 </div>
 
-<div class="bg-blue-50 border border-blue-100 rounded-2xl px-5 py-4 mb-8 text-sm text-blue-900 flex gap-3">
-    <i class="fas fa-circle-info mt-0.5 shrink-0"></i>
-    <div>
-        Cet hébergement ne propose pas de tâche planifiée : les relances sont évaluées
-        <strong>une fois par jour</strong>, à partir de {{ $reglages['relances_heure'] }} h, à l'occasion d'une visite du site
-        (le visiteur n'attend rien, le travail a lieu après l'affichage de la page).
-        Le bouton ci-dessus permet de forcer l'envoi à tout moment.
-        Chaque envoi est journalisé : personne ne peut être relancé deux fois pour la même échéance.
-    </div>
-</div>
-
 {{-- ── Envois dus ─────────────────────────────────────────────────────────── --}}
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
     @foreach([

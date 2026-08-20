@@ -80,7 +80,7 @@ class AdhesionController extends Controller
      */
     private function adhesionDeLaSaison(?Adhesion $precedente): ?Adhesion
     {
-        $periode = AdhesionPeriod::current();
+        $periode = AdhesionPeriod::pourAdhesion();
 
         if (! $periode || ! $precedente) {
             return null;
@@ -122,7 +122,7 @@ class AdhesionController extends Controller
             'stripePublicKey' => StripeService::publicKey(),
             'precedente'     => $precedente,
             'prefill'        => $prefill,
-            'periode'        => AdhesionPeriod::current(),
+            'periode'        => AdhesionPeriod::pourAdhesion(),
             'dejaAJour'      => $this->adhesionDeLaSaison($precedente),
         ];
     }
@@ -160,7 +160,9 @@ class AdhesionController extends Controller
         $precedente = $this->adhesionPrecedente($request);
 
         $donnees['source_id'] = $request->session()->get('mja_source_id');
-        $donnees['period_id'] = AdhesionPeriod::current()?->id;
+        // pourAdhesion() plutôt que current() : entre deux saisons, aucune ne
+        // contient la date du jour, et l'adhésion partirait sans rattachement.
+        $donnees['period_id'] = AdhesionPeriod::pourAdhesion()?->id;
         // Ordre de priorité : la personne connectée, puis le compte de
         // l'adhésion renouvelée, puis un compte déjà en base à cette adresse.
         $donnees['user_id']   = Auth::id()
