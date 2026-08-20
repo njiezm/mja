@@ -649,6 +649,18 @@ var ORG      = "MADIN' JEUNES AMBITION";
 var SLOGAN   = "RELÈVE TOUS LES DÉFIS !";
 var SITE     = "mja-martinique.com";
 var INSTA    = "@madin_jeunes_ambition";
+var TIKTOK   = "@madin_jeunes";
+var FACEBOOK = "MadinJeunesAmbition";
+
+/* Les trois comptes, dans l'ordre où ils se lisent en fin de vidéo. Le
+   pictogramme est tracé par `pictoReseau` : il porte les couleurs de la
+   marque, seules à faire reconnaître l'application avant qu'on lise le
+   pseudo. */
+var RESEAUX = [
+  { id:'instagram', nom:'Instagram', pseudo:INSTA },
+  { id:'tiktok',    nom:'TikTok',    pseudo:TIKTOK },
+  { id:'facebook',  nom:'Facebook',  pseudo:FACEBOOK }
+];
 
 /* Bibliothèque servie par le site. Les fichiers déposés par l'utilisateur
    s'y ajoutent avec une URL locale (blob:). */
@@ -686,9 +698,10 @@ var INTROS = [
 ];
 var OUTROS = [
   { id:'aucune', nom:'Aucune',                 duree:0,   aide:"Le montage s'arrête sur le dernier plan." },
-  { id:'appel',  nom:"Appel à l'action",       duree:2.4, aide:"« J'ADHÈRE », l'adresse du site et le compte Instagram." },
-  { id:'logo',   nom:'Logo et slogan',         duree:2.0, aide:"Retour au logo, slogan en dessous." },
-  { id:'contact',nom:'Coordonnées',            duree:2.6, aide:"Site, Instagram et téléphone, sur fond navy." }
+  { id:'appel',  nom:"Appel à l'action",       duree:3.8, aide:"« J'ADHÈRE », le slogan, le site, puis les trois comptes avec leur pictogramme." },
+  { id:'reseaux',nom:'Réseaux sociaux',        duree:4.6, aide:"« SUIS-NOUS », les trois comptes en grand — Instagram, TikTok, Facebook — puis le slogan." },
+  { id:'logo',   nom:'Logo et slogan',         duree:3.0, aide:"Retour au logo, slogan en dessous, pictogrammes des trois réseaux." },
+  { id:'contact',nom:'Coordonnées',            duree:4.0, aide:"Le slogan, les trois réseaux avec leur pictogramme, le site et le téléphone." }
 ];
 
 /* Bits par pixel et par image. 0,10 est le réglage courant d'une plateforme
@@ -803,6 +816,115 @@ function arrondi(x, y, w, h, r){
 function attenue(x){ x = Math.max(0, Math.min(1, x)); return 1 - Math.pow(1 - x, 3); }
 
 /* =====================================================================
+   3 bis. Pictogrammes des réseaux
+   Tracés à la main dans la toile. Une police d'icônes ne serait pas
+   garantie à l'export — la vidéo sortirait avec des carrés vides — alors
+   qu'un tracé rend toujours la même image. Chaque pictogramme est dessiné
+   dans un carré de 24 × 24 centré sur l'origine, puis mis à l'échelle.
+   ===================================================================== */
+
+/** Pastille blanche ronde : le fond commun des trois pictogrammes. */
+function pastille(cx, cy, r){
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+/** Note de musique de TikTok, dans le repère 24 × 24 déjà mis à l'échelle. */
+function noteTikTok(couleur){
+  ctx.strokeStyle = couleur;
+  ctx.fillStyle = couleur;
+  ctx.lineWidth = 2.8;
+  ctx.beginPath();
+  ctx.moveTo(1.6, 5.4);
+  ctx.lineTo(1.6, -8.4);
+  ctx.bezierCurveTo(4.9, -7.6, 7.8, -5.9, 8.8, -2.4);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(-2.4, 5.2, 3.9, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+/** Pictogramme du réseau `id`, centré en (cx, cy), dans un carré de côté `d`. */
+function pictoReseau(id, cx, cy, d){
+  var k = d / 24;
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.scale(k, k);
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  if (id === 'instagram') {
+    ctx.strokeStyle = '#E1306C';
+    ctx.fillStyle = '#E1306C';
+    ctx.lineWidth = 2.3;
+    arrondi(-9.7, -9.7, 19.4, 19.4, 5.8); ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, 0, 4.7, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(5.7, -5.7, 1.35, 0, Math.PI * 2); ctx.fill();
+
+  } else if (id === 'tiktok') {
+    /* Le décalage cyan puis rose est la signature du logo : sans lui, une
+       note de musique ne dit pas de quelle application il s'agit. */
+    ctx.save(); ctx.translate(-1.1, -1.1); noteTikTok('#25F4EE'); ctx.restore();
+    ctx.save(); ctx.translate( 1.1,  1.1); noteTikTok('#FE2C55'); ctx.restore();
+    noteTikTok('#12141A');
+
+  } else if (id === 'facebook') {
+    ctx.fillStyle = '#1877F2';
+    ctx.font = '800 28px ' + FAM;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText('f', 0, 9.8);
+  }
+  ctx.restore();
+}
+
+/**
+ * Ligne « pastille + pseudo », le groupe centré dans l'image. Les pseudos
+ * sont longs : empilés l'un sous l'autre ils restent lisibles là où une
+ * rangée horizontale les tasserait.
+ */
+function ligneReseau(reseau, y, taille){
+  var maxW = W() * 0.86, d, ecart, large;
+
+  /* Comme `texte`, la ligne se réduit jusqu'à tenir : un format étroit ou
+     une police de secours plus large ne doit pas la faire déborder. */
+  do {
+    d = taille * 1.55; ecart = taille * 0.55;
+    ctx.font = '700 ' + taille + 'px ' + FAM;
+    large = d + ecart + ctx.measureText(reseau.pseudo).width;
+    if (large <= maxW) break;
+    taille -= 2;
+  } while (taille > 8);
+
+  var x = (W() - large) / 2, cy = y - taille * 0.35;
+  pastille(x + d / 2, cy, d / 2);
+  pictoReseau(reseau.id, x + d / 2, cy, d * 0.62);
+  ctx.fillStyle = '#fff';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText(reseau.pseudo, x + d + ecart, y);
+  ctx.textAlign = 'center';
+}
+
+/**
+ * Les trois pastilles côte à côte, sans pseudo, pour les cartons déjà
+ * chargés. `sec` est le temps écoulé depuis le début de leur arrivée, en
+ * secondes : elles se posent l'une après l'autre.
+ */
+function rangeeReseaux(y, taille, sec){
+  var pas = taille * 1.45, x0 = W() / 2 - pas * (RESEAUX.length - 1) / 2;
+  for (var i = 0; i < RESEAUX.length; i++) {
+    ctx.save();
+    ctx.globalAlpha = attenue((sec - i * 0.22) / 0.35);
+    pastille(x0 + i * pas, y, taille / 2);
+    pictoReseau(RESEAUX[i].id, x0 + i * pas, y, taille * 0.62);
+    ctx.restore();
+  }
+}
+
+/* =====================================================================
    4. Cartons d'intro et d'outro
    ===================================================================== */
 function dessinerIntro(id, t){
@@ -868,18 +990,58 @@ function dessinerIntro(id, t){
 }
 
 function dessinerOutro(id, t){
-  var u = U(), a = attenue(t / 0.4);
+  var u = U(), i;
+
+  /* Les apparitions se calent en SECONDES, pas en fraction du carton :
+     rallonger un outro doit ajouter du temps de lecture, pas ralentir
+     l'animation. `arrive(debut)` vaut 0 avant `debut`, 1 une fois posé. */
+  var duree = (trouver(OUTROS, id) || {}).duree || 1, sec = t * duree;
+  function arrive(debut, rampe){ return attenue((sec - debut) / (rampe || 0.35)); }
+  var a = arrive(0, 0.5);
+
   if (id === 'appel') {
     fond(C.navy);
     filetTricolore(0, u * 0.026, 1);
     ctx.save(); ctx.globalAlpha = a;
-    var pulsation = 1 + 0.04 * Math.sin(t * Math.PI * 4);
-    ctx.translate(W() / 2, H() * 0.40); ctx.scale(pulsation, pulsation); ctx.translate(-W() / 2, -H() * 0.40);
-    texte("J'ADHÈRE", H() * 0.42, u * 0.15, C.yellow, true);
+    var pulsation = 1 + 0.04 * Math.sin(sec * Math.PI * 1.6);
+    ctx.translate(W() / 2, H() * 0.31); ctx.scale(pulsation, pulsation); ctx.translate(-W() / 2, -H() * 0.31);
+    texte("J'ADHÈRE", H() * 0.33, u * 0.14, C.yellow, true);
     ctx.restore();
-    ctx.save(); ctx.globalAlpha = attenue((t - 0.3) / 0.5);
-    texte(SITE, H() * 0.56, u * 0.062, '#fff', true);
-    texte(INSTA, H() * 0.64, u * 0.042, '#BDD4F5', true);
+    ctx.save(); ctx.globalAlpha = arrive(0.55, 0.4);
+    texte(SLOGAN, H() * 0.41, u * 0.046, '#fff', true);
+    ctx.restore();
+    ctx.save(); ctx.globalAlpha = arrive(0.8, 0.4);
+    texte(SITE, H() * 0.49, u * 0.052, '#BDD4F5', true);
+    ctx.restore();
+    /* Les trois comptes arrivent l'un après l'autre sous l'appel : le
+       regard est déjà là, il n'a qu'à descendre. */
+    for (i = 0; i < RESEAUX.length; i++) {
+      ctx.save();
+      ctx.globalAlpha = arrive(1.05 + i * 0.32);
+      ligneReseau(RESEAUX[i], H() * (0.65 + i * 0.085), u * 0.040);
+      ctx.restore();
+    }
+    filetTricolore(H() - u * 0.026, u * 0.026, 1);
+
+  } else if (id === 'reseaux') {
+    fond(C.navy);
+    filetTricolore(0, u * 0.026, 1);
+    ctx.save(); ctx.globalAlpha = a;
+    texte('SUIS-NOUS', H() * 0.24, u * 0.11, C.yellow, true);
+    texte('sur nos réseaux', H() * 0.305, u * 0.044, '#BDD4F5', true);
+    ctx.restore();
+    for (i = 0; i < RESEAUX.length; i++) {
+      ctx.save();
+      ctx.globalAlpha = arrive(0.75 + i * 0.42);
+      /* Le nom de l'application au-dessus du pseudo : le pictogramme dit
+         déjà lequel, le nom lève le doute sur un petit écran. */
+      texte(RESEAUX[i].nom.toUpperCase(), H() * (0.45 + i * 0.14) - u * 0.056, u * 0.030, '#8FB2E8', true);
+      ligneReseau(RESEAUX[i], H() * (0.45 + i * 0.14), u * 0.046);
+      ctx.restore();
+    }
+    ctx.save(); ctx.globalAlpha = arrive(2.5, 0.4);
+    texte(SLOGAN, H() * 0.855, u * 0.046, C.yellow, true);
+    texte(SITE, H() * 0.915, u * 0.038, '#fff', true);
     ctx.restore();
     filetTricolore(H() - u * 0.026, u * 0.026, 1);
 
@@ -893,25 +1055,33 @@ function dessinerOutro(id, t){
       ctx.drawImage(logoImg, W() / 2 - s * 0.42, H() * 0.40 - s * 0.42, s * 0.84, s * 0.84);
       ctx.restore();
     }
-    ctx.save(); ctx.globalAlpha = attenue((t - 0.25) / 0.5);
+    ctx.save(); ctx.globalAlpha = arrive(0.6, 0.45);
     texte(SLOGAN, H() * 0.58, u * 0.055, C.yellow, true);
     texte(SITE, H() * 0.66, u * 0.042, '#fff', true);
     ctx.restore();
+    /* Carton sobre : les pictogrammes seuls, sans les pseudos, disent où
+       nous retrouver sans surcharger la fin du plan. */
+    rangeeReseaux(H() * 0.80, u * 0.095, sec - 1.1);
     filetTricolore(H() - u * 0.022, u * 0.022, 1);
 
   } else if (id === 'contact') {
     fond(C.navy);
     filetTricolore(0, u * 0.022, 1);
-    var lignes = [['Site', SITE], ['Instagram', INSTA], ['Téléphone', '0696 43 88 21']];
-    texte('NOUS REJOINDRE', H() * 0.30, u * 0.062, C.yellow, true);
-    for (var i = 0; i < lignes.length; i++) {
-      var b = attenue((t - 0.15 - i * 0.12) / 0.4);
+    texte('NOUS REJOINDRE', H() * 0.22, u * 0.062, C.yellow, true);
+    texte(SLOGAN, H() * 0.285, u * 0.038, '#BDD4F5', true);
+    for (i = 0; i < RESEAUX.length; i++) {
+      var b = arrive(0.5 + i * 0.35);
       ctx.save(); ctx.globalAlpha = b;
       ctx.translate(0, (1 - b) * u * 0.03);
-      texte(lignes[i][0], H() * (0.44 + i * 0.13), u * 0.033, '#8FB2E8', true);
-      texte(lignes[i][1], H() * (0.44 + i * 0.13) + u * 0.055, u * 0.048, '#fff', true);
+      ligneReseau(RESEAUX[i], H() * (0.42 + i * 0.09), u * 0.042);
       ctx.restore();
     }
+    ctx.save(); ctx.globalAlpha = arrive(1.9, 0.4);
+    texte('Site', H() * 0.71, u * 0.030, '#8FB2E8', true);
+    texte(SITE, H() * 0.765, u * 0.046, '#fff', true);
+    texte('Téléphone', H() * 0.83, u * 0.030, '#8FB2E8', true);
+    texte('0696 43 88 21', H() * 0.885, u * 0.050, '#fff', true);
+    ctx.restore();
     filetTricolore(H() - u * 0.022, u * 0.022, 1);
   }
 }

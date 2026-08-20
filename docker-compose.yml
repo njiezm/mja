@@ -1,0 +1,135 @@
+# Infrastructure complète du site Madin' Jeunes Ambition.
+#
+#   1.  cp .env.docker.example .env.docker   puis remplir les mots de passe
+#   2.  docker compose --env-file .env.docker run --rm --no-deps app \
+#           php artisan key:generate --show
+#       → reporter la clé dans APP_KEY de .env.docker
+#   3.  docker compose --env-file .env.docker up -d --build
+#   4.  docker compose --env-file .env.docker exec app php artisan mja:super-admin
+#
+# Le site répond alors sur http://localhost:8080.
+#
+# ATTENTION à `--env-file` sur chaque commande : sans lui, compose ne lit
+# .env.docker que pour peupler les conteneurs, pas pour résoudre les
+# ${VARIABLES} de ce fichier — le service de base de données démarrerait
+# alors sans mot de passe. Pour s'en affranchir :
+#     export COMPOSE_ENV_FILES=.env.docker      (bash/zsh)
+#     $env:COMPOSE_ENV_FILES = '.env.docker'    (PowerShell)
+#
+# Les quatre services applicatifs partagent la même image : le worker et
+# l'ordonnanceur exécutent exactement le code qui sert les pages.
+
+name: mja
+
+x-app: &app
+  build:
+    context: .
+    dockerfile: Dockerfile
+  image: mja:latest
+  env_file: .env.docker
+  restart: unless-stopped
+  volumes:
+    # Seul le contenu produit par l'application est persisté. Le code, lui,
+    # vient de l'image : le monter depuis l'hôte ferait tourner en production
+    # une version qui n'a jamais été construite ni testée.
+    - storage:/var/www/html/storage
+  depends_on:
+    db:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+
+services:
+  # ── Site web ───────────────────────────────────────────────────────
+  app:
+    <<: *app
+    command: ["web"]
+    ports:
+      - "${HTTP_PORT:-8080}:80"
+
+  # ── File d'attente ─────────────────────────────────────────────────
+  # Utile dès que QUEUE_CONNECTION vaut database ou redis : les envois de
+  # courriels de relance sortent alors du cycle de la requête.
+  queue:
+    <<: *app
+    command: ["queue"]
+    # Les migrations sont l'affaire du service web, une seule fois.
+    environment:
+      RUN_MIGRATIONS: "false"
+    depends_on:
+      app:
+        condition: service_started
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # ── Tâches planifiées ──────────────────────────────────────────────
+  # Remplace le cron absent de l'hébergement mutualisé : purge des comptes
+  # supprimés, sauvegarde hebdomadaire, relances (voir routes/console.php).
+  # Le middleware DeclencheurRelances devient inutile ici, mais rester en
+  # place ne coûte rien et couvre le cas où ce service est arrêté.
+  scheduler:
+    <<: *app
+    command: ["schedule"]
+    environment:
+      RUN_MIGRATIONS: "false"
+    depends_on:
+      app:
+        condition: service_started
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # ── Base de données ────────────────────────────────────────────────
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: "${DB_DATABASE:-mja}"
+      MYSQL_USER: "${DB_USERNAME:-mja}"
+      MYSQL_PASSWORD: "${DB_PASSWORD:?renseigner DB_PASSWORD et lancer compose avec --env-file .env.docker}"
+      MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASSWORD:?renseigner DB_ROOT_PASSWORD et lancer compose avec --env-file .env.docker}"
+      # Les fuseaux horaires sont gérés par PHP, pas par MySQL : charger les
+      # tables tzinfo allonge le premier démarrage pour rien.
+      MYSQL_INITDB_SKIP_TZINFO: "1"
+    # utf8mb4 partout : les contenus du site portent des accents et des emoji,
+    # que le latin1 historique de MySQL tronquerait.
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=caching_sha2_password
+    volumes:
+      - db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+    # Pas de port publié : seule l'application a besoin de la base. Pour
+    # inspecter avec un client, décommenter en développement uniquement.
+    # ports:
+    #   - "3307:3306"
+
+  # ── Cache, sessions, file d'attente ────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "allkeys-lru"]
+    volumes:
+      - redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+
+volumes:
+  # Contenu déposé par les membres et sauvegardes de `mja:backup`
+  # (storage/app/backups). Pour récupérer une sauvegarde sur l'hôte :
+  #   docker compose cp app:/var/www/html/storage/app/backups ./sauvegardes
+  storage:
+  db:
+  redis:

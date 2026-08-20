@@ -1,0 +1,57 @@
+# Ce qui ne doit pas entrer dans le contexte de build.
+#
+# vendor/ et node_modules/ sont reconstruits dans leurs étapes dédiées : les
+# copier depuis l'hôte importerait des binaires compilés pour Windows.
+# Les .env sont exclus pour qu'un secret de développement ne se retrouve pas
+# figé dans une couche d'image.
+
+.git
+.gitignore
+.gitattributes
+.github
+
+vendor
+node_modules
+public/build
+public/hot
+public/storage
+public/fonts-manifest.dev.json
+
+.env
+.env.*
+!.env.example
+!.env.docker.example
+
+storage/app/backups
+storage/app/public/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/logs/*
+storage/pail
+bootstrap/cache/*
+
+# Outils locaux
+.vscode
+.idea
+.claude
+.codex
+.cursor
+.editorconfig
+.npmrc
+.phpunit.cache
+.phpunit.result.cache
+_ide_helper.php
+Homestead.*
+*.log
+Thumbs.db
+.DS_Store
+
+# Inutile en production
+tests
+phpunit.xml
+
+# Docker lui-même
+Dockerfile
+docker-compose*.yml
+.dockerignore

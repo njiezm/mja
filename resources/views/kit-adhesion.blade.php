@@ -38,15 +38,51 @@
         return $chemins;
     };
 
-    $photosAction = $parDefinition($lister('images/carrousel'));
-    $photosKit    = $parDefinition(array_values(array_filter(
+    /**
+     * Photos « en action » du dossier kit/ : membres en intervention, en
+     * tee-shirt de l'association (distributions Ti Dèj, Caravane de l'unité).
+     * Le classement est fait à la main — un nom de fichier ne dit pas ce que
+     * montre l'image, et c'est cette distinction qui décide quelle photo va
+     * sur un flyer. Le dossier images/carrousel est prévu pour ça : tout ce
+     * qu'on y dépose est considéré comme « en action », et les deux réserves
+     * restent classées de la plus définie à la plus légère.
+     */
+    $actionDansKit = [
+        'membres-07.jpg', 'membres-08.jpg', 'membres-09.jpg', 'membres-10.jpg',
+    ];
+
+    $kit = array_values(array_filter(
         $lister('images/kit'),
         fn ($p) => ! in_array(basename($p), $doublonsRafale, true),
+    ));
+
+    /**
+     * Photo vedette : la vue aérienne de l'équipe sur la plage, avec « MJA »
+     * tracé dans le sable. C'est la seule image du lot qui montre à la fois
+     * le groupe, le lieu et le nom de l'association — elle tient la case
+     * centrale des visuels à trois photos, où le regard se pose d'abord.
+     * Elle est retirée des photos de groupe pour ne pas se retrouver deux
+     * fois sur le même triptyque.
+     */
+    $nomVedette = 'WhatsApp Image 2026-08-20 at 19.17.20.jpeg';
+    $vedette = "images/kit/{$nomVedette}";
+    if (! is_file(public_path($vedette))) {
+        $vedette = null;
+    }
+
+    $photosAction = $parDefinition(array_merge(
+        $lister('images/carrousel'),
+        array_values(array_filter($kit, fn ($p) => in_array(basename($p), $actionDansKit, true))),
+    ));
+    $photosGroupe = $parDefinition(array_values(array_filter(
+        $kit,
+        fn ($p) => ! in_array(basename($p), $actionDansKit, true)
+                && basename($p) !== $nomVedette,
     )));
 
     // Résolution la plus faible du lot : sert à alerter avant impression.
     $definitionMini = null;
-    foreach (array_merge($photosAction, $photosKit) as $p) {
+    foreach (array_merge($photosAction, $photosGroupe) as $p) {
         $t = @getimagesize(public_path($p));
         $largeur = $t[0] ?? 0;
         if ($largeur && ($definitionMini === null || $largeur < $definitionMini)) {
@@ -55,10 +91,30 @@
     }
 
     // Alternance action / groupe : deux tuiles voisines ne se ressemblent pas.
+    // Cette liste sert de repli général ; les gabarits qui savent ce qu'ils
+    // veulent montrer piochent directement dans $photosAction ou $photosGroupe.
     $phototheque = [];
-    for ($i = 0; $i < max(count($photosAction), count($photosKit)); $i++) {
+    for ($i = 0; $i < max(count($photosAction), count($photosGroupe)); $i++) {
         if (isset($photosAction[$i])) $phototheque[] = $photosAction[$i];
-        if (isset($photosKit[$i]))    $phototheque[] = $photosKit[$i];
+        if (isset($photosGroupe[$i])) $phototheque[] = $photosGroupe[$i];
+    }
+    if ($vedette) $phototheque[] = $vedette;
+
+    // Définition de la plus petite photo « en action » : ce sont elles qui
+    // partent sur les flyers, un avertissement séparé est donc utile.
+    $definitionMiniAction = null;
+    foreach ($photosAction as $p) {
+        $l = (@getimagesize(public_path($p))[0] ?? 0);
+        if ($l && ($definitionMiniAction === null || $l < $definitionMiniAction)) {
+            $definitionMiniAction = $l;
+        }
+    }
+
+    // Largeur réelle de chaque photo : le gabarit s'en sert pour ne pas
+    // étirer une vignette de 356 px sur un fond de flyer pleine page.
+    $largeurs = [];
+    foreach ($phototheque as $p) {
+        $largeurs[$p] = (@getimagesize(public_path($p))[0] ?? 0);
     }
 @endphp
 <!DOCTYPE html>
@@ -178,6 +234,8 @@ section.block[hidden]{display:none}
 .card .tags b.px{background:#F3F5F9;color:var(--muted)}
 .card .dl{padding:12px 16px 16px;margin-top:auto}
 .dlrow{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:9px}
+.photorow .btn{min-width:30px;padding:5px 9px;font-size:15px;line-height:1}
+.photorow .pnum{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:52px;text-align:center}
 .dlrow > u{font-style:normal;text-decoration:none;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);width:34px;flex-shrink:0}
 .btn{border:none;font-family:inherit;font-size:12px;font-weight:700;padding:8px 12px;border-radius:9px;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;gap:5px}
 .btn.png{background:var(--light);color:var(--dark)}
@@ -288,9 +346,16 @@ footer.foot a{color:#fff;font-weight:600;text-decoration:none}
         <label class="filebtn" for="opt-photo"><i class="fas fa-images"></i> <span id="photo-name">{{ count($phototheque) }} photo(s) pré-chargée(s)</span></label>
         <input type="file" id="opt-photo" accept="image/*" multiple style="display:none">
         <div class="hint">Classées de la plus définie à la plus légère : les grands formats piochent d'abord les meilleures.
+          {{ count($photosAction) }} en action, {{ count($photosGroupe) }} de groupe — les flyers et affiches
+          montrent d'abord une photo en action.
           @if($definitionMini && $definitionMini < 1200)
           <b style="color:#B45309">La plus petite ne fait que {{ $definitionMini }} px de large</b> — suffisant pour un post,
           juste pour un flyer A5, insuffisant pour une affiche A3 ou un kakémono.
+          @endif
+          @if($definitionMiniAction && $definitionMiniAction < 1200)
+          <b style="color:#B45309">Les photos en action plafonnent à {{ $definitionMiniAction }} px de large</b> :
+          dépose des photos de terrain en pleine résolution dans <code>public/images/carrousel/</code>,
+          elles passeront automatiquement devant sur les flyers et les affiches.
           @endif
           Dépose tes propres fichiers pour les remplacer : indispensable pour l'impression, les photos issues d'Instagram étant compressées.</div>
       </div>
@@ -487,10 +552,42 @@ var ASSETS = { logo:null, fonts:'', qr:null, photos:{} };
    mosaïque mélangent toujours qualité et variété de situations. */
 var DEFAULT_PHOTOS = @json(array_values($phototheque));
 
+/* Les deux réserves, classées de la plus définie à la plus légère.
+   ACTION = membres en intervention, GROUPE = photos d'équipe et de soirée.
+   Les gabarits à une seule photo tirent dans ACTION : c'est elle qui montre
+   ce que fait l'association. Les triptyques prennent une action puis deux
+   groupes — l'action dit quoi, le groupe dit avec qui. */
+var PHOTOS_ACTION = @json(array_values($photosAction));
+var PHOTOS_GROUPE = @json(array_values($photosGroupe));
+
+/* Largeur en pixels de chaque photo de la photothèque. */
+var LARGEURS = @json($largeurs);
+
+/* Réserve d'une seule image : la vue aérienne de la plage, pour la case
+   centrale des visuels à trois photos. Une liste plutôt qu'une constante,
+   pour passer par le même `choisirPhoto` que les autres réserves — et pour
+   qu'un fichier absent (liste vide) fasse simplement retomber la tuile sur
+   la rotation générale, sans trou dans le visuel. */
+var PHOTOS_VEDETTE = @json($vedette ? [$vedette] : []);
+
 /* Décalage dans la photothèque, propre au visuel en cours de rendu : c'est ce
    qui fait que deux mosaïques ne montrent pas les mêmes photos. */
 var PIDX = 0;
 var EMBED_PHOTOS = false;
+
+/* Décalage de photo choisi à la main, visuel par visuel. Deux visuels voisins
+   tirent déjà des photos différentes ; ce décalage sert à changer celle d'un
+   visuel précis sans toucher aux autres. Il s'applique à l'aperçu comme à
+   l'export, puisque tout part de PIDX. */
+var DECALAGE = {};
+
+/* Nombre de tuiles photo posées par le dernier visuel construit : le
+   sélecteur n'a de sens que sur un visuel qui montre des photos, et on ne le
+   sait qu'après l'avoir composé. RESERVE retient la plus grande réserve
+   consultée : c'est de ce nombre de crans que le sélecteur dispose avant de
+   retomber sur la même image. */
+var TUILES = 0;
+var TUILES_RESERVE = 0;
 
 /** Source d'image à l'index `i` (bouclage). Renvoie une data-URI à l'export. */
 function photoAt(i){
@@ -882,7 +979,7 @@ function bgMarkup(style, W, H, uid, embed){
       img = OPT.photo
         ? '<image x="0" y="0" width="' + W + '" height="' + H + '" href="' + src + '" xlink:href="' + src
           + '" preserveAspectRatio="xMidYMid slice"/>'
-        : photoTile(0, 0, W, H, 0);
+        : photoTile(0, 0, W, H, 0, PHOTOS_ACTION);
     } else {
       /* Aucune photo chargée : fond neutre + petit repère en haut à droite,
          volontairement hors des zones de texte. */
@@ -936,7 +1033,7 @@ function price(txt, fallback){ return OPT.price ? txt : fallback; }
 /* Actions réelles de l'association, reprises telles quelles dans le gabarit
    « moderne ». On ne liste que des projets qui existent. */
 var ACTIONS_DEFAUT = [
-  ['diplome',   "Fwi Ti Dèj",              "Des petits-déjeuners sains les jours d'examen"],
+  ['diplome',   "Santé Nutrition Sport",   "Former nos jeunes à un esprit sain dans un corps sain"],
   ['coeur',     "La Caravane de l'unité",  "Paix, respect et solidarité, à la rencontre des habitants"],
   ['personnes', "Vie communautaire",       "Afterworks, sorties, moments conviviaux entre adhérents"]
 ];
@@ -1450,11 +1547,22 @@ function renderStory(style, variant, uid, embed){
 /* =====================================================================
    10. Layout — PAPIER (ratio A) 1240 × 1754  → A5 / A4 / A3
    ===================================================================== */
-/** Bandeau de photos jointives, plein bord. */
+/**
+ * Bandeau de photos jointives, plein bord. La première tuile est une photo
+ * « en action », les suivantes des photos de groupe. Sur un bandeau de trois,
+ * la case centrale revient à la photo vedette : action à gauche, l'équipe et
+ * le nom dans le sable au milieu, groupe à droite.
+ */
+function reserveTuile(i, n){
+  if (i === 0) return PHOTOS_ACTION;
+  if (n === 3 && i === 1 && PHOTOS_VEDETTE.length) return PHOTOS_VEDETTE;
+  return PHOTOS_GROUPE;
+}
+
 function photoStrip(x, y, w, h, n, offset){
   var tw = w / n, s = '';
   for (var i = 0; i < n; i++) {
-    s += photoTile(x + i * tw, y, tw + 0.6, h, (offset || 0) + i);
+    s += photoTile(x + i * tw, y, tw + 0.6, h, (offset || 0) + i, reserveTuile(i, n));
   }
   return s;
 }
@@ -1530,7 +1638,7 @@ function renderPaper(style, variant, uid, embed){
     s += qrCard(M, qrTop, 150, null, p.qrLabel);
     infoX = M + 150 + 150 * 0.22 + 34;
   }
-  s += T(infoX, qrTop + 46, 'SCANNE OU RENDS-TOI SUR', { size: 22, fill: p.fg2, ls: 3 });
+  s += T(infoX, qrTop + 46, '', { size: 22, fill: p.fg2, ls: 3 });
   s += T(infoX, qrTop + 86, SITE, { size: 30, fill: p.fg, w: 700 });
   s += instaTag(infoX, qrTop + 132, 21, p.fg2, { w:500 })
      + T(infoX, qrTop + 168, MAIL, { size: 21, w: 500, fill: p.fg2 });
@@ -1574,8 +1682,8 @@ function renderBulle(style, variant, uid, embed, W, H){
      + ' q 0 ' + (R * 0.48) + ' ' + (-R * 0.52) + ' ' + (R * 0.48)
      + ' q ' + (-R * 0.72) + ' 0 ' + (-R * 0.72) + ' ' + (-R * 0.58)
      + ' Z"/></clipPath></defs>';
-  s += '<g clip-path="url(#bul' + uid + ')">'
-     + photoTile(cxB - R, cyB - R, 2 * R, R * 2.2, 0)
+  s += '<g clip-path="url(#bul' + uid + ')" data-bleed="1">'
+     + photoTile(cxB - R, cyB - R, 2 * R, R * 2.2, 0, PHOTOS_ACTION)
      + '<rect x="' + (cxB - R) + '" y="' + (cyB - R) + '" width="' + (2 * R) + '" height="' + (R * 2.2) + '" fill="' + C.navy + '" opacity="' + (sombre ? 0.28 : 0.16) + '"/>'
      + '</g>';
 
@@ -1718,7 +1826,7 @@ function renderModerne(style, variant, uid, embed, W, H){
   if (phW > W * 0.20 && phH > H * 0.10) {
     var r = Math.min(phW, phH) * 0.22;
     s += '<defs><clipPath id="ph' + uid + '"><rect x="' + phX + '" y="' + phY + '" width="' + phW + '" height="' + phH + '" rx="' + r + '"/></clipPath></defs>';
-    s += '<g clip-path="url(#ph' + uid + ')">' + photoTile(phX, phY, phW, phH, 0) + '</g>';
+    s += '<g clip-path="url(#ph' + uid + ')">' + photoTile(phX, phY, phW, phH, 0, PHOTOS_ACTION) + '</g>';
     s += '<rect x="' + phX + '" y="' + phY + '" width="' + phW + '" height="' + phH + '" rx="' + r
        + '" fill="none" stroke="' + C.yellow + '" stroke-width="' + (bar * 1.4) + '"/>';
   }
@@ -1884,7 +1992,8 @@ function renderTrio(style, variant, uid, embed, W, H){
   for (var t2 = 0; t2 < 3; t2++) {
     var tx = M + t2 * (tW + gap), rr = tW * 0.06;
     s += '<defs><clipPath id="tp' + uid + t2 + '"><rect x="' + tx + '" y="' + tY + '" width="' + tW + '" height="' + tH + '" rx="' + rr + '"/></clipPath></defs>';
-    s += '<g clip-path="url(#tp' + uid + t2 + ')">' + photoTile(tx, tY, tW, tH, t2) + '</g>';
+    s += '<g clip-path="url(#tp' + uid + t2 + ')">'
+       + photoTile(tx, tY, tW, tH, t2, reserveTuile(t2, 3)) + '</g>';
     s += '<rect x="' + tx + '" y="' + tY + '" width="' + tW + '" height="' + (bar * 0.9) + '" fill="' + teintes[t2] + '"/>';
     s += '<rect x="' + tx + '" y="' + (tY + tH - bar * 0.9) + '" width="' + tW + '" height="' + (bar * 0.9) + '" fill="' + teintes[t2] + '"/>';
   }
@@ -2032,16 +2141,67 @@ function renderVerso(style, variant, uid, embed){
  * visee, exprimes en fraction de l'image (0 = gauche/haut, 1 = droite/bas).
  */
 var CADRAGE = {
-  'images/kit/membres-06.jpg': { zoom: 1.45, cx: 0.50, cy: 0.56 }
+  'images/kit/membres-06.jpg': { zoom: 1.45, cx: 0.50, cy: 0.56 },
+
+  /* Vue aérienne de la plage : le sujet (l'équipe et « MJA » dans le sable)
+     occupe la moitié basse. Sans recadrage, une tuile portrait garde surtout
+     le ciel et les cocotiers, et le sujet finit minuscule en bas de case. */
+  'images/kit/WhatsApp Image 2026-08-20 at 19.17.20.jpeg': { zoom: 1.35, cx: 0.50, cy: 0.62 }
 };
 
 var _uidTile = 0;
 
-function photoTile(x, y, w, h, idx){
-  var i = PIDX + idx;
-  var src = photoAt(i);
-  var chemin = OPT.photos.length ? null
-    : DEFAULT_PHOTOS[((i % DEFAULT_PHOTOS.length) + DEFAULT_PHOTOS.length) % DEFAULT_PHOTOS.length];
+/** Adresse de la photo `chemin` : data-URI à l'export, URL du site sinon. */
+function srcPhoto(chemin){
+  if (EMBED_PHOTOS && ASSETS.photos[chemin]) return 'data:image/jpeg;base64,' + ASSETS.photos[chemin];
+  return ASSET(chemin.split('/').map(encodeURIComponent).join('/'));
+}
+
+/**
+ * Une tuile photo. `reserve` dit ce qu'on veut montrer (PHOTOS_ACTION ou
+ * PHOTOS_GROUPE) ; sans elle on retombe sur la photothèque mélangée.
+ * Dès que l'utilisateur dépose ses propres fichiers, plus de classement
+ * possible : on garde la rotation simple.
+ */
+/**
+ * Réserve réordonnée pour une tuile de `w` unités : d'abord les photos assez
+ * définies pour la remplir, puis les autres.
+ *
+ * Réordonner et non filtrer, c'est le point important. Une vignette de
+ * 356 px en fond de flyer pleine page est nette dans la galerie et bouillie à
+ * l'impression — d'où la préférence. Mais écarter les autres réduisait
+ * parfois la réserve à une seule photo : le visuel affichait alors toujours la
+ * même image et son sélecteur de photo disparaissait, faute de second cran.
+ * La liste garde donc toujours sa taille ; seul l'ordre change, si bien que
+ * le tirage par défaut tombe sur la mieux définie et que le sélecteur peut
+ * quand même parcourir tout le lot.
+ */
+function candidats(reserve, w){
+  var bons = [], reste = [];
+  for (var k = 0; k < reserve.length; k++) {
+    if ((LARGEURS[reserve[k]] || 0) >= w) bons.push(reserve[k]);
+    else reste.push(reserve[k]);
+  }
+  return bons.concat(reste);
+}
+
+function photoTile(x, y, w, h, idx, reserve){
+  var i = PIDX + idx, src, chemin = null, puise;
+  TUILES++;
+
+  if (!OPT.photos.length && reserve && reserve.length) {
+    var liste = candidats(reserve, w);
+    puise = liste.length;
+    chemin = liste[((i % liste.length) + liste.length) % liste.length];
+    src = srcPhoto(chemin);
+  } else {
+    puise = OPT.photos.length || DEFAULT_PHOTOS.length;
+    src = photoAt(i);
+    if (!OPT.photos.length && DEFAULT_PHOTOS.length) {
+      chemin = DEFAULT_PHOTOS[((i % DEFAULT_PHOTOS.length) + DEFAULT_PHOTOS.length) % DEFAULT_PHOTOS.length];
+    }
+  }
+  if (puise > TUILES_RESERVE) TUILES_RESERVE = puise;
   var cad = chemin ? CADRAGE[chemin] : null;
 
   if (!cad) {
@@ -2399,7 +2559,7 @@ var GROUP_LABEL = { post:'Post', story:'Story', affiche:'Affiche', flyer:'Flyer'
 /** Compose le SVG d'un visuel. `embed` = ressources en base64 (export). */
 function buildSvg(card, embed){
   var uid = '-' + card.id + (embed ? 'x' : '');
-  PIDX = card.pidx || 0;
+  PIDX = (card.pidx || 0) + (DECALAGE[card.id] || 0);
   EMBED_PHOTOS = !!embed;
   if (card.verso)  return renderVerso(card.style, card.variant, uid, embed);
   if (card.style === 'moderne') return renderModerne(card.style, card.variant, uid, embed, card.w, card.h);
@@ -2455,7 +2615,7 @@ function anim(inner, o){
 function motionFrame(card, t, embed){
   var W = card.w, H = card.h, uid = '-m' + card.id + (embed ? 'x' : '');
   var style = card.style, p = pal(style), v = V(card.variant);
-  PIDX = card.pidx || 0;
+  PIDX = (card.pidx || 0) + (DECALAGE[card.id] || 0);
   EMBED_PHOTOS = !!embed;
   var cx = W / 2, M = W * 0.07;
   var lien = OPT.url.replace(/^https?:\/\//, '');
@@ -2637,8 +2797,12 @@ function fileBase(card){
 
 /** SVG d'un visuel : dernière image du storyboard pour les vidéos. */
 function svgFor(card, embed){
+  TUILES = 0;
+  TUILES_RESERVE = 0;
   return card.motion ? motionFrame(card, 1, embed) : buildSvg(card, embed);
 }
+
+
 async function exportPng(card, outW, outH, suffix){
   var cv = await rasterize(svgFor(card, true), outW, outH);
   await new Promise(function(res){
@@ -2788,10 +2952,17 @@ function cardMarkup(card){
       + '<button class="btn png" data-act="png" data-fmt="x2">×2</button>'
       + '<button class="btn pdf" data-act="pdf" data-fmt="A4"><i class="fas fa-file-pdf"></i> PDF</button></div>';
   }
+  /* Rangée masquée par défaut : on ne sait qu'après le rendu si ce visuel
+     montre des photos (voir drawCard). */
+  var photoRow = '<div class="dlrow photorow" hidden><u>Photo</u>'
+    + '<button class="btn ghost" data-act="photo-prev" title="Photo précédente">&#8249;</button>'
+    + '<span class="pnum"></span>'
+    + '<button class="btn ghost" data-act="photo-next" title="Photo suivante">&#8250;</button></div>';
+
   return '<article class="card" data-id="' + card.id + '" data-group="' + card.group + '" data-style="' + card.style + '">'
     + '<div class="art" data-act="zoom"><div class="ph"></div></div>'
     + '<div class="meta"><h3>' + esc(card.name) + '</h3><div class="tags">' + tags + '</div></div>'
-    + '<div class="dl">' + rows + '</div>'
+    + '<div class="dl">' + photoRow + rows + '</div>'
     + '</article>';
 }
 
@@ -2808,10 +2979,20 @@ function renderGallery(){
    l'écran — indispensable avec une soixantaine de visuels. */
 var drawn = {}, io = null;
 function drawCard(id){
-  var card = cardById(id), el = document.querySelector('.card[data-id="' + id + '"] .art');
+  var card = cardById(id), racine = document.querySelector('.card[data-id="' + id + '"]');
+  var el = racine && racine.querySelector('.art');
   if (!card || !el) return;
   el.innerHTML = svgFor(card, false);
   drawn[id] = true;
+
+  var rang = racine.querySelector('.photorow');
+  if (!rang) return;
+  var total = TUILES_RESERVE;
+  if (!TUILES || total < 2) { rang.hidden = true; return; }
+  rang.hidden = false;
+  var pos = (((card.pidx || 0) + (DECALAGE[id] || 0)) % total + total) % total;
+  rang.querySelector('.pnum').textContent = (pos + 1) + ' / ' + total
+    + (TUILES > 1 ? ' (' + TUILES + ' tuiles)' : '');
 }
 function setupLazy(){
   if (io) io.disconnect();
@@ -2899,6 +3080,14 @@ document.addEventListener('click', async function(e){
     return;
   }
   if (act === 'play') { playPreview(card, cardEl.querySelector('.art')); return; }
+
+  /* Changement de photo : un simple décalage, puis on recompose ce visuel
+     seul — inutile de refaire la galerie entière. */
+  if (act === 'photo-prev' || act === 'photo-next') {
+    DECALAGE[card.id] = (DECALAGE[card.id] || 0) + (act === 'photo-next' ? 1 : -1);
+    drawCard(card.id);
+    return;
+  }
 
   btn.disabled = true;
   try {
@@ -3049,6 +3238,8 @@ function textBox(el){
   return { x0:x0, x1:x0 + w, y0:y - size * 0.78, y1:y + size * 0.24, s:str, size:size };
 }
 
+var _svgMesure = null;
+
 function auditCard(card){
   var svg = svgFor(card, false);
   var doc = new DOMParser().parseFromString(svg, 'image/svg+xml');
@@ -3064,6 +3255,60 @@ function auditCard(card){
     return false;
   }
 
+  /**
+   * Boîte réellement peinte : la géométrie de l'élément, rognée par les
+   * clip-path de ses ancêtres. Une photo recadrée est volontairement plus
+   * grande que sa tuile — c'est la tuile qui se voit. Sans ce rognage, chaque
+   * tuile recadrée était signalée « hors cadre » et le rapport devenait
+   * illisible, donc inutile ; en l'ignorant tout court, on aurait cessé de
+   * voir les textes qu'une photo recouvre vraiment.
+   */
+  /* Emprise d'un clipPath. Les bulles sont decrites par un `path` : plutot
+     que de re-implementer un parseur de tracé, on demande sa vraie boîte au
+     navigateur (getBBox), en greffant une copie du tracé dans un SVG hors
+     écran. Un clipPath illisible renvoie null et l'élément n'est alors pas
+     rogné — mieux vaut un faux positif qu'un débordement passé sous silence. */
+  function boiteClip(cp){
+    if (!cp) return null;
+    if (!_svgMesure) {
+      _svgMesure = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      _svgMesure.setAttribute('style', 'position:absolute;left:-9999px;top:0;width:1px;height:1px');
+      document.body.appendChild(_svgMesure);
+    }
+    var boite = null;
+    Array.prototype.forEach.call(cp.children, function(f){
+      var n = document.importNode(f, true), b2 = null;
+      _svgMesure.appendChild(n);
+      try {
+        var bb = n.getBBox();
+        if (bb.width || bb.height) b2 = { x0:bb.x, y0:bb.y, x1:bb.x + bb.width, y1:bb.y + bb.height };
+      } catch (e) { /* tracé illisible : on ne rogne pas */ }
+      _svgMesure.removeChild(n);
+      if (!b2) return;
+      boite = boite ? { x0:Math.min(boite.x0, b2.x0), y0:Math.min(boite.y0, b2.y0),
+                        x1:Math.max(boite.x1, b2.x1), y1:Math.max(boite.y1, b2.y1) } : b2;
+    });
+    return boite;
+  }
+
+  function boitePeinte(el){
+    var x = parseFloat(el.getAttribute('x')) || 0, y = parseFloat(el.getAttribute('y')) || 0;
+    var w = parseFloat(el.getAttribute('width')) || 0, h = parseFloat(el.getAttribute('height')) || 0;
+    if (!w || !h) return null;
+    var b = { x0:x, y0:y, x1:x + w, y1:y + h };
+
+    for (var n = el.parentNode; n && n.nodeType === 1; n = n.parentNode) {
+      var ref = n.getAttribute && n.getAttribute('clip-path');
+      if (!ref) continue;
+      var id = (ref.match(/#([^)]+)\)/) || [])[1];
+      var c = id && boiteClip(doc.querySelector('clipPath[id="' + id + '"]'));
+      if (!c) continue;
+      b.x0 = Math.max(b.x0, c.x0); b.y0 = Math.max(b.y0, c.y0);
+      b.x1 = Math.min(b.x1, c.x1); b.y1 = Math.min(b.y1, c.y1);
+    }
+    return (b.x1 - b.x0 > 0.5 && b.y1 - b.y0 > 0.5) ? b : null;
+  }
+
   Array.prototype.forEach.call(doc.querySelectorAll('text'), function(el){
     if (inDefs(el)) return;
     var b = textBox(el);
@@ -3077,17 +3322,26 @@ function auditCard(card){
     if (d.length) pb.push('TEXTE « ' + b.s.slice(0, 34) + ' » ' + d.join(', '));
   });
 
+  /* Le débordement volontaire est déclaré dans le gabarit (`data-bleed`) :
+     la demi-bulle photo sort du bord droit par construction. On ne signale
+     donc que ce qui sort sans l'avoir annoncé. */
+  function debordVoulu(el){
+    for (var n = el; n && n.nodeType === 1; n = n.parentNode) {
+      if (n.getAttribute && n.getAttribute('data-bleed')) return true;
+    }
+    return false;
+  }
+
   /* Rectangles et images : un fond peut faire exactement W×H, pas plus. */
   Array.prototype.forEach.call(doc.querySelectorAll('rect,image'), function(el){
-    if (inDefs(el)) return;
-    var x = parseFloat(el.getAttribute('x')) || 0, y = parseFloat(el.getAttribute('y')) || 0;
-    var w = parseFloat(el.getAttribute('width')) || 0, h = parseFloat(el.getAttribute('height')) || 0;
-    if (!w || !h) return;
+    if (inDefs(el) || debordVoulu(el)) return;
+    var b = boitePeinte(el);
+    if (!b) return;
     var d = [];
-    if (x < -TOL) d.push('x=' + Math.round(x));
-    if (y < -TOL) d.push('y=' + Math.round(y));
-    if (x + w > W + TOL) d.push('droite +' + Math.round(x + w - W));
-    if (y + h > H + TOL) d.push('bas +' + Math.round(y + h - H));
+    if (b.x0 < -TOL) d.push('x=' + Math.round(b.x0));
+    if (b.y0 < -TOL) d.push('y=' + Math.round(b.y0));
+    if (b.x1 > W + TOL) d.push('droite +' + Math.round(b.x1 - W));
+    if (b.y1 > H + TOL) d.push('bas +' + Math.round(b.y1 - H));
     if (d.length) pb.push(el.tagName.toUpperCase() + ' hors cadre (' + d.join(', ') + ')');
   });
 
@@ -3098,20 +3352,20 @@ function auditCard(card){
     if (inDefs(el)) return;
     var tag = el.tagName.toLowerCase();
     if (tag === 'text') {
-      var b = textBox(el);
-      if (b) vus.push(b);
+      var bt = textBox(el);
+      if (bt) vus.push(bt);
       return;
     }
     var op = parseFloat(el.getAttribute('opacity'));
     if (!isNaN(op) && op < 0.85) return;                 /* voile translucide : normal */
     var fill = (el.getAttribute('fill') || '').toLowerCase();
     if (fill === 'none' || fill.indexOf('rgba') === 0) return;
-    var x = parseFloat(el.getAttribute('x')) || 0, y = parseFloat(el.getAttribute('y')) || 0;
-    var w = parseFloat(el.getAttribute('width')) || 0, h = parseFloat(el.getAttribute('height')) || 0;
-    if (w >= W - 2 && h >= H - 2) return;                /* fond plein cadre */
+    var bp = boitePeinte(el);
+    if (!bp) return;
+    if (bp.x1 - bp.x0 >= W - 2 && bp.y1 - bp.y0 >= H - 2) return;   /* fond plein cadre */
     vus.forEach(function(b){
-      var ox = Math.min(b.x1, x + w) - Math.max(b.x0, x);
-      var oy = Math.min(b.y1, y + h) - Math.max(b.y0, y);
+      var ox = Math.min(b.x1, bp.x1) - Math.max(b.x0, bp.x0);
+      var oy = Math.min(b.y1, bp.y1) - Math.max(b.y0, bp.y0);
       if (ox <= 1 || oy <= 1) return;
       var aire = (b.x1 - b.x0) * (b.y1 - b.y0);
       if (aire > 0 && (ox * oy) / aire > 0.35) {
@@ -3158,12 +3412,63 @@ async function auditAll(){
 
 /** Auto-test : tente de rasteriser chaque visuel et rapporte les échecs.
     Accessible via ?selftest=1 — le résultat est écrit dans #selftest. */
+/** Largeur brute de `txt` dans une famille donnee, a 100 px. */
+function mesureFamille(txt, fam, style, weight){
+  _mc.font = (style === 'italic' ? 'italic ' : '') + weight + ' 100px "' + fam + '"';
+  return _mc.measureText(txt).width;
+}
+
+/**
+ * Garde-fou aperçu / export.
+ *
+ * `measure()` mesure avec les polices de la PAGE, mais l'export compose avec
+ * les @font-face embarqués dans le SVG. Si une graisse ne pointe pas sur le
+ * même fichier des deux côtés, les largeurs calculées ne valent plus rien :
+ * l'aperçu tombe juste et l'export déborde. On recharge donc les
+ * déclarations d'export sous un nom de famille neutre et on compare les
+ * largeurs, graisse par graisse.
+ */
+async function controlerPolices(){
+  if (!ASSETS.fonts) return ["polices d'export non embarquées — contrôle impossible"];
+  if (!window.FontFace) return [];
+
+  var re = /@font-face\{font-family:'([^']+)';font-style:(\w+);font-weight:([^;]+);src:url\(([^)]+)\)/g;
+  var m, chargements = [];
+  while ((m = re.exec(ASSETS.fonts))) {
+    var face = new FontFace('Controle ' + m[1], 'url(' + m[4] + ')', { style:m[2], weight:m[3] });
+    chargements.push(face.load().then(function(f){ document.fonts.add(f); }));
+  }
+  if (!chargements.length) return ['aucune déclaration @font-face reconnue dans ASSETS.fonts'];
+  await Promise.all(chargements);
+
+  /* Toutes les graisses réellement demandées par les gabarits. */
+  var DEMANDEES = [
+    ['Gill Sans', 'normal', 500], ['Gill Sans', 'normal', 600], ['Gill Sans', 'normal', 700],
+    ['Gill Sans', 'normal', 800], ['Gill Sans', 'italic', 700],
+    ['AllRound Gothic', 'normal', 700], ['AllRound Gothic', 'normal', 800]
+  ];
+  var ECHANTILLON = "Adhésion 2026-2027 — RELÈVE TOUS LES DÉFIS ! agjqw";
+  var ecarts = [];
+  DEMANDEES.forEach(function(t){
+    var page = mesureFamille(ECHANTILLON, t[0], t[1], t[2]);
+    var expo = mesureFamille(ECHANTILLON, 'Controle ' + t[0], t[1], t[2]);
+    if (Math.abs(page - expo) > 0.5) {
+      ecarts.push('POLICE ' + t[0] + ' ' + t[1] + ' ' + t[2] + ' : page ' + page.toFixed(1)
+                + ' px / export ' + expo.toFixed(1) + " px — l'export ne composera pas comme l'aperçu");
+    }
+  });
+  return ecarts;
+}
+
 async function selfTest(){
   var out = [], box = document.createElement('pre');
   box.id = 'selftest';
   box.style.cssText = 'padding:16px;font-size:13px;white-space:pre-wrap;background:#111;color:#0f0;margin:0';
   box.textContent = 'SELFTEST en cours…';
   document.body.insertBefore(box, document.body.firstChild);
+
+  (await controlerPolices()).forEach(function(m){ out.push(m); });
+
   for (var i = 0; i < CARDS.length; i++) {
     var c = CARDS[i];
     try {
@@ -3186,8 +3491,11 @@ async function boot(){
   try {
     await Promise.all([
       document.fonts.load('400 32px "Gill Sans"'),
+      document.fonts.load('500 32px "Gill Sans"'),
+      document.fonts.load('600 32px "Gill Sans"'),
       document.fonts.load('700 32px "Gill Sans"'),
-      document.fonts.load('italic 700 32px "Gill Sans"'),
+      document.fonts.load('italic 400 32px "Gill Sans"'),
+      document.fonts.load('600 32px "AllRound Gothic"'),
       document.fonts.load('800 32px "AllRound Gothic"')
     ]);
     await document.fonts.ready;
@@ -3212,8 +3520,6 @@ async function boot(){
   applyFilters();
   setupLazy();
 
-  if (qs.get('selftest')) { window.__selftest = selfTest(); }
-  if (qs.get('audit')) { window.__audit = auditAll(); }
   /* Ressources base64 pour l'export : un SVG rasterisé dans un canvas n'a
      accès à aucune ressource externe, il faut donc tout embarquer. */
   try {
@@ -3222,14 +3528,23 @@ async function boot(){
       fetchB64(ASSET('fonts/Gill_Sans.woff2')),
       fetchB64(ASSET('fonts/Gill_Sans_Bold.woff2')),
       fetchB64(ASSET('fonts/Gill_Sans_Italic.woff2')),
+      fetchB64(ASSET('fonts/AllRoundGothic-Demi.woff2')),
       fetchB64(ASSET('fonts/AllRoundGothic-Bold.woff2'))
     ]);
     ASSETS.logo = res[0];
+
+    /* ATTENTION — ces plages de graisse doivent rester le miroir exact de
+       public/css/gill-sans.css. `measure()` mesure avec les polices de la
+       PAGE ; si l'export associe une graisse à un autre fichier, il compose
+       plus large ou plus étroit que ce qui a été mesuré : l'aperçu tombe
+       juste et l'export déborde. C'est ce qui arrivait avec la graisse 500,
+       qui prenait le Regular dans la page et le Bold à l'export. */
     ASSETS.fonts =
-      "@font-face{font-family:'Gill Sans';font-style:normal;font-weight:400;src:url(data:font/woff2;base64," + res[1] + ") format('woff2');}"
-    + "@font-face{font-family:'Gill Sans';font-style:normal;font-weight:500 900;src:url(data:font/woff2;base64," + res[2] + ") format('woff2');}"
-    + "@font-face{font-family:'Gill Sans';font-style:italic;font-weight:400 900;src:url(data:font/woff2;base64," + res[3] + ") format('woff2');}"
-    + "@font-face{font-family:'AllRound Gothic';font-style:normal;font-weight:600 900;src:url(data:font/woff2;base64," + res[4] + ") format('woff2');}"
+      "@font-face{font-family:'Gill Sans';font-style:normal;font-weight:400 500;src:url(data:font/woff2;base64," + res[1] + ") format('woff2');}"
+    + "@font-face{font-family:'Gill Sans';font-style:normal;font-weight:600 900;src:url(data:font/woff2;base64," + res[2] + ") format('woff2');}"
+    + "@font-face{font-family:'Gill Sans';font-style:italic;font-weight:400;src:url(data:font/woff2;base64," + res[3] + ") format('woff2');}"
+    + "@font-face{font-family:'AllRound Gothic';font-style:normal;font-weight:600;src:url(data:font/woff2;base64," + res[4] + ") format('woff2');}"
+    + "@font-face{font-family:'AllRound Gothic';font-style:normal;font-weight:700 900;src:url(data:font/woff2;base64," + res[5] + ") format('woff2');}"
     + "text{font-kerning:normal;}";
 
     /* Photothèque en base64 : sans ça, les visuels Photo et Mosaïque
@@ -3241,6 +3556,11 @@ async function boot(){
     console.warn('Polices non embarquées : les exports utiliseront une police de repli.', e);
     toast("Attention : polices non embarquées, vérifie un export avant diffusion.");
   }
+
+  /* Contrôles après embarquement : avant, ils testeraient des SVG sans
+     polices ni photos, c'est-à-dire pas ce que l'export produit. */
+  if (qs.get('selftest')) { window.__selftest = await selfTest(); }
+  if (qs.get('audit')) { window.__audit = await auditAll(); }
 }
 boot();
 </script>
