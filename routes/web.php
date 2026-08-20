@@ -149,7 +149,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
         // Relances automatiques (paiement en attente, renouvellement de saison)
         Route::get('relances', [Admin\RelanceController::class, 'index'])->name('relances.index');
         Route::put('relances', [Admin\RelanceController::class, 'update'])->name('relances.update');
+        Route::post('relances/suspendre', [Admin\RelanceController::class, 'suspendre'])->name('relances.suspendre');
         Route::post('relances/executer', [Admin\RelanceController::class, 'executer'])->name('relances.executer');
+        Route::delete('relances/historique', [Admin\RelanceController::class, 'viderHistorique'])->name('relances.historique.vider');
         Route::post('relances/adhesion/{adhesion}', [Admin\RelanceController::class, 'relancerUne'])->name('relances.une');
 
         // Sources d'acquisition & statistiques de tracking

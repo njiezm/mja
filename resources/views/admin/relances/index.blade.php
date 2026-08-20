@@ -3,6 +3,52 @@
 
 @section('content')
 
+{{-- L'interrupteur ne s'appuie pas sur les variantes « peer-checked » : la
+     feuille Tailwind compilée du projet ne les contient pas toutes. --}}
+<style>
+    .sw-piste { position: relative; width: 3rem; height: 1.75rem; flex: none;
+        background: #d1d5db; border-radius: 9999px; transition: background-color .2s; }
+    .sw-piste::after { content: ''; position: absolute; top: .25rem; left: .25rem;
+        width: 1.25rem; height: 1.25rem; background: #fff; border-radius: 9999px;
+        box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: transform .2s; }
+    .sw-input:checked + .sw-piste { background: #E3342F; }
+    .sw-input:checked + .sw-piste::after { transform: translateX(1.25rem); }
+    .sw-input:focus-visible + .sw-piste { outline: 3px solid #1E93D6; outline-offset: 2px; }
+    /* Page grisée quand les relances sont coupées : plus rien n'est cliquable. */
+    .zone-suspendue { opacity: .45; filter: grayscale(1); pointer-events: none; }
+</style>
+
+<form method="POST" action="{{ route('admin.relances.suspendre') }}"
+      class="rounded-2xl shadow-sm border px-5 py-4 mb-8 {{ $suspendues ? 'bg-red-50 border-mja-red/30' : 'bg-white border-gray-100' }}">
+    @csrf
+    {{-- Le champ caché porte la valeur « décoché » : c'est le dernier envoyé qui compte. --}}
+    <input type="hidden" name="suspendues" value="0">
+    <label class="flex items-center justify-between gap-4 cursor-pointer">
+        <span class="min-w-0">
+            <span class="block font-display font-bold text-gray-900">
+                <i class="fas {{ $suspendues ? 'fa-ban text-mja-red' : 'fa-circle-check text-green-600' }} mr-1.5"></i>
+                Désactiver les relances
+                @if($suspendues)
+                <span class="ml-2 align-middle text-xs font-display font-bold px-2.5 py-1 rounded-full bg-mja-red/10 text-mja-red">Suspendues</span>
+                @endif
+            </span>
+            <span class="block text-xs text-gray-500 mt-1">
+                @if($suspendues)
+                Plus aucun email ne part, ni automatiquement ni à la main. Les réglages et l'historique
+                restent consultables mais figés — basculez l'interrupteur pour reprendre les envois.
+                @else
+                Coupe immédiatement tous les envois, automatiques comme manuels. Les réglages sont conservés.
+                @endif
+            </span>
+        </span>
+        <input type="checkbox" name="suspendues" value="1" class="sw-input sr-only"
+               {{ $suspendues ? 'checked' : '' }} onchange="this.form.submit()">
+        <span class="sw-piste"></span>
+    </label>
+</form>
+
+<div class="{{ $suspendues ? 'zone-suspendue' : '' }}" @if($suspendues) inert @endif>
+
 <div class="flex flex-wrap items-start justify-between gap-4 mb-8">
     <div>
         <h1 class="font-display font-black text-2xl text-gray-900">Relances</h1>
@@ -126,7 +172,18 @@
 </form>
 
 {{-- ── Historique ─────────────────────────────────────────────────────────── --}}
-<h2 class="font-display font-black text-lg text-gray-900 mb-4">Historique des envois</h2>
+<div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+    <h2 class="font-display font-black text-lg text-gray-900">Historique des envois</h2>
+    @if($historique->total() > 0)
+    <form method="POST" action="{{ route('admin.relances.historique.vider') }}"
+          data-confirm="Vider tout l'historique des relances ({{ $historique->total() }} entrée(s)) ? Attention : ce journal empêche les doublons. Une fois vidé, les compteurs repartent de zéro et les personnes déjà relancées pourront l'être à nouveau.">
+        @csrf @method('DELETE')
+        <button class="inline-flex items-center gap-2 bg-red-50 hover:bg-red-100 text-mja-red font-semibold text-sm px-4 py-2 rounded-xl transition-colors">
+            <i class="fas fa-trash-can text-xs"></i> Vider l'historique
+        </button>
+    </form>
+    @endif
+</div>
 
 @if($historique->isEmpty())
 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-10 text-center text-gray-400 text-sm">
@@ -167,5 +224,7 @@
     @if($historique->hasPages())<div class="px-6 py-4 border-t border-gray-50">{{ $historique->links() }}</div>@endif
 </div>
 @endif
+
+</div>{{-- /zone grisée --}}
 
 @endsection

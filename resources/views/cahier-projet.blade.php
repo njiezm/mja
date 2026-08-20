@@ -420,6 +420,8 @@
             ['PUT /admin/relances', 'admin.relances.update', 'Enregistre les réglages de relance'],
             ['POST /admin/relances/executer', 'admin.relances.executer', 'Déclenche à la main la campagne du jour'],
             ['POST /admin/relances/adhesion/{id}', 'admin.relances.une', 'Relance une seule personne'],
+            ['POST /admin/relances/suspendre', 'admin.relances.suspendre', 'Interrupteur général : coupe ou rétablit tous les envois'],
+            ['DELETE /admin/relances/historique', 'admin.relances.historique.vider', 'Vide le journal des relances (les compteurs repartent de zéro)'],
             ['GET /admin/periodes', 'admin.periods.index', 'Saisons : liste et création'],
             ['/admin/periodes/{id}', 'admin.periods.*', 'Édition et suppression'],
             ['GET /admin/dons', 'admin.donations.index', 'Dons reçus'],

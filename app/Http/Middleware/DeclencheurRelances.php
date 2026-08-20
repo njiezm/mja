@@ -70,6 +70,11 @@ class DeclencheurRelances
     /** Après l'heure configurée, et pas déjà passé aujourd'hui. */
     private function cEstLeMoment(): bool
     {
+        // Suspendu en back-office : ni verrou ni marqueur à consommer.
+        if (RelanceService::suspendues()) {
+            return false;
+        }
+
         if (! RelanceService::actif('relance_paiement_active')
             && ! RelanceService::actif('relance_renouvellement_active')) {
             return false;

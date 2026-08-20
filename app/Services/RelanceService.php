@@ -35,6 +35,19 @@ class RelanceService
         'relances_heure'                   => 9,   // heure d'envoi (0-23)
     ];
 
+    /**
+     * Clé de l'interrupteur général. Volontairement hors de DEFAUTS : le
+     * formulaire de réglages boucle sur DEFAUTS et remettrait la suspension à
+     * zéro à chaque enregistrement.
+     */
+    public const CLE_SUSPENSION = 'relances_suspendues';
+
+    /** Suspension globale : tant qu'elle est active, aucune relance ne part. */
+    public static function suspendues(): bool
+    {
+        return (bool) Setting::get(self::CLE_SUSPENSION);
+    }
+
     public static function reglage(string $cle): int
     {
         $valeur = Setting::get($cle, self::DEFAUTS[$cle] ?? 0);
@@ -56,6 +69,12 @@ class RelanceService
     public function executer(bool $simulation = false, bool $automatique = true): array
     {
         $bilan = ['paiement' => 0, 'renouvellement' => 0, 'echecs' => 0, 'details' => []];
+
+        // Interrupteur général : il court-circuite les deux types, quels que
+        // soient leurs réglages propres.
+        if (self::suspendues()) {
+            return $bilan;
+        }
 
         if (self::actif('relance_paiement_active')) {
             foreach ($this->paiementsARelancer() as $adhesion) {
