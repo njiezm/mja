@@ -232,12 +232,26 @@ class AdhesionController extends Controller
         // navigateur n'est jamais une source de vérité sur un paiement.
         $cartePayee = false;
 
+        $intentId = $request->input('payment_intent_id');
+
         if (($donnees['moyen_paiement'] ?? null) === 'en_ligne') {
-            $cartePayee = StripeService::paiementValide($request->input('payment_intent_id'), $this->montantApresRemise($promoCode));
+            $cartePayee = StripeService::paiementValide($intentId, $this->montantApresRemise($promoCode));
 
             if (! $cartePayee) {
                 return back()->withInput()
                     ->withErrors(['moyen_paiement' => "Le paiement par carte n'a pas été validé. Réglez la cotisation dans le formulaire avant d'envoyer votre demande."]);
+            }
+
+            // Un paiement ne vaut que pour une adhésion. L'identifiant vient du
+            // navigateur : sans ce contrôle, un double-clic sur « Envoyer » ou un
+            // retour arrière après une erreur de validation créait deux adhésions
+            // « payée » pour un seul encaissement. Le contrôle ici donne un
+            // message clair ; la garantie, elle, est l'index unique en base.
+            if (Adhesion::where('stripe_payment_intent_id', $intentId)->exists()) {
+                return back()->withInput()->withErrors([
+                    'moyen_paiement' => "Ce paiement a déjà été rattaché à une demande d'adhésion. "
+                        . "Si vous pensez avoir été débité deux fois, contactez-nous.",
+                ]);
             }
         }
 
@@ -249,6 +263,15 @@ class AdhesionController extends Controller
 
         // La création et la consommation du code se font ensemble : si une
         // écriture échoue, le code reste disponible.
+        // Le paiement est enregistré avec l'adhésion, dans la même écriture.
+        // Le rattachement côté Stripe reste utile pour le rapprochement
+        // comptable, mais il ne peut plus être le seul lien : c'était un appel
+        // HTTP sans rejeu, et un échec réseau effaçait la correspondance.
+        if ($cartePayee) {
+            $donnees['stripe_payment_intent_id'] = $intentId;
+            $donnees['paye_le'] = now();
+        }
+
         $adhesion = DB::transaction(function () use ($donnees, $promoCode) {
             if ($promoCode) {
                 $code = PromoCode::whereKey($promoCode->id)->lockForUpdate()->first();
@@ -265,10 +288,11 @@ class AdhesionController extends Controller
             return Adhesion::create($donnees);
         });
 
-        // Le paiement carte a été créé avant l'adhésion : on l'y rattache pour
-        // qu'un évènement Stripe ultérieur sache de quelle demande il parle.
+        // Le rattachement côté Stripe vient en complément, pour que le tableau
+        // de bord de l'association montre la correspondance. S'il échoue, le
+        // lien reste en base : ce n'est plus une perte.
         if ($cartePayee) {
-            StripeService::attacherAdhesion($request->input('payment_intent_id'), $adhesion->id);
+            StripeService::attacherAdhesion($intentId, $adhesion->id);
         }
 
         // Le renouvellement devient l'adhésion courante du compte.

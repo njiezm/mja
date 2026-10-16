@@ -16,6 +16,7 @@ class Adhesion extends Model
         'moyen_paiement', 'droit_image', 'rgpd_consentement', 'statut', 'lu',
         'source_id', 'period_id', 'account_token', 'account_token_expires_at',
         'renouvellement_token', 'renouvellement_token_expires_at', 'renouvelle_adhesion_id', 'promo_code_id',
+        'stripe_payment_intent_id', 'paye_le',
     ];
 
     protected $casts = [
@@ -25,6 +26,7 @@ class Adhesion extends Model
         'reseaux_sociaux'                 => 'array',
         'account_token_expires_at'        => 'datetime',
         'renouvellement_token_expires_at' => 'datetime',
+        'paye_le'                         => 'datetime',
     ];
 
     /**

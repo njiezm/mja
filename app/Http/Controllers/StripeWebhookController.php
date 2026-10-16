@@ -112,10 +112,14 @@ class StripeWebhookController extends Controller
     private function paiementAbouti(array $intent): void
     {
         $metadonnees = $intent['metadata'] ?? [];
-        $id = $metadonnees['adhesion_id'] ?? null;
 
-        if ($id && ($adhesion = Adhesion::find($id))) {
-            $this->marquerPayee($adhesion);
+        // La base d'abord, les metadata ensuite. Les metadata sont écrites par
+        // un appel qui peut échouer ; la colonne, elle, est posée dans la même
+        // transaction que l'adhésion.
+        $adhesion = $this->retrouver($intent['id'] ?? null, $metadonnees['adhesion_id'] ?? null);
+
+        if ($adhesion) {
+            $this->marquerPayee($adhesion, $intent['id'] ?? null);
 
             return;
         }
@@ -138,10 +142,11 @@ class StripeWebhookController extends Controller
 
         $metadonnees = $session['metadata'] ?? [];
 
-        if ($id = $metadonnees['adhesion_id'] ?? ($session['client_reference_id'] ?? null)) {
-            if ($adhesion = Adhesion::find($id)) {
-                $this->marquerPayee($adhesion);
-            }
+        $intentId = $session['payment_intent'] ?? null;
+        $id = $metadonnees['adhesion_id'] ?? ($session['client_reference_id'] ?? null);
+
+        if ($adhesion = $this->retrouver($intentId, $id)) {
+            $this->marquerPayee($adhesion, $intentId);
         }
 
         if ($id = $metadonnees['donation_id'] ?? null) {
@@ -158,13 +163,34 @@ class StripeWebhookController extends Controller
      * Idempotent : Stripe réémet un évènement tant qu'il n'a pas reçu de 200,
      * et le même paiement peut donc arriver plusieurs fois.
      */
-    private function marquerPayee(Adhesion $adhesion): void
+    private function retrouver(?string $intentId, $adhesionId): ?Adhesion
     {
+        if ($intentId) {
+            $adhesion = Adhesion::where('stripe_payment_intent_id', $intentId)->first();
+
+            if ($adhesion) {
+                return $adhesion;
+            }
+        }
+
+        return $adhesionId ? Adhesion::find($adhesionId) : null;
+    }
+
+    private function marquerPayee(Adhesion $adhesion, ?string $intentId = null): void
+    {
+        // Le lien est pose ici aussi : une adhesion reglee par page Stripe
+        // n'etait rattachee a son paiement nulle part en base.
+        if ($intentId && ! $adhesion->stripe_payment_intent_id) {
+            Adhesion::whereKey($adhesion->id)
+                ->whereNull('stripe_payment_intent_id')
+                ->update(['stripe_payment_intent_id' => $intentId]);
+        }
+
         if ($adhesion->isAdherent()) {
             return;
         }
 
-        $adhesion->update(['statut' => 'payee']);
+        $adhesion->update(['statut' => 'payee', 'paye_le' => $adhesion->paye_le ?? now()]);
         Log::info("Webhook Stripe : adhésion #{$adhesion->id} marquée payée.");
 
         if (! $adhesion->user_id) {

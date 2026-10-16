@@ -93,6 +93,43 @@ class StripeService
         }
     }
 
+    /**
+     * Liste les PaymentIntents crees depuis un horodatage, en paginant.
+     *
+     * Sert au rapprochement comptable : c'est le seul moyen de retrouver les
+     * encaissements qui n'ont aucune adhesion en face, puisque par definition
+     * ils ne laissent aucune trace de notre cote.
+     *
+     * @return array<int, array>|null  null si Stripe n'a pas repondu
+     */
+    public static function listerPaymentIntents(int $depuis, int $plafond = 500): ?array
+    {
+        $tout = [];
+        $apres = null;
+
+        do {
+            $params = ['limit' => 100, 'created[gte]' => $depuis];
+
+            if ($apres) {
+                $params['starting_after'] = $apres;
+            }
+
+            $resp = Http::withToken(self::secret())->get(self::API . '/payment_intents', $params);
+
+            if ($resp->failed()) {
+                Log::error('Stripe liste payment intents : ' . $resp->body());
+
+                return null;
+            }
+
+            $page = $resp->json('data') ?? [];
+            $tout = array_merge($tout, $page);
+            $apres = $page ? end($page)['id'] : null;
+        } while ($page && $resp->json('has_more') && count($tout) < $plafond);
+
+        return $tout;
+    }
+
     /** Récupère un PaymentIntent (tableau) ou null. */
     public static function retrievePaymentIntent(string $intentId): ?array
     {
